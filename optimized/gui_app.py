@@ -7,8 +7,10 @@ import re
 import struct
 import threading
 import traceback
+import xml.etree.ElementTree as ET
 import tkinter.font as tkfont
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 import xlsxwriter
@@ -119,9 +121,12 @@ class STDFGuidCheckerApp:
         self.progress_bar = None
         self._pending_progress = None  # (fraction, message) — atomic shared state
         self._progress_poll_id = None
+        self._mpc_lookup_after_id = None  # debounce timer for MPC auto-lookup
         self._build_ui()
         self._update_selected_test_summary()
         self._sync_manual_filter_state()
+        # Attach MPC auto-lookup: fires 500ms after the user stops typing in Lot ID
+        self.lot_id_var.trace_add("write", self._on_lot_id_changed)
 
     def _build_ui(self):
         pad = {"padx": 8, "pady": 6}
@@ -218,6 +223,7 @@ class STDFGuidCheckerApp:
         secondary_actions_frame.grid(row=1, column=0, sticky="ew", pady=(8, 4))
         secondary_actions_frame.columnconfigure(0, weight=1, uniform="secondary_actions")
         secondary_actions_frame.columnconfigure(1, weight=1, uniform="secondary_actions")
+        secondary_actions_frame.columnconfigure(2, weight=1, uniform="secondary_actions")
         ttk.Button(
             secondary_actions_frame,
             text="Get FTDC Fail",
@@ -229,7 +235,13 @@ class STDFGuidCheckerApp:
             text="Get STDF",
             command=self.start_get_stdf,
             style="SecondaryAction.TButton",
-        ).grid(row=0, column=1, sticky="ew", padx=(4, 0))
+        ).grid(row=0, column=1, sticky="ew", padx=(4, 4))
+        ttk.Button(
+            secondary_actions_frame,
+            text="Check STDF",
+            command=self.start_check_stdf,
+            style="SecondaryAction.TButton",
+        ).grid(row=0, column=2, sticky="ew", padx=(4, 0))
 
         convert_frame = ttk.Frame(right_side)
         convert_frame.grid(row=2, column=0, sticky="ew", pady=(4, 0))
@@ -415,9 +427,20 @@ class STDFGuidCheckerApp:
 
     def select_files(self, panel: str):
         from tkinter import filedialog
+        from optimized.stdf_fetcher import LOCAL_DEST_BASE
+
+        # Default to the FTDC extraction folder for the current Lot ID
+        initial_dir = None
+        lot_id = self.lot_id_var.get().strip()
+        if lot_id:
+            candidate = os.path.join(LOCAL_DEST_BASE, lot_id.upper())
+            if os.path.isdir(candidate):
+                initial_dir = candidate
+
         paths = filedialog.askopenfilenames(
             title=f"Select one or more {panel} STDF files",
             filetypes=[("STDF files", "*.std* *.old"), ("All files", "*.*")],
+            initialdir=initial_dir,
         )
         if not paths:
             return
@@ -885,6 +908,485 @@ class STDFGuidCheckerApp:
         dialog.focus_force()
         self.root.wait_window(dialog)
         return selected[0]
+
+    # ── MPC Auto-Lookup ────────────────────────────────────────────────────
+
+    def _on_lot_id_changed(self, *args):
+        """Debounce handler: wait 500ms after the last keystroke before looking up MPC."""
+        if self._mpc_lookup_after_id is not None:
+            self.root.after_cancel(self._mpc_lookup_after_id)
+            self._mpc_lookup_after_id = None
+
+        lot_id = self.lot_id_var.get().strip()
+        if not lot_id:
+            self.mpc_var.set("")
+            return
+
+        self._mpc_lookup_after_id = self.root.after(
+            500, lambda: self._lookup_mpc_for_lot_id(lot_id)
+        )
+
+    def _lookup_mpc_for_lot_id(self, lot_id: str):
+        """Send POST to MES web service and populate the MPC field from the response."""
+        self._mpc_lookup_after_id = None
+
+        def worker():
+            try:
+                import requests as _requests
+            except ImportError:
+                return
+
+            def _set_val(val: str):
+                # Only update if the user hasn't changed/cleared the Lot ID in the meantime
+                if self.lot_id_var.get().strip().upper() == lot_id.upper():
+                    self.mpc_var.set(val)
+
+            url = "http://mth-vm-eaprd1/MPHL/getlot/mes.asmx/GetLotByLotId"
+            try:
+                resp = _requests.post(url, data={"LotId": lot_id}, timeout=10)
+            except _requests.exceptions.ConnectionError:
+                self.root.after(0, lambda: _set_val("Network error: unable to connect"))
+                return
+            except _requests.exceptions.Timeout:
+                self.root.after(0, lambda: _set_val("Network error: request timed out"))
+                return
+            except Exception as exc:
+                msg = str(exc)[:60]
+                self.root.after(0, lambda m=msg: _set_val(f"Lookup failed: {m}"))
+                return
+
+            # ── Parse the XML response ─────────────────────────────────────
+            try:
+                root_el = ET.fromstring(resp.text)
+                ns = {"mes": "http://microchip.com/mes/"}
+
+                reply_code_el = root_el.find("mes:ReplyCode", ns)
+                reply_code = reply_code_el.text.strip() if reply_code_el is not None and reply_code_el.text else ""
+
+                if reply_code == "-1":
+                    self.root.after(0, lambda: _set_val("Lot ID not found"))
+                    return
+
+                mpc_el = root_el.find(".//mes:MPC", ns)
+                if mpc_el is not None and mpc_el.text and mpc_el.text.strip():
+                    mpc_value = mpc_el.text.strip()
+                    self.root.after(0, lambda v=mpc_value: _set_val(v))
+                else:
+                    self.root.after(0, lambda: _set_val(""))
+            except ET.ParseError:
+                self.root.after(0, lambda: _set_val("Lookup failed: invalid response"))
+            except Exception as exc:
+                msg = str(exc)[:60]
+                self.root.after(0, lambda m=msg: _set_val(f"Lookup failed: {m}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    # ── Check STDF ─────────────────────────────────────────────────────────
+
+    def _prompt_panel_choice(self, parent=None):
+        """Show a small popup with FIRST PASS / RETEST / QC buttons and return the choice."""
+        import tkinter as tk
+
+        dialog = tk.Toplevel(parent or self.root)
+        dialog.title("Select Panel")
+        dialog.resizable(False, False)
+        dialog.transient(parent or self.root)
+        dialog.grab_set()
+        dialog.withdraw()
+
+        selected: List[Optional[str]] = [None]
+
+        frame = self.ttk.Frame(dialog, padding=15)
+        frame.pack(fill="both", expand=True)
+
+        self.ttk.Label(
+            frame, text="Load file into which panel?",
+            font=("Segoe UI", 9),
+        ).pack(pady=(0, 10))
+
+        btn_row = self.ttk.Frame(frame)
+        btn_row.pack()
+
+        for panel in ("FIRST PASS", "RETEST", "QC"):
+            def _on_click(p=panel):
+                selected[0] = p
+                dialog.destroy()
+            self.ttk.Button(btn_row, text=panel, command=_on_click).pack(
+                side="left", padx=4,
+            )
+
+        dialog.update_idletasks()
+        # Center over parent
+        pw = (parent or self.root).winfo_rootx()
+        ph = (parent or self.root).winfo_rooty()
+        px = (parent or self.root).winfo_width()
+        py = (parent or self.root).winfo_height()
+        dw = dialog.winfo_reqwidth()
+        dh = dialog.winfo_reqheight()
+        x = pw + (px - dw) // 2
+        y = ph + (py - dh) // 2
+        dialog.geometry(f"+{x}+{y}")
+        dialog.deiconify()
+        dialog.focus_force()
+        (parent or self.root).wait_window(dialog)
+        return selected[0]
+
+    def start_check_stdf(self):
+        """Open a mini-GUI showing STDF files in the local FTDC folder with integrity status."""
+        from tkinter import messagebox
+        from optimized.stdf_fetcher import LOCAL_DEST_BASE, STDF_EXTENSIONS
+
+        lot_id_val = self.lot_id_var.get().strip().upper()
+        if not lot_id_val:
+            messagebox.showwarning(
+                "Check STDF",
+                "Please enter a Lot ID first.",
+                parent=self.root,
+            )
+            return
+
+        folder_path = os.path.join(LOCAL_DEST_BASE, lot_id_val)
+        if not os.path.isdir(folder_path):
+            messagebox.showwarning(
+                "Check STDF",
+                f"No STDF folder found for Lot ID '{lot_id_val}'.\n\n"
+                f"Expected path: {folder_path}\n\n"
+                f"Please use 'Get STDF' first to fetch the files.",
+                parent=self.root,
+            )
+            return
+
+        stdf_files = [
+            f for f in os.listdir(folder_path)
+            if os.path.isfile(os.path.join(folder_path, f))
+            and os.path.splitext(f)[1].lower() in STDF_EXTENSIONS
+        ]
+        if not stdf_files:
+            messagebox.showwarning(
+                "Check STDF",
+                f"No STDF files found in:\n{folder_path}",
+                parent=self.root,
+            )
+            return
+
+        stdf_files.sort(key=str.casefold)
+        self._open_check_stdf_window(lot_id_val, folder_path, stdf_files)
+
+    def _open_check_stdf_window(
+        self, lot_id: str, folder_path: str, files: List[str]
+    ):
+        """Build the Check STDF mini-GUI and kick off concurrent MRR/PCR parsing."""
+        import tkinter as tk
+        from tkinter import messagebox
+        from optimized.stdf_parser import parse_check_summary
+
+        win = tk.Toplevel(self.root)
+        win.title(f"Check STDF \u2014 {lot_id}")
+        win.geometry("950x480")
+        win.minsize(850, 350)
+        win.transient(self.root)
+
+        container = self.ttk.Frame(win, padding=10)
+        container.pack(fill="both", expand=True)
+        container.columnconfigure(0, weight=1)
+        container.rowconfigure(1, weight=1)
+
+        # ── Path label ─────────────────────────────────────────────────────
+        self.ttk.Label(
+            container,
+            text=f"STDF Files in: {folder_path}",
+            font=("Segoe UI", 9),
+        ).grid(row=0, column=0, sticky="w", pady=(0, 6))
+
+        # ── List area (header + scrollable canvas) ─────────────────────────
+        list_frame = self.ttk.Frame(container)
+        list_frame.grid(row=1, column=0, sticky="nsew")
+        list_frame.columnconfigure(0, weight=1)
+        list_frame.rowconfigure(1, weight=1)
+        col_weights = [4, 1, 1, 1, 2]
+        header_texts = ["File Name", "Total Parts", "Tested Good", "Status", "Action"]
+
+        # ── Column header row ──────────────────────────────────────────────
+        header_frame = tk.Frame(list_frame, bg="#D0D0D0")
+        header_frame.grid(row=0, column=0, sticky="ew")
+        for ci, (txt, wt) in enumerate(zip(header_texts, col_weights)):
+            header_frame.columnconfigure(ci, weight=wt, uniform="col")
+            align = "w" if ci == 0 else "center"
+            px = 8 if ci == 0 else 4
+            tk.Label(
+                header_frame, text=txt,
+                font=("Segoe UI", 9, "bold"), bg="#E0E0E0",
+                anchor=align, padx=px, pady=4,
+            ).grid(row=0, column=ci, sticky="nsew", padx=(0, 1), pady=(0, 1))
+
+        # ── Scrollable canvas ──────────────────────────────────────────────
+        canvas = tk.Canvas(
+            list_frame, bg="white", highlightthickness=0, borderwidth=0,
+        )
+        canvas.grid(row=1, column=0, sticky="nsew")
+        v_scroll = self.ttk.Scrollbar(
+            list_frame, orient="vertical", command=canvas.yview,
+        )
+        v_scroll.grid(row=1, column=1, sticky="ns")
+        canvas.configure(yscrollcommand=v_scroll.set)
+
+        inner = tk.Frame(canvas, bg="#D0D0D0")
+        canvas_win_id = canvas.create_window((0, 0), window=inner, anchor="nw")
+
+        def _on_canvas_cfg(event):
+            canvas.itemconfig(canvas_win_id, width=event.width)
+        canvas.bind("<Configure>", _on_canvas_cfg)
+
+        def _on_inner_cfg(_event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        inner.bind("<Configure>", _on_inner_cfg)
+
+        # Mouse-wheel scrolling (scoped to canvas hover)
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _bind_mw(_event):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        def _unbind_mw(_event):
+            canvas.unbind_all("<MouseWheel>")
+
+        canvas.bind("<Enter>", _bind_mw)
+        canvas.bind("<Leave>", _unbind_mw)
+
+        for ci, wt in enumerate(col_weights):
+            inner.columnconfigure(ci, weight=wt, uniform="col")
+
+        # ── Build data rows ────────────────────────────────────────────────
+        cell_font = ("Segoe UI", 9)
+        row_widgets: Dict[str, Dict] = {}
+
+        for ri, filename in enumerate(files):
+            bg = "#FFFFFF" if ri % 2 == 0 else "#F7F7F7"
+            filepath_full = os.path.join(folder_path, filename)
+
+            # col 0 — File Name
+            fn_lbl = tk.Label(
+                inner, text=filename, font=cell_font, bg=bg,
+                anchor="w", padx=8, pady=3,
+            )
+            fn_lbl.grid(row=ri, column=0, sticky="nsew", padx=(0, 1), pady=(0, 1))
+
+            # col 1 — Total Parts
+            tp_lbl = tk.Label(
+                inner, text="--", font=cell_font, bg=bg,
+                anchor="center", padx=4, pady=3,
+            )
+            tp_lbl.grid(row=ri, column=1, sticky="nsew", padx=(0, 1), pady=(0, 1))
+
+            # col 2 — Tested Good
+            tg_lbl = tk.Label(
+                inner, text="--", font=cell_font, bg=bg,
+                anchor="center", padx=4, pady=3,
+            )
+            tg_lbl.grid(row=ri, column=2, sticky="nsew", padx=(0, 1), pady=(0, 1))
+
+            # col 3 — Status (progress bar + label centered)
+            st_frame = tk.Frame(inner, bg=bg)
+            st_frame.grid(row=ri, column=3, sticky="nsew", padx=(0, 1), pady=(0, 1))
+            st_frame.columnconfigure(0, weight=1)
+            st_frame.rowconfigure(0, weight=1)
+
+            st_inner = tk.Frame(st_frame, bg=bg)
+            st_inner.grid(row=0, column=0, sticky="")
+
+            pbar = self.ttk.Progressbar(
+                st_inner, mode="indeterminate", length=40,
+            )
+            pbar.pack(side="left", padx=(0, 4))
+            pbar.start(15)
+
+            st_lbl = tk.Label(
+                st_inner, text="Checking…", font=cell_font,
+                bg=bg, fg="#888888",
+            )
+            st_lbl.pack(side="left")
+
+            # col 4 — Action (Open + Load + Delete centered as a singular object)
+            act_frame = tk.Frame(inner, bg=bg)
+            act_frame.grid(row=ri, column=4, sticky="nsew", padx=(0, 1), pady=(0, 1))
+            act_frame.columnconfigure(0, weight=1)
+            act_frame.rowconfigure(0, weight=1)
+
+            act_inner = tk.Frame(act_frame, bg=bg)
+            act_inner.grid(row=0, column=0, sticky="")
+
+            rw: Dict[str, Any] = {
+                "fn_lbl": fn_lbl, "tp_lbl": tp_lbl, "tg_lbl": tg_lbl,
+                "st_lbl": st_lbl, "st_frame": st_frame, "pbar": pbar,
+                "act_frame": act_frame,
+                "open_btn": None, "load_btn": None, "del_btn": None,
+                "bg": bg, "filepath": filepath_full,
+            }
+            row_widgets[filename] = rw
+
+            # ── Button factories ──────────────────────────────────────
+            def _make_open(fp):
+                def _cmd():
+                    try:
+                        os.startfile(fp)
+                    except OSError as exc:
+                        messagebox.showerror(
+                            "Open Failed", str(exc), parent=win,
+                        )
+                return _cmd
+
+            def _make_load(fn, fp):
+                def _cmd():
+                    # Normalize path to forward slashes to match filedialog format
+                    norm_fp = os.path.abspath(fp).replace("\\", "/")
+                    name_lower = fn.lower()
+                    if "_e_" in name_lower:
+                        target = "FIRST PASS"
+                    elif re.search(r"rj\d+_w", name_lower):
+                        target = "RETEST"
+                    elif re.search(r"rj\d+_q", name_lower) or "_q" in name_lower:
+                        target = "QC"
+                    else:
+                        target = self._prompt_panel_choice(win)
+                        if target is None:
+                            return
+                    if norm_fp not in self.panel_files[target]:
+                        self.panel_files[target].append(norm_fp)
+                        self.refresh_file_list(target)
+                        self.log(f"Loaded '{fn}' into {target} panel.")
+                    else:
+                        self.log(f"'{fn}' already in {target} panel.")
+                return _cmd
+
+            def _make_delete(fn, fp, rw_ref):
+                def _cmd():
+                    if not messagebox.askyesno(
+                        "Delete File",
+                        f"Are you sure you want to delete:\n\n{fn}",
+                        parent=win,
+                    ):
+                        return
+                    try:
+                        os.remove(fp)
+                        for lbl in (rw_ref["fn_lbl"], rw_ref["tp_lbl"],
+                                    rw_ref["tg_lbl"]):
+                            lbl.configure(fg="#AAAAAA")
+                        rw_ref["st_lbl"].configure(text="Deleted", fg="#AAAAAA")
+                        rw_ref["open_btn"].configure(state="disabled")
+                        rw_ref["load_btn"].configure(state="disabled")
+                        rw_ref["del_btn"].configure(state="disabled")
+                        self.log(f"Deleted: {fn}")
+                    except OSError as exc:
+                        messagebox.showerror(
+                            "Delete Failed", str(exc), parent=win,
+                        )
+                return _cmd
+
+            ob = self.ttk.Button(
+                act_inner, text="Open", width=7,
+                command=_make_open(filepath_full),
+            )
+            ob.pack(side="left", padx=(4, 2), pady=2)
+            rw["open_btn"] = ob
+
+            lb = self.ttk.Button(
+                act_inner, text="Load", width=7,
+                command=_make_load(filename, filepath_full),
+            )
+            lb.pack(side="left", padx=2, pady=2)
+            rw["load_btn"] = lb
+
+            db = self.ttk.Button(
+                act_inner, text="Delete", width=7,
+                command=_make_delete(filename, filepath_full, rw),
+            )
+            db.pack(side="left", padx=(2, 4), pady=2)
+            rw["del_btn"] = db
+
+        # ── Close button ───────────────────────────────────────────────────
+        btn_frame = self.ttk.Frame(container)
+        btn_frame.grid(row=2, column=0, sticky="e", pady=(8, 0))
+        self.ttk.Button(
+            btn_frame, text="Close", command=win.destroy,
+        ).pack(side="right")
+
+        # ── Concurrent MRR + PCR parsing ───────────────────────────────────
+        _STDF_MISSING = 4294967295  # 0xFFFFFFFF — STDF "missing value"
+
+        def _parse_file(filename: str):
+            """Parse MRR + PCR and return (filename, status, tag, part_cnt, good_cnt)."""
+            fpath = os.path.join(folder_path, filename)
+            try:
+                summary = parse_check_summary(fpath)
+                mrr = summary.get("mrr")
+                pcr = summary.get("pcr")
+
+                # Integrity status from MRR FINISH_T
+                if mrr is not None:
+                    ft = mrr.get("FINISH_T")
+                    if isinstance(ft, int) and ft > 0:
+                        status, tag = "Completed", "completed"
+                    elif isinstance(ft, str) and ft.strip():
+                        status, tag = "Completed", "completed"
+                    else:
+                        status, tag = "Corrupted", "corrupted"
+                else:
+                    status, tag = "Corrupted", "corrupted"
+
+                # PCR counts
+                if pcr is not None:
+                    pc = pcr.get("PART_CNT")
+                    gc = pcr.get("GOOD_CNT")
+                    pc_str = str(pc) if pc is not None and pc != _STDF_MISSING else "N/A"
+                    gc_str = str(gc) if gc is not None and gc != _STDF_MISSING else "N/A"
+                else:
+                    pc_str = gc_str = "N/A"
+
+                return filename, status, tag, pc_str, gc_str
+            except Exception:
+                return filename, "Corrupted", "corrupted", "N/A", "N/A"
+
+        def _on_future_done(future):
+            try:
+                fname, status, tag, pc_str, gc_str = future.result()
+            except Exception:
+                return
+            widgets = row_widgets.get(fname)
+            if widgets is None:
+                return
+            fg = "#008000" if tag == "completed" else "#C00000"
+
+            def _update():
+                try:
+                    if not win.winfo_exists():
+                        return
+                    widgets["pbar"].stop()
+                    widgets["pbar"].pack_forget()
+                    widgets["st_lbl"].configure(text=status, fg=fg)
+                    widgets["tp_lbl"].configure(text=pc_str)
+                    widgets["tg_lbl"].configure(text=gc_str)
+                except Exception:
+                    pass
+
+            self.root.after(0, _update)
+
+        max_workers = min(len(files), os.cpu_count() or 4)
+        executor = ThreadPoolExecutor(max_workers=max_workers)
+        for filename in files:
+            future = executor.submit(_parse_file, filename)
+            future.add_done_callback(_on_future_done)
+
+        # Ensure the executor shuts down when the window is closed
+        def _on_win_close():
+            try:
+                canvas.unbind_all("<MouseWheel>")
+            except Exception:
+                pass
+            executor.shutdown(wait=False, cancel_futures=True)
+            win.destroy()
+
+        win.protocol("WM_DELETE_WINDOW", _on_win_close)
 
     # ── Get STDF ───────────────────────────────────────────────────────────
 
