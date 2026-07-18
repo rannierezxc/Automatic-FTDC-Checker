@@ -16,12 +16,17 @@ Onefile:
 """
 import json
 import os
+import re
 import shutil
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 LOCAL_DEST_BASE = r"C:\FTDC"
-STDF_EXTENSIONS = frozenset({".stdf", ".std", ".bak", ".old"})
+STDF_EXTENSIONS = frozenset({".stdf", ".std", ".bak", ".old", ".stdf_open", ".std_open"})
+
+# Files whose names match any of these patterns (case-insensitive) are excluded
+# from Get STDF results: white-slug variants, correlation variants, and QC/verification variants.
+_EXCLUDE_FILENAME_RE = re.compile(r"whs|white|corr|corel|qcf|qcver|ver", re.IGNORECASE)
 
 # Tester specific base directories
 TESTER_NETWORK_PATHS = {
@@ -175,12 +180,10 @@ def search_stdf_files(
     Search the network directory for STDF files whose filename
     contains the lot_id (case-insensitive).
 
-    If the tester type is LTX (network_base matches the LTX network path),
-    it searches directly in the network_base directory.
-    Otherwise (e.g. V93K), it searches within each device subfolder.
-
-    Returns a sorted list of full file paths that matched.
+    Uses a ThreadPoolExecutor to parallelize directory scanning over high-latency network paths.
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     lot_id_lower = lot_id.strip().lower()
     if not lot_id_lower:
         raise ValueError("Lot ID must not be empty.")
@@ -211,18 +214,12 @@ def search_stdf_files(
 
     total_dirs = max(len(search_dirs), 1)
 
-    for i, search_dir in enumerate(search_dirs):
+    def scan_single_dir(search_dir: str) -> List[str]:
+        res = []
         _emit_log(f"Searching: {search_dir}", logger)
-
-        if progress_callback:
-            frac = 0.10 + 0.55 * (i / total_dirs)
-            dir_name = os.path.basename(search_dir)
-            progress_callback(frac, f"Scanning {dir_name}…")
-
         if not os.path.isdir(search_dir):
             _emit_log(f"  Directory not found or inaccessible: {search_dir}", logger)
-            continue
-
+            return res
         try:
             for entry in os.scandir(search_dir):
                 if not entry.is_file():
@@ -232,11 +229,35 @@ def search_stdf_files(
                 if ext not in STDF_EXTENSIONS:
                     continue
                 if lot_id_lower in name_lower:
-                    found_files.append(entry.path)
+                    if _EXCLUDE_FILENAME_RE.search(name_lower):
+                        _emit_log(f"  Skipped (excluded pattern): {entry.name}", logger)
+                        continue
+                    res.append(entry.path)
         except PermissionError as exc:
             _emit_log(f"  Permission denied: {search_dir} — {exc}", logger)
         except OSError as exc:
             _emit_log(f"  Error scanning directory: {exc}", logger)
+        return res
+
+    max_workers = min(len(search_dirs), 8)
+    if max_workers > 1:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_dir = {executor.submit(scan_single_dir, d): d for d in search_dirs}
+            completed_dirs = 0
+            for future in as_completed(future_to_dir):
+                completed_dirs += 1
+                if progress_callback:
+                    frac = 0.10 + 0.55 * (completed_dirs / total_dirs)
+                    d_name = os.path.basename(future_to_dir[future])
+                    progress_callback(frac, f"Scanned {d_name}…")
+                found_files.extend(future.result())
+    else:
+        for i, search_dir in enumerate(search_dirs):
+            if progress_callback:
+                frac = 0.10 + 0.55 * (i / total_dirs)
+                dir_name = os.path.basename(search_dir)
+                progress_callback(frac, f"Scanning {dir_name}…")
+            found_files.extend(scan_single_dir(search_dir))
 
     if progress_callback:
         progress_callback(0.65, f"Found {len(found_files)} file(s)")
@@ -259,8 +280,11 @@ def copy_stdf_files(
     Creates the destination directory if it does not exist.
     Overwrites files that already exist in the destination.
 
-    Returns the absolute path to the destination directory.
+    Uses ThreadPoolExecutor to copy multiple STDF files concurrently to optimize transfer speed.
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import threading
+
     dest_dir = os.path.join(LOCAL_DEST_BASE, lot_id.strip())
     os.makedirs(dest_dir, exist_ok=True)
 
@@ -268,20 +292,39 @@ def copy_stdf_files(
     _emit_log(f"Copying {len(source_paths)} file(s) to: {dest_dir}", logger)
 
     copied = 0
-    for i, src in enumerate(source_paths):
-        filename = os.path.basename(src)
+    copied_lock = threading.Lock()
+
+    def copy_one(src_path: str) -> Tuple[bool, str]:
+        nonlocal copied
+        filename = os.path.basename(src_path)
         dest_path = os.path.join(dest_dir, filename)
-
-        if progress_callback:
-            frac = 0.70 + 0.25 * (i / total)
-            progress_callback(frac, f"Copying {i + 1}/{len(source_paths)}: {filename}")
-
         try:
-            shutil.copy2(src, dest_path)
-            copied += 1
+            shutil.copy2(src_path, dest_path)
+            with copied_lock:
+                copied += 1
             _emit_log(f"  Copied: {filename}", logger)
+            return True, filename
         except (OSError, shutil.SameFileError) as exc:
             _emit_log(f"  FAILED to copy {filename}: {exc}", logger)
+            return False, filename
+
+    # Copy files in parallel (up to 4 concurrently to utilize network bandwidth without saturating disk I/O)
+    max_workers = min(len(source_paths), 4)
+    if max_workers > 1:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(copy_one, src) for src in source_paths]
+            for idx, future in enumerate(as_completed(futures)):
+                success, filename = future.result()
+                if progress_callback:
+                    frac = 0.70 + 0.25 * ((idx + 1) / total)
+                    progress_callback(frac, f"Copied {idx + 1}/{total}: {filename}")
+    else:
+        for idx, src in enumerate(source_paths):
+            filename = os.path.basename(src)
+            if progress_callback:
+                frac = 0.70 + 0.25 * ((idx + 1) / total)
+                progress_callback(frac, f"Copying {idx + 1}/{total}: {filename}")
+            copy_one(src)
 
     if progress_callback:
         progress_callback(0.96, "Copy complete")

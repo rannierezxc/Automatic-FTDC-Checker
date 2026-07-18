@@ -15,6 +15,8 @@ Key optimizations:
 from optimized.stdf_parser import (
     STDFReader,
     parse_stdf_file,
+    parse_mrr_only,
+    parse_check_summary,
     scan_test_list,
     parse_filter_values,
     sort_paths_by_modified,

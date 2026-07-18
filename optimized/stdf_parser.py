@@ -26,13 +26,14 @@ ByteProgressFunc = Optional[Callable[[int, int], None]]
 _FAR = (0, 10)
 _MIR = (1, 10)
 _MRR = (1, 20)
+_PCR = (1, 30)
 _SDR = (1, 80)
 _PIR = (5, 10)
 _PRR = (5, 20)
 _PTR = (15, 10)
 
 RECORD_TYPES = {
-    _FAR: "FAR", _MIR: "MIR", _MRR: "MRR", _SDR: "SDR",
+    _FAR: "FAR", _MIR: "MIR", _MRR: "MRR", _PCR: "PCR", _SDR: "SDR",
     _PIR: "PIR", _PRR: "PRR", _PTR: "PTR",
 }
 
@@ -304,6 +305,23 @@ class STDFReader:
             pass
         if fields.get("FINISH_T") not in (None, ""):
             fields["FINISH_T_TEXT"] = _format_stdf_timestamp(fields.get("FINISH_T"))
+        return fields or None
+
+    def parse_pcr_compact(self, data, start=0, end=None):
+        """Parse a Part Count Record (PCR)."""
+        fields = {}
+        offset = start
+        end = self._limit_for(data, end)
+        try:
+            fields["HEAD_NUM"], offset = self._read_u1_at(data, offset, end)
+            fields["SITE_NUM"], offset = self._read_u1_at(data, offset, end)
+            fields["PART_CNT"], offset = self._read_u4_at(data, offset, end)
+            fields["RTST_CNT"], offset = self._read_u4_at(data, offset, end)
+            fields["ABRT_CNT"], offset = self._read_u4_at(data, offset, end)
+            fields["GOOD_CNT"], offset = self._read_u4_at(data, offset, end)
+            fields["FUNC_CNT"], offset = self._read_u4_at(data, offset, end)
+        except (IndexError, struct.error):
+            pass
         return fields or None
 
     def parse_sdr_compact(self, data, start=0, end=None):
@@ -628,3 +646,91 @@ def parse_stdf_file(
         "PARTS": filtered_parts, "RESULTS": filtered_results,
         "TEST_META": test_meta, "MIR": mir_info, "MRR": mrr_info, "SDR": sdr_records,
     }, counts, skipped_ptr
+
+
+def parse_mrr_only(filepath: str) -> Optional[Dict]:
+    """Parse only the MRR record from an STDF file for fast integrity checking.
+
+    Scans records sequentially until the MRR (type=1, sub=20) is found, then
+    returns its fields dict. Utilizes a fast memory-mapped loop to avoid generator overhead.
+    """
+    try:
+        with STDFReader(filepath) as reader:
+            mm = reader._mm
+            file_size = reader.file_size
+            if mm is not None:
+                if file_size >= 5 and mm[2] == 0 and mm[3] == 10:
+                    reader.endian = ">" if mm[4] == 1 else "<"
+                    reader._rebuild_structs()
+                endian = reader.endian
+                s_H_unpack = struct.Struct(f"{endian}H").unpack_from
+                offset = 0
+                while offset + 4 <= file_size:
+                    rec_len = s_H_unpack(mm, offset)[0]
+                    rec_typ = mm[offset + 2]
+                    rec_sub = mm[offset + 3]
+                    body_start = offset + 4
+                    body_end = body_start + rec_len
+                    if body_end > file_size:
+                        break
+                    if rec_typ == 1 and rec_sub == 20:  # MRR
+                        return reader.parse_mrr_compact(mm, start=body_start, end=body_end)
+                    offset = body_end
+            else:
+                for rec_typ, rec_sub, data, start, end in reader.record_spans():
+                    if data is None:
+                        continue
+                    if rec_typ == 1 and rec_sub == 20:  # MRR
+                        return reader.parse_mrr_compact(data, start=start, end=end)
+    except Exception:
+        return None
+    return None
+
+
+def parse_check_summary(filepath: str) -> Dict:
+    """Parse MRR and summary PCR from an STDF file for integrity checking.
+
+    Scans the entire file and returns a dict with MRR and PCR.
+    Uses a fast custom loop to avoid generator yield overhead.
+    """
+    result: Dict = {"mrr": None, "pcr": None}
+    try:
+        with STDFReader(filepath) as reader:
+            mm = reader._mm
+            file_size = reader.file_size
+            if mm is not None:
+                if file_size >= 5 and mm[2] == 0 and mm[3] == 10:
+                    reader.endian = ">" if mm[4] == 1 else "<"
+                    reader._rebuild_structs()
+                endian = reader.endian
+                s_H_unpack = struct.Struct(f"{endian}H").unpack_from
+                offset = 0
+                while offset + 4 <= file_size:
+                    rec_len = s_H_unpack(mm, offset)[0]
+                    rec_typ = mm[offset + 2]
+                    rec_sub = mm[offset + 3]
+                    body_start = offset + 4
+                    body_end = body_start + rec_len
+                    if body_end > file_size:
+                        break
+                    if rec_typ == 1:
+                        if rec_sub == 20 and result["mrr"] is None:  # MRR
+                            result["mrr"] = reader.parse_mrr_compact(mm, start=body_start, end=body_end)
+                        elif rec_sub == 30:  # PCR
+                            pcr = reader.parse_pcr_compact(mm, start=body_start, end=body_end)
+                            if pcr and pcr.get("HEAD_NUM") == 255 and pcr.get("SITE_NUM") == 0:
+                                result["pcr"] = pcr
+                    offset = body_end
+            else:
+                for rec_typ, rec_sub, data, start, end in reader.record_spans():
+                    if data is None or rec_typ != 1:
+                        continue
+                    if rec_sub == 20 and result["mrr"] is None:  # MRR
+                        result["mrr"] = reader.parse_mrr_compact(data, start=start, end=end)
+                    elif rec_sub == 30:  # PCR
+                        pcr = reader.parse_pcr_compact(data, start=start, end=end)
+                        if pcr and pcr.get("HEAD_NUM") == 255 and pcr.get("SITE_NUM") == 0:
+                            result["pcr"] = pcr
+    except Exception:
+        pass
+    return result
