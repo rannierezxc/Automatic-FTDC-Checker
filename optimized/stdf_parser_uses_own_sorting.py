@@ -45,48 +45,16 @@ def _count_files_text(count: int) -> str:
     return f"{count} file" if count == 1 else f"{count} files"
 
 
-def _gui_path_filename_sort_key(path: str):
-    """Return optimized.gui_app._path_filename_sort_key(path) lazily.
-
-    The actual timestamp ordering rule is intentionally owned by gui_app.py so
-    the GUI panel order and backend parsing order cannot drift apart. The
-    import is lazy to avoid circular-import issues while gui_app imports this
-    parser module during application startup.
-    """
+def _path_modified_sort_key(path: str) -> Tuple[float, str]:
     try:
-        from optimized.gui_app import _path_filename_sort_key
-    except Exception as exc:
-        # Fallback only for the case where gui_app.py is executed as __main__
-        # instead of imported as optimized.gui_app.
-        import sys
-        main_key = getattr(sys.modules.get("__main__"), "_path_filename_sort_key", None)
-        if callable(main_key):
-            return main_key(path)
-        raise RuntimeError(
-            "Unable to import optimized.gui_app._path_filename_sort_key. "
-            "Run the application as the optimized package or ensure gui_app.py "
-            "is available before sorting STDF paths."
-        ) from exc
-    return _path_filename_sort_key(path)
-
-
-def _path_modified_sort_key(path: str):
-    """Backward-compatible alias for older callers.
-
-    Historical name retained, but the sort key now delegates to
-    optimized.gui_app._path_filename_sort_key instead of using Date Modified.
-    """
-    return _gui_path_filename_sort_key(path)
-
-
-def sort_paths_by_filename_timestamp(input_paths: Sequence[str]) -> List[str]:
-    """Sort STDF paths using the shared GUI timestamp-from-filename rule."""
-    return sorted(list(input_paths or []), key=_gui_path_filename_sort_key)
+        modified_time = os.path.getmtime(path)
+    except OSError:
+        modified_time = float("inf")
+    return modified_time, os.path.basename(path).lower()
 
 
 def sort_paths_by_modified(input_paths: Sequence[str]) -> List[str]:
-    """Backward-compatible wrapper using the shared GUI timestamp sort key."""
-    return sort_paths_by_filename_timestamp(input_paths)
+    return sorted(list(input_paths or []), key=_path_modified_sort_key)
 
 
 def _format_stdf_timestamp(value) -> str:

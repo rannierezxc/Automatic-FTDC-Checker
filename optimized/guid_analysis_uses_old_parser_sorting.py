@@ -21,7 +21,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from optimized.stdf_parser import (
     ByteProgressFunc, LogFunc, ProgressFunc,
-    _count_files_text, _emit_log, sort_paths_by_filename_timestamp,
+    _count_files_text, _emit_log, sort_paths_by_modified,
     parse_stdf_file,
 )
 
@@ -314,11 +314,9 @@ def analyze_guid_data(
     first_pass_actual_good_qty = str(first_pass_actual_good_qty or "").strip()
     total_actual_good_qty = str(total_actual_good_qty or "").strip()
 
-    # Align backend parsing order with gui_app.py's single source of truth:
-    # optimized.gui_app._path_filename_sort_key, via stdf_parser.sort_paths_by_filename_timestamp().
-    first_pass_paths = sort_paths_by_filename_timestamp(first_pass_paths)
-    retest_paths = sort_paths_by_filename_timestamp(retest_paths)
-    qc_paths = sort_paths_by_filename_timestamp(qc_paths or [])
+    first_pass_paths = sort_paths_by_modified(first_pass_paths)
+    retest_paths = sort_paths_by_modified(retest_paths)
+    qc_paths = sort_paths_by_modified(qc_paths or [])
 
     if not first_pass_paths:
         raise ValueError("Please select at least one FIRST PASS STDF file.")
