@@ -32,16 +32,49 @@ from optimized.excel_output import (
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 icon_path = os.path.join(BASE_DIR, 'FTDC_Checker_icon.ico')
+_FILENAME_TIMESTAMP_RE = re.compile(r"\d{14}")
 
-def _path_filename_sort_key(path: str) -> Tuple[str, str]:
-    """Return a deterministic ascending filename sort key.
 
-    Files are ordered primarily by their base filename, case-insensitively.
-    The absolute path is used only as a tie-breaker when two selected files
-    from different folders have the same filename.
+def _extract_first_filename_timestamp(path: str) -> str:
+    """Return the first valid YYYYMMDDHHMMSS timestamp found in the filename.
+
+    Some STDF files can represent the same datalog using different naming
+    conventions, for example:
+      - mmt-271300725.900_e_20260714082531_6140_2607142300.std.old
+      - ATA5831_MMT-271300725.900_1__20260714082531.std
+
+    Plain filename sorting puts the ATA-prefixed version first because of
+    lexicographical order. This helper extracts the first 14-digit timestamp
+    from left to right and validates it as YYYYMMDDHHMMSS, so both naming
+    conventions are arranged by the actual datalog timestamp instead.
+    """
+    filename = os.path.basename(os.path.abspath(path))
+    for match in _FILENAME_TIMESTAMP_RE.finditer(filename):
+        timestamp = match.group(0)
+        try:
+            datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+        except ValueError:
+            continue
+        return timestamp
+    return ""
+
+
+def _path_filename_sort_key(path: str) -> Tuple[int, str, str, str]:
+    """Return a deterministic ascending datalog sort key.
+
+    Files are ordered primarily by the first valid YYYYMMDDHHMMSS timestamp
+    found in the filename, scanning from left to right. The base filename and
+    absolute path are used only as deterministic tie-breakers.
+
+    Files with no valid 14-digit timestamp fall back behind timestamped files
+    and are then ordered by filename, case-insensitively.
     """
     abs_path = os.path.abspath(path)
-    return os.path.basename(abs_path).casefold(), abs_path.casefold()
+    base_name = os.path.basename(abs_path).casefold()
+    timestamp = _extract_first_filename_timestamp(abs_path)
+    if timestamp:
+        return 0, timestamp, base_name, abs_path.casefold()
+    return 1, base_name, "", abs_path.casefold()
 
 
 def _merge_test_rows(rows):
@@ -374,7 +407,7 @@ class STDFGuidCheckerApp:
         self.panel_files[panel].sort(key=self._file_name_sort_key)
 
     # Backwards-compatible aliases for any internal/older calls.
-    # Behavior is intentionally filename ascending, not Date Modified.
+    # Behavior is intentionally timestamp ascending from filename, not Date Modified.
     def _file_modified_sort_key(self, path: str) -> Tuple[str, str]:
         return self._file_name_sort_key(path)
 
@@ -1069,7 +1102,7 @@ class STDFGuidCheckerApp:
             )
             return
 
-        stdf_files.sort(key=str.casefold)
+        stdf_files.sort(key=lambda filename: self._file_name_sort_key(os.path.join(folder_path, filename)))
         self._open_check_stdf_window(lot_id_val, folder_path, stdf_files)
 
     def _open_check_stdf_window(
@@ -1975,7 +2008,8 @@ class STDFGuidCheckerApp:
                 )
                 return
 
-        # Keep the visual file order and the parsing order aligned: Filename ascending.
+        # Keep the visual file order and the parsing order aligned:
+        # timestamp ascending from the first valid YYYYMMDDHHMMSS in each filename.
         self.refresh_all_file_lists()
         first_pass_paths = list(self.panel_files["FIRST PASS"])
         retest_paths = list(self.panel_files["RETEST"])
@@ -2005,7 +2039,7 @@ class STDFGuidCheckerApp:
         self.log(f"RETEST files: {len(retest_paths)}")
         self.log(f"QC files: {len(qc_paths)}")
         self.log(f"Manual filter: {sorted(manual_filter_tests) if manual_filter_tests else 'Disabled / not used'}")
-        self.log("File parsing order: Filename ascending within each panel.")
+        self.log("File parsing order: Timestamp ascending within each panel (first valid YYYYMMDDHHMMSS in filename; filename fallback).")
         self.update_progress(0.0, "Starting analysis")
         self._set_running(True)
 
