@@ -1276,9 +1276,9 @@ class STDFGuidCheckerApp:
                     name_lower = fn.lower()
                     if "_e_" in name_lower:
                         target = "FIRST PASS"
-                    elif re.search(r"rj\d+_w", name_lower):
+                    elif re.search(r"rj\d+_w", name_lower) or re.search(r"w_rj\d+", name_lower):
                         target = "RETEST"
-                    elif re.search(r"rj\d+_q", name_lower) or "_q" in name_lower:
+                    elif re.search(r"rj\d+_q", name_lower) or "_q_" in name_lower:
                         target = "QC"
                     else:
                         target = self._prompt_panel_choice(win)
