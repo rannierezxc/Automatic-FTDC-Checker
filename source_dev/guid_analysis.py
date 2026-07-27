@@ -177,7 +177,6 @@ def parse_panel_wxy_parts(
     """
     rows: List[Dict[str, object]] = []
     total_counts: Dict[str, int] = defaultdict(int)
-    total_skipped_ptr = 0
     _file_sizes: List[int] = []
     for _p in input_paths:
         try:
@@ -231,11 +230,10 @@ def parse_panel_wxy_parts(
             fraction = progress_start + span * ((base + min(max(current_bytes, 0), total_for_file)) / total_bytes)
             progress_callback(fraction, status_text)
 
-        parsed, counts, skipped_ptr = parse_stdf_file(
+        parsed, counts, _ = parse_stdf_file(
             input_path=input_path, filter_tests=filter_tests,
             verbose=False, logger=logger, progress_callback=file_progress,
         )
-        total_skipped_ptr += skipped_ptr
         for rec_name, count in counts.items():
             total_counts[rec_name] += count
 
@@ -285,7 +283,7 @@ def parse_panel_wxy_parts(
     return {
         "panel": panel_name, "rows": rows, "total_parts": len(rows),
         "pass_count": pass_count, "fail_count": fail_count, "missing_wxy": missing_wxy,
-        "counts": dict(total_counts), "skipped_ptr": total_skipped_ptr,
+        "counts": dict(total_counts), "skipped_ptr": 0,
     }
 
 

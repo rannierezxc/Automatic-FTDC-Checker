@@ -156,16 +156,58 @@ class STDFReader:
         return self._mm
 
     def __enter__(self):
-        self._file = open(self.filepath, "rb")
-        try:
-            self.file_size = os.path.getsize(self.filepath)
-        except OSError:
-            self.file_size = 0
-        if self.file_size > 0:
+        self._file = None
+        self._os_fd = None
+        self._win_handle = None
+
+        if os.name == "nt":
             try:
-                self._mm = mmap.mmap(self._file.fileno(), 0, access=mmap.ACCESS_READ)
-            except (ValueError, OSError):
-                self._mm = None
+                import ctypes, msvcrt
+                # FILE_FLAG_SEQUENTIAL_SCAN (0x08000000) tells Windows Kernel Cache Manager
+                # to aggressively pre-fetch contiguous disk pages into RAM via DMA ahead of CPU page faults.
+                GENERIC_READ = 0x80000000
+                FILE_SHARE_READ = 0x00000001
+                OPEN_EXISTING = 3
+                FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000
+
+                handle = ctypes.windll.kernel32.CreateFileW(
+                    os.path.abspath(self.filepath),
+                    GENERIC_READ,
+                    FILE_SHARE_READ,
+                    None,
+                    OPEN_EXISTING,
+                    FILE_FLAG_SEQUENTIAL_SCAN,
+                    None
+                )
+                if handle != -1 and handle != 0:
+                    self._win_handle = handle
+                    self._os_fd = msvcrt.open_osfhandle(handle, 0)
+            except Exception:
+                self._win_handle = None
+                self._os_fd = None
+
+        if self._os_fd is not None:
+            try:
+                self.file_size = os.path.getsize(self.filepath)
+            except OSError:
+                self.file_size = 0
+            if self.file_size > 0:
+                try:
+                    self._mm = mmap.mmap(self._os_fd, 0, access=mmap.ACCESS_READ)
+                except (ValueError, OSError):
+                    self._mm = None
+        else:
+            self._file = open(self.filepath, "rb")
+            try:
+                self.file_size = os.path.getsize(self.filepath)
+            except OSError:
+                self.file_size = 0
+            if self.file_size > 0:
+                try:
+                    self._mm = mmap.mmap(self._file.fileno(), 0, access=mmap.ACCESS_READ)
+                except (ValueError, OSError):
+                    self._mm = None
+
         self._last_progress_bytes = -1
         self._cn_cache = {}
         return self
@@ -174,6 +216,12 @@ class STDFReader:
         if self._mm is not None:
             self._mm.close()
             self._mm = None
+        if self._os_fd is not None:
+            try:
+                os.close(self._os_fd)
+            except OSError:
+                pass
+            self._os_fd = None
         if self._file:
             self._file.close()
             self._file = None
@@ -193,7 +241,8 @@ class STDFReader:
                 if len(header) < 4:
                     break
                 rec_len = struct.unpack("<H", header[0:2])[0]
-                rec_typ, rec_sub = header[2], header[3]
+                rec_typ = header[2]
+                rec_sub = header[3]
                 body = f.read(rec_len)
                 if len(body) < rec_len:
                     break
@@ -241,7 +290,7 @@ class STDFReader:
                 yield rec_typ, rec_sub, mm, body_start, body_end
                 continue
 
-            # Fast PTR filter skip
+            # Zero-yield PTR filter skip: advance offset directly at C-level without tracking counters
             if rec_typ == 15 and rec_sub == 10 and filter_tests is not None:
                 if rec_len >= 4:
                     if s_I_unpack(mm, body_start)[0] not in filter_tests:
@@ -249,7 +298,6 @@ class STDFReader:
                         if has_cb and offset >= next_p:
                             self._report_progress(offset)
                             next_p = offset + p_step
-                        yield rec_typ, rec_sub, None, 0, 0
                         continue
 
             offset = body_end
@@ -537,35 +585,27 @@ def parse_stdf_file(
     - B9: Inline completion tracking (no post-parse filter)
     - B20: Endian re-captured after FAR detection
     """
-    counts: Dict[str, int] = defaultdict(int)
-    skipped_ptr = 0
     if filter_tests is not None:
         _emit_log(f"Reading STDF : {input_path}", verbose, logger)
-        _emit_log(f"PTR filter   : {sorted(filter_tests)}", verbose, logger)
     else:
         _emit_log(f"Reading STDF : {input_path}  (all PTR tests)", verbose, logger)
 
     parts: List[Dict] = []
     part_results: List[Dict[int, float]] = []
-    test_meta: Dict[int, Dict] = {}
     mir_info: Dict[str, object] = {}
     mrr_info: Dict[str, object] = {}
-    sdr_records: List[Dict[str, object]] = []
     open_slot: Dict[int, int] = {}
 
     with STDFReader(input_path, filter_tests=filter_tests, progress_callback=progress_callback) as reader:
         # Local bindings for hot-path methods
         parse_mir = reader.parse_mir_compact
         parse_mrr = reader.parse_mrr_compact
-        parse_sdr = reader.parse_sdr_compact
         parse_pir = reader.parse_pir_compact
-        parse_ptr = reader.parse_ptr_compact
         parse_prr = reader.parse_prr_compact
         open_slot_get = open_slot.get
         open_slot_pop = open_slot.pop
         parts_append = parts.append
         part_results_append = part_results.append
-        sdr_append = sdr_records.append
 
         endian_captured = False
 
@@ -583,14 +623,9 @@ def parse_stdf_file(
                 s_I = reader._s_I
                 s_f = reader._s_f
 
-            # B4: Check PTR first (most common record by far)
+            # PTR hot path (most common record by far)
             if rec_typ == 15 and rec_sub == 10:
-                counts["PTR"] = counts.get("PTR", 0) + 1
-                if data is None:
-                    skipped_ptr += 1
-                    continue
-                # B1: Inline PTR parsing — no dict creation
-                if end - start >= 12:
+                if data is not None and end - start >= 12:
                     try:
                         test_num = s_I.unpack_from(data, start)[0]
                         head_num = data[start + 4]
@@ -601,18 +636,9 @@ def parse_stdf_file(
                     part_idx = open_slot_get((head_num << 8) | site_num, -1)
                     if 0 <= part_idx < len(part_results):
                         part_results[part_idx][test_num] = result_val
-                    if test_num not in test_meta:
-                        fields = parse_ptr(data, include_meta=True, start=start, end=end)
-                        if fields:
-                            test_meta[test_num] = {"TEST_TXT": fields.get("TEST_TXT", "")}
                 continue
 
             # Non-PTR records (rare)
-            rec_key = (rec_typ, rec_sub)
-            if rec_key not in _KNOWN_RECORDS:
-                continue
-            rec_name = RECORD_TYPES[rec_key]
-            counts[rec_name] = counts.get(rec_name, 0) + 1
             if data is None:
                 continue
 
@@ -650,10 +676,6 @@ def parse_stdf_file(
                         fields = parse_mrr(data, start=start, end=end)
                         if fields:
                             mrr_info.update(fields)
-                elif rec_sub == 80:  # SDR
-                    fields = parse_sdr(data, start=start, end=end)
-                    if fields:
-                        sdr_append(fields)
 
     # B9: Inline filter — no separate _filter_complete_parts() call
     filtered_parts: List[Dict] = []
@@ -669,15 +691,10 @@ def parse_stdf_file(
     if dropped:
         _emit_log(f"Dropped {dropped:,} inferred/incomplete part(s) without PRR.", verbose, logger)
 
-    kept = counts.get("PTR", 0) - skipped_ptr
-    if filter_tests is not None:
-        _emit_log(f"PTR kept     : {kept:,}  /  skipped: {skipped_ptr:,}", verbose, logger)
-    _emit_log(f"Records      : {dict(counts)}", verbose, logger)
-
     return {
         "PARTS": filtered_parts, "RESULTS": filtered_results,
-        "TEST_META": test_meta, "MIR": mir_info, "MRR": mrr_info, "SDR": sdr_records,
-    }, counts, skipped_ptr
+        "TEST_META": {}, "MIR": mir_info, "MRR": mrr_info, "SDR": [],
+    }, {}, 0
 
 
 def parse_mrr_only(filepath: str) -> Optional[Dict]:

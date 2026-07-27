@@ -575,9 +575,38 @@ def search_stdf_files(
 
 # ── File copy ─────────────────────────────────────────────────────────────────
 
-def _fast_copy_file(src: str, dst: str, buffer_size: int = 4 * 1024 * 1024):
-    """Copy file with a 4MB buffer to maximize throughput over Windows SMB3 network shares."""
+def _fast_copy_file(src: str, dst: str, buffer_size: int = 8 * 1024 * 1024):
+    """Copy file optimized for 1GB+ files over Windows SMB3 network shares.
+
+    On Windows, uses kernel32.CopyFileExW to leverage kernel SMB Direct /
+    SMB Multichannel and DMA hardware acceleration without user-space RAM allocations.
+    Falls back to an 8MB buffer copy with disk pre-allocation on other platforms.
+    """
+    if os.name == "nt":
+        try:
+            import ctypes
+            res = ctypes.windll.kernel32.CopyFileExW(
+                os.path.abspath(src),
+                os.path.abspath(dst),
+                None, None, None, 0
+            )
+            if res != 0:
+                return
+        except Exception:
+            pass
+
+    # High-speed fallback: 8MB buffer with local disk space pre-allocation
+    try:
+        file_size = os.path.getsize(src)
+    except OSError:
+        file_size = 0
+
     with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
+        if file_size > 0:
+            try:
+                fdst.truncate(file_size)  # Pre-allocate 1GB disk space to eliminate NTFS fragmentation
+            except OSError:
+                pass
         while True:
             buf = fsrc.read(buffer_size)
             if not buf:
