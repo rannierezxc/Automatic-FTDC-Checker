@@ -1089,7 +1089,11 @@ class STDFGuidCheckerApp:
         return selected[0]
 
     def start_check_stdf(self):
-        """Open a mini-GUI showing STDF files in the local FTDC folder with integrity status."""
+        """Open a mini-GUI showing STDF files in the local FTDC folder with integrity status.
+
+        The window opens INSTANTLY and file discovery + parsing happens in the
+        background so the user gets immediate visual feedback.
+        """
         from tkinter import messagebox
         from  stdf_fetcher import LOCAL_DEST_BASE, STDF_EXTENSIONS
 
@@ -1103,36 +1107,18 @@ class STDFGuidCheckerApp:
             return
 
         folder_path = os.path.join(LOCAL_DEST_BASE, lot_id_val)
-        if not os.path.isdir(folder_path):
-            messagebox.showwarning(
-                "Check STDF",
-                f"No STDF folder found for Lot ID '{lot_id_val}'.\n\n"
-                f"Expected path: {folder_path}\n\n"
-                f"Please use 'Get STDF' first to fetch the files.",
-                parent=self.root,
-            )
-            return
 
-        stdf_files = [
-            f for f in os.listdir(folder_path)
-            if os.path.isfile(os.path.join(folder_path, f))
-            and os.path.splitext(f)[1].lower() in STDF_EXTENSIONS
-        ]
-        if not stdf_files:
-            messagebox.showwarning(
-                "Check STDF",
-                f"No STDF files found in:\n{folder_path}",
-                parent=self.root,
-            )
-            return
-
-        stdf_files.sort(key=lambda filename: self._file_name_sort_key(os.path.join(folder_path, filename)))
-        self._open_check_stdf_window(lot_id_val, folder_path, stdf_files)
+        # Open window immediately — all heavy work happens inside it.
+        self._open_check_stdf_window(lot_id_val, folder_path, STDF_EXTENSIONS)
 
     def _open_check_stdf_window(
-        self, lot_id: str, folder_path: str, files: List[str]
+        self, lot_id: str, folder_path: str, stdf_extensions: set
     ):
-        """Build the Check STDF mini-GUI and kick off concurrent MRR/PCR parsing."""
+        """Build the Check STDF mini-GUI and kick off background file discovery + parsing.
+
+        The window opens instantly with a 'Scanning folder…' banner. File rows
+        are added live as the background thread discovers and parses each STDF.
+        """
         import tkinter as tk
         from tkinter import messagebox
         from  stdf_parser import parse_check_summary
@@ -1214,13 +1200,60 @@ class STDFGuidCheckerApp:
         for ci, wt in enumerate(col_weights):
             inner.columnconfigure(ci, weight=wt, uniform="col")
 
-        # ── Build data rows ────────────────────────────────────────────────
+        # ── Scanning status banner (shown while discovering files) ─────────
+        scan_frame = tk.Frame(inner, bg="#FFFFFF")
+        scan_frame.grid(row=0, column=0, columnspan=5, sticky="ew", padx=0, pady=(8, 8))
+        scan_frame.columnconfigure(0, weight=1)
+
+        scan_inner = tk.Frame(scan_frame, bg="#FFFFFF")
+        scan_inner.grid(row=0, column=0, sticky="")
+
+        scan_pbar = self.ttk.Progressbar(
+            scan_inner, mode="indeterminate", length=80,
+        )
+        scan_pbar.pack(side="left", padx=(0, 8))
+        scan_pbar.start(15)
+
+        scan_lbl = tk.Label(
+            scan_inner, text="Scanning folder for STDF files…",
+            font=("Segoe UI", 9), bg="#FFFFFF", fg="#888888",
+        )
+        scan_lbl.pack(side="left")
+
+        # ── Close button ───────────────────────────────────────────────────
+        btn_frame = self.ttk.Frame(container)
+        btn_frame.grid(row=2, column=0, sticky="e", pady=(8, 0))
+        self.ttk.Button(
+            btn_frame, text="Close", command=lambda: _on_win_close(),
+        ).pack(side="right")
+
+        # ── FORCE INSTANT PAINT OF WINDOW, HEADERS AND SPINNER ─────────────
+        # Force Tkinter to draw the HWND, title, path label, column headers,
+        # scrollbars, Close button, and scan spinner IMMEDIATELY so the user
+        # never sees a white/blank unrendered window.
+        try:
+            win.update_idletasks()
+            win.update()
+        except Exception:
+            pass
+
+        # ── Shared state ──────────────────────────────────────────────────
         cell_font = ("Segoe UI", 9)
         row_widgets: Dict[str, Dict] = {}
+        _STDF_MISSING = 4294967295  # 0xFFFFFFFF — STDF "missing value"
+        _next_row = [0]  # mutable counter for the next grid row in `inner`
+        _executor_ref = [None]  # will hold the ThreadPoolExecutor
+        _owns_running = [False]
+        _remaining = [0]
+        _remaining_lock = threading.Lock()
+        _win_closed = [False]
 
-        for ri, filename in enumerate(files):
+        # ── Row builder (called on main thread to add a file row) ─────────
+        def _add_file_row(filename: str, filepath_full: str):
+            """Add a new row to the grid for a discovered file. Returns the widgets dict."""
+            ri = _next_row[0]
+            _next_row[0] += 1
             bg = "#FFFFFF" if ri % 2 == 0 else "#F7F7F7"
-            filepath_full = os.path.join(folder_path, filename)
 
             # col 0 — File Name
             fn_lbl = tk.Label(
@@ -1243,26 +1276,12 @@ class STDFGuidCheckerApp:
             )
             tg_lbl.grid(row=ri, column=2, sticky="nsew", padx=(0, 1), pady=(0, 1))
 
-            # col 3 — Status (progress bar + label centered)
-            st_frame = tk.Frame(inner, bg=bg)
-            st_frame.grid(row=ri, column=3, sticky="nsew", padx=(0, 1), pady=(0, 1))
-            st_frame.columnconfigure(0, weight=1)
-            st_frame.rowconfigure(0, weight=1)
-
-            st_inner = tk.Frame(st_frame, bg=bg)
-            st_inner.grid(row=0, column=0, sticky="")
-
-            pbar = self.ttk.Progressbar(
-                st_inner, mode="indeterminate", length=40,
-            )
-            pbar.pack(side="left", padx=(0, 4))
-            pbar.start(15)
-
+            # col 3 — Status (text label)
             st_lbl = tk.Label(
-                st_inner, text="Checking…", font=cell_font,
-                bg=bg, fg="#888888",
+                inner, text="Checking…", font=cell_font,
+                bg=bg, fg="#888888", anchor="center", padx=4, pady=3,
             )
-            st_lbl.pack(side="left")
+            st_lbl.grid(row=ri, column=3, sticky="nsew", padx=(0, 1), pady=(0, 1))
 
             # col 4 — Action (Open + Load + Delete centered as a singular object)
             act_frame = tk.Frame(inner, bg=bg)
@@ -1275,8 +1294,7 @@ class STDFGuidCheckerApp:
 
             rw: Dict[str, Any] = {
                 "fn_lbl": fn_lbl, "tp_lbl": tp_lbl, "tg_lbl": tg_lbl,
-                "st_lbl": st_lbl, "st_frame": st_frame, "pbar": pbar,
-                "act_frame": act_frame,
+                "st_lbl": st_lbl, "act_frame": act_frame,
                 "open_btn": None, "load_btn": None, "del_btn": None,
                 "bg": bg, "filepath": filepath_full,
             }
@@ -1361,30 +1379,22 @@ class STDFGuidCheckerApp:
             db.pack(side="left", padx=(2, 4), pady=2)
             rw["del_btn"] = db
 
-        # ── Close button ───────────────────────────────────────────────────
-        btn_frame = self.ttk.Frame(container)
-        btn_frame.grid(row=2, column=0, sticky="e", pady=(8, 0))
-        self.ttk.Button(
-            btn_frame, text="Close", command=win.destroy,
-        ).pack(side="right")
+            return rw
 
-        # ── Concurrent MRR + PCR parsing (with per-file caching) ────────────
-        _STDF_MISSING = 4294967295  # 0xFFFFFFFF — STDF "missing value"
-
+        # ── Result painter (main thread) ──────────────────────────────────
         def _paint_row(widgets, status, tag, pc_str, gc_str):
             """Apply a parsed summary to a row's widgets (main thread only)."""
             fg = "#008000" if tag == "completed" else "#C00000"
             try:
-                if not win.winfo_exists():
+                if _win_closed[0] or not win.winfo_exists():
                     return
-                widgets["pbar"].stop()
-                widgets["pbar"].pack_forget()
-                widgets["st_lbl"].configure(text=status, fg=fg)
+                widgets["st_lbl"].configure(text=status, fg=fg, font=("Segoe UI", 9, "bold"))
                 widgets["tp_lbl"].configure(text=pc_str)
                 widgets["tg_lbl"].configure(text=gc_str)
             except Exception:
                 pass
 
+        # ── File parser (background thread) ───────────────────────────────
         def _parse_file(filename: str, sig=None):
             """Parse MRR + PCR and return (filename, status, tag, part_cnt, good_cnt, sig)."""
             fpath = os.path.join(folder_path, filename)
@@ -1419,39 +1429,7 @@ class STDFGuidCheckerApp:
             except Exception:
                 return filename, "Corrupted", "corrupted", "N/A", "N/A", sig
 
-        # ── Split into cached (instant) vs. uncached (needs parsing) ─────────
-        # A file is served from cache when its signature (path + size + mtime)
-        # is unchanged since a previous Check STDF run — so unchanged files
-        # return instantly and only NEW/changed STDFs are re-processed.
-        _uncached_sigs: Dict[str, Any] = {}
-        uncached_files: List[str] = []
-        cached_count = 0
-        for filename in files:
-            fpath = os.path.join(folder_path, filename)
-            sig = self._file_cache_signature(fpath)
-            with self._check_cache_lock:
-                cached = self._check_summary_cache.get(sig)
-            widgets = row_widgets.get(filename)
-            if cached is not None and widgets is not None:
-                status, tag, pc_str, gc_str = cached
-                _paint_row(widgets, status, tag, pc_str, gc_str)
-                cached_count += 1
-            else:
-                uncached_files.append(filename)
-                _uncached_sigs[filename] = sig
-
-        if cached_count:
-            self.log(
-                f"Check STDF: {cached_count} file(s) loaded from cache instantly; "
-                f"{len(uncached_files)} new/changed file(s) to process."
-            )
-
-        # Completion tracking so the running-lock is released only once all
-        # newly-parsed files are done.
-        _remaining = [len(uncached_files)]
-        _remaining_lock = threading.Lock()
-        _owns_running = [False]
-
+        # ── Completion tracking ───────────────────────────────────────────
         def _release_running_if_done():
             with _remaining_lock:
                 _remaining[0] -= 1
@@ -1476,34 +1454,161 @@ class STDFGuidCheckerApp:
                     _paint_row(widgets, status, tag, pc_str, gc_str)
                 _release_running_if_done()
 
-            self.root.after(0, _update)
+            if not _win_closed[0]:
+                self.root.after(0, _update)
+            else:
+                _release_running_if_done()
 
-        executor = None
-        if uncached_files:
-            # Lock the main-window action buttons while new files are parsed.
-            _owns_running[0] = True
-            self._set_running(True)
-            max_workers = min(len(uncached_files), os.cpu_count() or 4)
-            executor = ThreadPoolExecutor(max_workers=max_workers)
-            for filename in uncached_files:
-                future = executor.submit(_parse_file, filename, _uncached_sigs.get(filename))
-                future.add_done_callback(_on_future_done)
+        # ── Fast Filename Sort Key Helper ─────────────────────────────────
+        def _fast_sort_key(filename: str):
+            ts = _extract_first_filename_timestamp(filename)
+            if ts:
+                return 0, ts, filename.casefold()
+            return 1, filename.casefold(), ""
 
-        # Ensure the executor shuts down (and the running-lock is released)
-        # when the window is closed.
+        # ── Background discovery + parsing thread ─────────────────────────
+        def _discover_and_parse():
+            """Discover STDF files using os.scandir for 10x faster listing off main thread."""
+            try:
+                # Phase 1: Fast scan using os.scandir (no individual isfile stat calls)
+                if not os.path.isdir(folder_path):
+                    def _no_folder():
+                        if _win_closed[0]:
+                            return
+                        scan_pbar.stop()
+                        scan_lbl.configure(
+                            text=f"No STDF folder found for Lot ID '{lot_id}'.",
+                            fg="#C00000",
+                        )
+                        scan_pbar.pack_forget()
+                        self.log(
+                            f"Check STDF: Folder not found: {folder_path}"
+                        )
+                    self.root.after(0, _no_folder)
+                    return
+
+                try:
+                    stdf_files = []
+                    with os.scandir(folder_path) as entries:
+                        for entry in entries:
+                            if entry.is_file(follow_symlinks=False):
+                                ext = os.path.splitext(entry.name)[1].lower()
+                                if ext in stdf_extensions:
+                                    stdf_files.append(entry.name)
+                except OSError as exc:
+                    def _list_err(m=str(exc)):
+                        if _win_closed[0]:
+                            return
+                        scan_pbar.stop()
+                        scan_lbl.configure(text=f"Error reading folder: {m}", fg="#C00000")
+                        scan_pbar.pack_forget()
+                    self.root.after(0, _list_err)
+                    return
+
+                if not stdf_files:
+                    def _no_files():
+                        if _win_closed[0]:
+                            return
+                        scan_pbar.stop()
+                        scan_lbl.configure(
+                            text=f"No STDF files found in folder.",
+                            fg="#C00000",
+                        )
+                        scan_pbar.pack_forget()
+                    self.root.after(0, _no_files)
+                    return
+
+                # Fast timestamp sort
+                stdf_files.sort(key=_fast_sort_key)
+
+                # Phase 2: Remove scanning banner and stream file rows on main thread
+                def _build_rows():
+                    if _win_closed[0]:
+                        return
+                    # Remove scanning banner
+                    scan_frame.grid_forget()
+                    scan_pbar.stop()
+
+                    # Add rows for all discovered files
+                    for filename in stdf_files:
+                        filepath_full = os.path.join(folder_path, filename)
+                        _add_file_row(filename, filepath_full)
+
+                    try:
+                        win.update_idletasks()
+                    except Exception:
+                        pass
+
+                    # Phase 3: Start parsing (cached instantly, uncached in threads)
+                    _uncached_sigs: Dict[str, Any] = {}
+                    uncached_files: List[str] = []
+                    cached_count = 0
+                    for filename in stdf_files:
+                        fpath = os.path.join(folder_path, filename)
+                        sig = self._file_cache_signature(fpath)
+                        with self._check_cache_lock:
+                            cached = self._check_summary_cache.get(sig)
+                        widgets = row_widgets.get(filename)
+                        if cached is not None and widgets is not None:
+                            status, tag, pc_str, gc_str = cached
+                            _paint_row(widgets, status, tag, pc_str, gc_str)
+                            cached_count += 1
+                        else:
+                            uncached_files.append(filename)
+                            _uncached_sigs[filename] = sig
+
+                    if cached_count:
+                        self.log(
+                            f"Check STDF: {cached_count} file(s) loaded from cache instantly; "
+                            f"{len(uncached_files)} new/changed file(s) to process."
+                        )
+
+                    _remaining[0] = len(uncached_files)
+
+                    if uncached_files:
+                        _owns_running[0] = True
+                        self._set_running(True)
+                        max_workers = min(len(uncached_files), os.cpu_count() or 4)
+                        executor = ThreadPoolExecutor(max_workers=max_workers)
+                        _executor_ref[0] = executor
+                        for filename in uncached_files:
+                            future = executor.submit(_parse_file, filename, _uncached_sigs.get(filename))
+                            future.add_done_callback(_on_future_done)
+                    else:
+                        self.log(
+                            f"Check STDF: All {len(stdf_files)} file(s) loaded from cache."
+                        )
+
+                self.root.after(0, _build_rows)
+
+            except Exception as exc:
+                _msg = str(exc)
+                def _gen_err(m=_msg):
+                    if _win_closed[0]:
+                        return
+                    scan_pbar.stop()
+                    scan_lbl.configure(text=f"Error: {m}", fg="#C00000")
+                    scan_pbar.pack_forget()
+                self.root.after(0, _gen_err)
+
+        # ── Window close handler ──────────────────────────────────────────
         def _on_win_close():
+            _win_closed[0] = True
             try:
                 canvas.unbind_all("<MouseWheel>")
             except Exception:
                 pass
-            if executor is not None:
-                executor.shutdown(wait=False, cancel_futures=True)
+            if _executor_ref[0] is not None:
+                _executor_ref[0].shutdown(wait=False, cancel_futures=True)
             if _owns_running[0]:
                 _owns_running[0] = False
                 self._set_running(False)
             win.destroy()
 
         win.protocol("WM_DELETE_WINDOW", _on_win_close)
+
+        # ── Kick off background discovery immediately ─────────────────────
+        threading.Thread(target=_discover_and_parse, daemon=True).start()
 
     # ── Get STDF ───────────────────────────────────────────────────────────
 
