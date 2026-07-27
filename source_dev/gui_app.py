@@ -1709,17 +1709,16 @@ class STDFGuidCheckerApp:
         for _nb in network_bases:
             self.log(f"    - {_nb}")
 
-        # ── Get STDF cache: skip files already fetched to C:\FTDC\{lot} ──────
-        # Only genuinely new STDFs are searched/copied, saving network time.
-        already_have = existing_stdf_basenames(lot_id_val)
-        if already_have:
-            self.log(
-                f"  Cache: {len(already_have)} file(s) already in "
-                f"C:\\FTDC\\{lot_id_val} will be skipped."
-            )
-
         def _search_worker():
             try:
+                # Local destination cache scan off main thread
+                already_have = existing_stdf_basenames(lot_id_val)
+                if already_have:
+                    self.log(
+                        f"  Cache: {len(already_have)} file(s) already in "
+                        f"C:\\FTDC\\{lot_id_val} will be skipped."
+                    )
+
                 found = search_stdf_files(
                     lot_id_val, device_names,
                     network_bases=network_bases,

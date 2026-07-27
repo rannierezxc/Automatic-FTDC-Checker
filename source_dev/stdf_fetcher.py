@@ -578,6 +578,20 @@ def search_stdf_files(
 
 # ── File copy ─────────────────────────────────────────────────────────────────
 
+def _fast_copy_file(src: str, dst: str, buffer_size: int = 4 * 1024 * 1024):
+    """Copy file with a 4MB buffer to maximize throughput over Windows SMB3 network shares."""
+    with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
+        while True:
+            buf = fsrc.read(buffer_size)
+            if not buf:
+                break
+            fdst.write(buf)
+    try:
+        shutil.copystat(src, dst)
+    except OSError:
+        pass
+
+
 def copy_stdf_files(
     source_paths: List[str],
     lot_id: str,
@@ -632,7 +646,7 @@ def copy_stdf_files(
         dest_name = _reserve_dest_name(filename)
         dest_path = os.path.join(dest_dir, dest_name)
         try:
-            shutil.copy2(src_path, dest_path)
+            _fast_copy_file(src_path, dest_path)
             with copied_lock:
                 copied += 1
             if dest_name != filename:
