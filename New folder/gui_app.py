@@ -161,11 +161,27 @@ class STDFGuidCheckerApp:
         self._pending_progress = None  # (fraction, message) — atomic shared state
         self._progress_poll_id = None
         self._mpc_lookup_after_id = None  # debounce timer for MPC auto-lookup
+        # ── MPC lookup performance state ──────────────────────────────────
+        # In-memory cache: LotID (upper) -> resolved MPC string. A cache hit
+        # populates the MPC field with ZERO network delay (instant on repeats).
+        self._mpc_cache: Dict[str, str] = {}
+        # Monotonic request id: guards against a slow older lookup overwriting
+        # the field after the user has already moved on to a newer Lot ID.
+        self._mpc_lookup_seq = 0
+        # Shared HTTP session for keep-alive (avoids a fresh TCP/DNS handshake
+        # on every lookup). Created lazily; reused across all MPC lookups.
+        self._http_session = None
+        self._http_session_lock = threading.Lock()
+        self._mpc_lookup_url = "http://mth-vm-eaprd1/MPHL/getlot/mes.asmx/GetLotByLotId"
         self._build_ui()
         self._update_selected_test_summary()
         self._sync_manual_filter_state()
         # Attach MPC auto-lookup: fires 500ms after the user stops typing in Lot ID
         self.lot_id_var.trace_add("write", self._on_lot_id_changed)
+        # Fix 6: prewarm DNS + TCP to the MES host at startup so the FIRST real
+        # lookup does not pay cold connection setup. Runs in the background and
+        # never blocks the UI (best-effort; failures are ignored).
+        self.root.after(200, self._prewarm_mpc_connection)
 
     def _build_ui(self):
         pad = {"padx": 8, "pady": 6}
@@ -969,8 +985,60 @@ class STDFGuidCheckerApp:
 
     # ── MPC Auto-Lookup ────────────────────────────────────────────────────
 
+    # Lot IDs are usually SCANNED (arrive as one complete paste) but are
+    # sometimes hand-typed. We balance the two: a very short debounce when the
+    # value already looks like a complete lot id (scan/paste), a slightly longer
+    # one while it still looks partially typed.
+    _LOT_ID_COMPLETE_RE = re.compile(r"^[A-Za-z]{2,}[-\s]?\d{6,}(?:\.\d+)?$")
+
+    def _looks_like_complete_lot(self, lot_id: str) -> bool:
+        """Heuristic: does this look like a finished lot id (scanned/pasted)?
+        Used only to pick the debounce delay; never blocks a lookup."""
+        return bool(self._LOT_ID_COMPLETE_RE.match(lot_id.strip()))
+
+    def _get_http_session(self):
+        """Return a shared requests.Session (keep-alive) or None if requests is
+        unavailable. Created lazily and reused across all MPC lookups so the
+        TCP/DNS handshake is paid once, not on every keystroke-triggered call."""
+        with self._http_session_lock:
+            if self._http_session is not None:
+                return self._http_session
+            try:
+                import requests as _requests
+            except ImportError:
+                return None
+            try:
+                sess = _requests.Session()
+                # A small connection pool is plenty for single-user lookups.
+                adapter = _requests.adapters.HTTPAdapter(
+                    pool_connections=2, pool_maxsize=4, max_retries=0
+                )
+                sess.mount("http://", adapter)
+                sess.mount("https://", adapter)
+                self._http_session = sess
+            except Exception:
+                self._http_session = None
+            return self._http_session
+
+    def _prewarm_mpc_connection(self):
+        """Fix 6: open the TCP/DNS connection to the MES host at startup in the
+        background so the FIRST real lookup does not pay cold setup. Best-effort;
+        any failure is silently ignored (the field still works on first use)."""
+        def _warm():
+            sess = self._get_http_session()
+            if sess is None:
+                return
+            try:
+                # A cheap HEAD/GET just to establish the socket into the pool.
+                # Short timeout; we don't care about the response body/status.
+                sess.get(self._mpc_lookup_url, timeout=(1.5, 2.5))
+            except Exception:
+                pass
+        threading.Thread(target=_warm, daemon=True).start()
+
     def _on_lot_id_changed(self, *args):
-        """Debounce handler: wait 500ms after the last keystroke before looking up MPC."""
+        """Debounce handler. Waits a short, adaptive delay after the last change
+        before looking up the MPC (shorter for scanned/complete lot ids)."""
         if self._mpc_lookup_after_id is not None:
             self.root.after_cancel(self._mpc_lookup_after_id)
             self._mpc_lookup_after_id = None
@@ -980,37 +1048,72 @@ class STDFGuidCheckerApp:
             self.mpc_var.set("")
             return
 
+        # Fix 1: instant cache hit — no network, no debounce wait.
+        cached = self._mpc_cache.get(lot_id.upper())
+        if cached is not None:
+            self.mpc_var.set(cached)
+            return
+
+        # Fix 3: adaptive debounce. Scanned/complete -> snappy; typing -> a bit
+        # longer so we don't fire on every intermediate keystroke.
+        delay = 150 if self._looks_like_complete_lot(lot_id) else 350
         self._mpc_lookup_after_id = self.root.after(
-            500, lambda: self._lookup_mpc_for_lot_id(lot_id)
+            delay, lambda: self._lookup_mpc_for_lot_id(lot_id)
         )
 
     def _lookup_mpc_for_lot_id(self, lot_id: str):
-        """Send POST to MES web service and populate the MPC field from the response."""
+        """Look up the MPC for a lot id via the MES web service and populate the
+        MPC field. Uses a shared keep-alive session, an in-memory cache, and a
+        request-sequence guard so a slow old call can't overwrite a newer one."""
         self._mpc_lookup_after_id = None
 
+        # Fix 1: re-check the cache (the value may have arrived during debounce).
+        cached = self._mpc_cache.get(lot_id.upper())
+        if cached is not None:
+            self.mpc_var.set(cached)
+            return
+
+        # Fix 5: immediate visual feedback while the network call runs.
+        if self.lot_id_var.get().strip().upper() == lot_id.upper():
+            self.mpc_var.set("Looking up…")
+
+        # Sequence guard: only the newest request may write the field.
+        self._mpc_lookup_seq += 1
+        my_seq = self._mpc_lookup_seq
+
         def worker():
-            try:
-                import requests as _requests
-            except ImportError:
+            sess = self._get_http_session()
+            if sess is None:
                 return
 
-            def _set_val(val: str):
-                # Only update if the user hasn't changed/cleared the Lot ID in the meantime
-                if self.lot_id_var.get().strip().upper() == lot_id.upper():
-                    self.mpc_var.set(val)
+            def _set_val(val: str, cache: bool = False):
+                # Only apply if (a) this is still the newest lookup, and
+                # (b) the user hasn't changed/cleared the Lot ID meanwhile.
+                if my_seq != self._mpc_lookup_seq:
+                    return
+                if self.lot_id_var.get().strip().upper() != lot_id.upper():
+                    return
+                if cache:
+                    self._mpc_cache[lot_id.upper()] = val
+                self.mpc_var.set(val)
 
-            url = "http://mth-vm-eaprd1/MPHL/getlot/mes.asmx/GetLotByLotId"
+            # Fix 4: split (connect, read) timeout — fail fast on a dead host,
+            # still allow a slow-but-alive server to answer.
             try:
-                resp = _requests.post(url, data={"LotId": lot_id}, timeout=10)
-            except _requests.exceptions.ConnectionError:
-                self.root.after(0, lambda: _set_val("Network error: unable to connect"))
-                return
-            except _requests.exceptions.Timeout:
-                self.root.after(0, lambda: _set_val("Network error: request timed out"))
-                return
+                resp = sess.post(
+                    self._mpc_lookup_url, data={"LotId": lot_id}, timeout=(2, 8)
+                )
             except Exception as exc:
-                msg = str(exc)[:60]
-                self.root.after(0, lambda m=msg: _set_val(f"Lookup failed: {m}"))
+                # Broad except so any requests error class is handled uniformly
+                # (ConnectionError/Timeout/etc.), then show a short message.
+                name = type(exc).__name__
+                if "Timeout" in name:
+                    self.root.after(0, lambda: _set_val("Network error: request timed out"))
+                elif "Connection" in name:
+                    self.root.after(0, lambda: _set_val("Network error: unable to connect"))
+                else:
+                    msg = str(exc)[:60]
+                    self.root.after(0, lambda m=msg: _set_val(f"Lookup failed: {m}"))
                 return
 
             # ── Parse the XML response ─────────────────────────────────────
@@ -1028,7 +1131,8 @@ class STDFGuidCheckerApp:
                 mpc_el = root_el.find(".//mes:MPC", ns)
                 if mpc_el is not None and mpc_el.text and mpc_el.text.strip():
                     mpc_value = mpc_el.text.strip()
-                    self.root.after(0, lambda v=mpc_value: _set_val(v))
+                    # Fix 1: cache successful resolutions for instant repeats.
+                    self.root.after(0, lambda v=mpc_value: _set_val(v, cache=True))
                 else:
                     self.root.after(0, lambda: _set_val(""))
             except ET.ParseError:
@@ -1038,6 +1142,7 @@ class STDFGuidCheckerApp:
                 self.root.after(0, lambda m=msg: _set_val(f"Lookup failed: {m}"))
 
         threading.Thread(target=worker, daemon=True).start()
+
 
     # ── Check STDF ─────────────────────────────────────────────────────────
 
