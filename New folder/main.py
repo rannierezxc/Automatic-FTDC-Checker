@@ -19,13 +19,18 @@ from guid_analysis import analyze_guid_data
 
 def launch_desktop_app():
     try:
+        import sys, os
+        hub_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "PTS_Hub")
+        if hub_dir not in sys.path:
+            sys.path.insert(0, hub_dir)
+        from PTS_Hub.main import launch_hub
+        launch_hub()
+    except Exception:
         import tkinter as tk
-    except ImportError as exc:
-        raise RuntimeError("tkinter is not available.") from exc
-    from gui_app import STDFGuidCheckerApp
-    root = tk.Tk()
-    STDFGuidCheckerApp(root)
-    root.mainloop()
+        from gui_app import STDFGuidCheckerApp
+        root = tk.Tk()
+        STDFGuidCheckerApp(root)
+        root.mainloop()
 
 
 def main():

@@ -24,15 +24,43 @@ if HUB_ROOT not in sys.path:
     sys.path.insert(0, HUB_ROOT)
 
 try:
-    from core.widgets import ModernHoverButton, ModernGreenProgressBar
+    from core.widgets import (
+        ModernHoverButton, ModernGreenProgressBar, ModernEntry, ModernCard, ModernAccentButton
+    )
     from core.config import get_asset_path, ICON_PATH, APP_VERSION
-    from core.theme import setup_theme
+    from core.theme import (
+        setup_theme, MAIN_BG, CARD_BG, CARD_BORDER, BORDER_COLOR, TEXT_FG, TEXT_MUTED, TEXT_DISABLED,
+        ENTRY_BG, ENTRY_FG, ENTRY_DISABLED_BG, ENTRY_DISABLED_FG, ENTRY_BORDER,
+        BTN_BG, BTN_FG, BTN_BORDER, BTN_HOVER_BG, BTN_HOVER_BORDER, BTN_HOVER_FG,
+        BTN_DISABLED_BG, BTN_DISABLED_FG, ACCENT_BTN_BG, ACCENT_BTN_FG, ACCENT_BTN_HOVER_BG,
+        ACCENT_BTN_DISABLED_BG, LIST_BG, LISTBOX_BG, LISTBOX_FG, LISTBOX_SELECT_BG, LISTBOX_SELECT_FG,
+        LISTBOX_BORDER, LOG_BG, LOG_FG, LOG_SELECT_BG, LOG_SELECT_FG, LOG_BORDER,
+        BADGE_EMPTY_BG, BADGE_EMPTY_FG, BADGE_ACTIVE_BG, BADGE_ACTIVE_FG, BADGE_READY_BG, BADGE_READY_FG,
+        FONT_TITLE, FONT_SUBTITLE, FONT_CARD_TITLE, FONT_LABEL, FONT_LABEL_NORMAL, FONT_ENTRY,
+        FONT_BUTTON, FONT_BUTTON_ACCENT, FONT_BUTTON_MINI, FONT_BADGE, FONT_STATUS, FONT_LOG,
+        PAD_CARD_X, PAD_CARD_Y, PAD_BTN_X, PAD_BTN_Y, PAD_BTN_MINI_X, PAD_BTN_MINI_Y,
+        PAD_ACCENT_BTN_X, PAD_ACCENT_BTN_Y
+    )
 except ImportError:
     # Fallback when run directly inside apps/ftdc_checker
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-    from core.widgets import ModernHoverButton, ModernGreenProgressBar
+    from core.widgets import (
+        ModernHoverButton, ModernGreenProgressBar, ModernEntry, ModernCard, ModernAccentButton
+    )
     from core.config import get_asset_path, ICON_PATH, APP_VERSION
-    from core.theme import setup_theme
+    from core.theme import (
+        setup_theme, MAIN_BG, CARD_BG, CARD_BORDER, BORDER_COLOR, TEXT_FG, TEXT_MUTED, TEXT_DISABLED,
+        ENTRY_BG, ENTRY_FG, ENTRY_DISABLED_BG, ENTRY_DISABLED_FG, ENTRY_BORDER,
+        BTN_BG, BTN_FG, BTN_BORDER, BTN_HOVER_BG, BTN_HOVER_BORDER, BTN_HOVER_FG,
+        BTN_DISABLED_BG, BTN_DISABLED_FG, ACCENT_BTN_BG, ACCENT_BTN_FG, ACCENT_BTN_HOVER_BG,
+        ACCENT_BTN_DISABLED_BG, LIST_BG, LISTBOX_BG, LISTBOX_FG, LISTBOX_SELECT_BG, LISTBOX_SELECT_FG,
+        LISTBOX_BORDER, LOG_BG, LOG_FG, LOG_SELECT_BG, LOG_SELECT_FG, LOG_BORDER,
+        BADGE_EMPTY_BG, BADGE_EMPTY_FG, BADGE_ACTIVE_BG, BADGE_ACTIVE_FG, BADGE_READY_BG, BADGE_READY_FG,
+        FONT_TITLE, FONT_SUBTITLE, FONT_CARD_TITLE, FONT_LABEL, FONT_LABEL_NORMAL, FONT_ENTRY,
+        FONT_BUTTON, FONT_BUTTON_ACCENT, FONT_BUTTON_MINI, FONT_BADGE, FONT_STATUS, FONT_LOG,
+        PAD_CARD_X, PAD_CARD_Y, PAD_BTN_X, PAD_BTN_Y, PAD_BTN_MINI_X, PAD_BTN_MINI_Y,
+        PAD_ACCENT_BTN_X, PAD_ACCENT_BTN_Y
+    )
 
 try:
     from apps.ftdc_checker.stdf_parser import (
@@ -138,6 +166,7 @@ class FTDCCheckerFrame(ttk.Frame):
         super().__init__(parent)
         self.parent = parent
         self.hub = hub
+        self.app_name = "FTDC Checker"
         self.root = self.winfo_toplevel() if hasattr(self, "winfo_toplevel") else parent
         self.tk_mod = tk
         self.ttk = ttk
@@ -226,47 +255,53 @@ class FTDCCheckerFrame(ttk.Frame):
         workspace.rowconfigure(1, weight=1)
 
         # ── 1. Lot & Production Configuration Card (No hint text, compact & clean) ──
-        input_card = ttk.LabelFrame(workspace, text=" Lot & Production Configuration ", padding=(12, 6))
+        input_card = ModernCard(workspace, text="Lot Details", padx=10, pady=4)
         input_card.grid(row=0, column=0, sticky="ew", padx=2, pady=(0, 6))
         for c in range(4):
             input_card.columnconfigure(c, weight=1, uniform="input_cols")
 
         # Col 0: Lot ID
-        col0 = ttk.Frame(input_card)
-        col0.grid(row=0, column=0, sticky="ew", padx=6, pady=3)
-        ttk.Label(col0, text="Lot ID", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        ttk.Entry(col0, textvariable=self.lot_id_var).pack(fill="x", pady=(3, 2))
+        tk.Label(input_card, text="Lot ID", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).grid(
+            row=0, column=0, sticky="w", padx=6, pady=(2, 1)
+        )
+        ModernEntry(input_card, textvariable=self.lot_id_var).grid(
+            row=1, column=0, sticky="ew", padx=6, pady=(1, 4)
+        )
 
         # Col 1: MPC
-        col1 = ttk.Frame(input_card)
-        col1.grid(row=0, column=1, sticky="ew", padx=6, pady=3)
-        mpc_lbl_frame = ttk.Frame(col1)
-        mpc_lbl_frame.pack(anchor="w", fill="x")
-        ttk.Label(mpc_lbl_frame, text="MPC", font=("Segoe UI", 9, "bold")).pack(side="left")
+        mpc_lbl_frame = tk.Frame(input_card, bg=CARD_BG)
+        mpc_lbl_frame.grid(row=0, column=1, sticky="w", padx=6, pady=(2, 1))
+        tk.Label(mpc_lbl_frame, text="MPC", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).pack(side="left")
         auto_badge = tk.Label(
             mpc_lbl_frame,
-            text="Auto-resolved",
-            font=("Segoe UI", 7, "bold"),
-            bg="#EFF6FF",
-            fg="#2563EB",
+            text="Auto-fill",
+            font=FONT_BADGE,
+            bg=BADGE_ACTIVE_BG,
+            fg=BADGE_ACTIVE_FG,
             padx=4,
             pady=0,
             relief="flat",
         )
         auto_badge.pack(side="left", padx=(6, 0))
-        ttk.Entry(col1, textvariable=self.mpc_var).pack(fill="x", pady=(3, 2))
+        ModernEntry(input_card, textvariable=self.mpc_var).grid(
+            row=1, column=1, sticky="ew", padx=6, pady=(1, 4)
+        )
 
         # Col 2: First Pass Actual Good QTY
-        col2 = ttk.Frame(input_card)
-        col2.grid(row=0, column=2, sticky="ew", padx=6, pady=3)
-        ttk.Label(col2, text="First Pass Actual Good QTY", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        ttk.Entry(col2, textvariable=self.fp_actual_good_qty_var).pack(fill="x", pady=(3, 2))
+        tk.Label(input_card, text="First Pass Actual Good QTY", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).grid(
+            row=0, column=2, sticky="w", padx=6, pady=(2, 1)
+        )
+        ModernEntry(input_card, textvariable=self.fp_actual_good_qty_var).grid(
+            row=1, column=2, sticky="ew", padx=6, pady=(1, 4)
+        )
 
         # Col 3: Total Actual Good QTY
-        col3 = ttk.Frame(input_card)
-        col3.grid(row=0, column=3, sticky="ew", padx=6, pady=3)
-        ttk.Label(col3, text="Total Actual Good QTY", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        ttk.Entry(col3, textvariable=self.total_actual_good_qty_var).pack(fill="x", pady=(3, 2))
+        tk.Label(input_card, text="Total Actual Good QTY", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).grid(
+            row=0, column=3, sticky="w", padx=6, pady=(2, 1)
+        )
+        ModernEntry(input_card, textvariable=self.total_actual_good_qty_var).grid(
+            row=1, column=3, sticky="ew", padx=6, pady=(1, 4)
+        )
 
         # ── 2. Central Split: File Management (Left) vs Controls & Filter (Right) ─
         center = ttk.Frame(workspace)
@@ -276,7 +311,7 @@ class FTDCCheckerFrame(ttk.Frame):
         center.rowconfigure(0, weight=1)
 
         # ── Left: Input STDF Files Container ──────────────────────────────
-        files_box = ttk.LabelFrame(center, text=" Input STDF Datalogs ", padding=(8, 6))
+        files_box = ModernCard(center, text="Input STDF Datalogs", padx=6, pady=4)
         files_box.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
         files_box.columnconfigure(0, weight=1)
         for r in range(3):
@@ -294,14 +329,16 @@ class FTDCCheckerFrame(ttk.Frame):
         right_box.rowconfigure(1, weight=0)  # Action Buttons (Bottom)
 
         # ── Right Top: Test Parameter Filter Card (Swapped to Top) ─────────
-        filter_card = ttk.LabelFrame(right_box, text=" Test Parameter Filter ", padding=(10, 8))
+        filter_card = ModernCard(right_box, text="Test Parameter Filter", padx=8, pady=6)
         filter_card.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
         filter_card.columnconfigure(0, weight=1)
+        self.filter_card = filter_card
 
         # Header Row: Show All Test + Clear Selected + Manual Filter toggle
-        filter_header = ttk.Frame(filter_card)
+        filter_header = tk.Frame(filter_card, bg=CARD_BG)
         filter_header.grid(row=0, column=0, sticky="ew", pady=(0, 6))
-        filter_header.columnconfigure(1, weight=1)
+        filter_header.columnconfigure(2, weight=1)
+        self.filter_header = filter_header
 
         self.show_all_tests_button = ModernHoverButton(
             filter_header,
@@ -320,63 +357,79 @@ class FTDCCheckerFrame(ttk.Frame):
         )
         self.clear_selected_tests_button.grid(row=0, column=1, sticky="w", padx=(6, 0))
         self.clear_selected_tests_button.grid_remove()
+        self.filter_widgets.append(self.clear_selected_tests_button)
 
-        ttk.Checkbutton(
+        self.manual_filter_cb = ttk.Checkbutton(
             filter_header,
             text="Manual Filter",
             variable=self.manual_filter_var,
             command=self._sync_manual_filter_state,
-        ).grid(row=0, column=2, sticky="e")
+        )
+        self.manual_filter_cb.grid(row=0, column=2, sticky="e")
+
+        self._filter_card_labels = []
 
         # Parameter Selection Field
-        ttk.Label(filter_card, text="Test Parameter Selection", font=("Segoe UI", 9, "bold")).grid(
-            row=1, column=0, sticky="w", pady=(3, 1)
-        )
-        self.selected_entry = ttk.Entry(filter_card, textvariable=self.selected_tests_var, state="readonly", font=("Segoe UI", 8))
+        param_label = tk.Label(filter_card, text="Test Parameter Selection", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG)
+        param_label.grid(row=1, column=0, sticky="w", pady=(3, 1))
+        self._filter_card_labels.append(param_label)
+
+        self.selected_entry = ModernEntry(filter_card, textvariable=self.selected_tests_var, state="readonly", font=("Segoe UI", 8))
         self.selected_entry.grid(row=2, column=0, sticky="ew")
         self.filter_widgets.append(self.selected_entry)
 
-        ttk.Label(filter_card, textvariable=self._selected_test_count_var, style="Subtext.TLabel").grid(
-            row=3, column=0, sticky="w", pady=(1, 4)
-        )
+        count_label = tk.Label(filter_card, textvariable=self._selected_test_count_var, font=FONT_SUBTITLE, bg=CARD_BG, fg=TEXT_MUTED)
+        count_label.grid(row=3, column=0, sticky="w", pady=(1, 4))
+        self._filter_card_labels.append(count_label)
 
         # Direct Test Numbers Input
-        ttk.Label(filter_card, text="Test Numbers", font=("Segoe UI", 9, "bold")).grid(
-            row=4, column=0, sticky="w", pady=(2, 1)
-        )
-        self.typed_entry = ttk.Entry(filter_card, textvariable=self.tests_var)
+        num_label = tk.Label(filter_card, text="Test Numbers", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG)
+        num_label.grid(row=4, column=0, sticky="w", pady=(2, 1))
+        self._filter_card_labels.append(num_label)
+
+        self.typed_entry = ModernEntry(filter_card, textvariable=self.tests_var)
         self.typed_entry.grid(row=5, column=0, sticky="ew")
         self.filter_widgets.append(self.typed_entry)
-        ttk.Label(
+
+        fmt_label = tk.Label(
             filter_card,
             text='Format: space or comma separated (e.g. "1001 1002")',
-            style="Subtext.TLabel",
-        ).grid(row=6, column=0, sticky="w", pady=(1, 6))
+            font=FONT_SUBTITLE, bg=CARD_BG, fg=TEXT_MUTED,
+        )
+        fmt_label.grid(row=6, column=0, sticky="w", pady=(1, 6))
+        self._filter_card_labels.append(fmt_label)
 
         # Range Filtering
-        range_frame = ttk.Frame(filter_card)
+        range_frame = tk.Frame(filter_card, bg=CARD_BG)
         range_frame.grid(row=7, column=0, sticky="ew", pady=(2, 2))
         range_frame.columnconfigure(1, weight=1)
         range_frame.columnconfigure(3, weight=1)
+        self.range_frame = range_frame
 
-        ttk.Label(range_frame, text="Range From:").grid(row=0, column=0, sticky="w", padx=(0, 4))
-        self.range_from_entry = ttk.Entry(range_frame, textvariable=self.range_from_var)
+        rf_label = tk.Label(range_frame, text="Range From:", font=("Segoe UI", 8), bg=CARD_BG, fg=TEXT_MUTED)
+        rf_label.grid(row=0, column=0, sticky="w", padx=(0, 4))
+        self._filter_card_labels.append(rf_label)
+
+        self.range_from_entry = ModernEntry(range_frame, textvariable=self.range_from_var)
         self.range_from_entry.grid(row=0, column=1, sticky="ew", padx=(0, 8))
         self.filter_widgets.append(self.range_from_entry)
 
-        ttk.Label(range_frame, text="Range To:").grid(row=0, column=2, sticky="w", padx=(4, 4))
-        self.range_to_entry = ttk.Entry(range_frame, textvariable=self.range_to_var)
+        rt_label = tk.Label(range_frame, text="Range To:", font=("Segoe UI", 8), bg=CARD_BG, fg=TEXT_MUTED)
+        rt_label.grid(row=0, column=2, sticky="w", padx=(4, 4))
+        self._filter_card_labels.append(rt_label)
+
+        self.range_to_entry = ModernEntry(range_frame, textvariable=self.range_to_var)
         self.range_to_entry.grid(row=0, column=3, sticky="ew")
         self.filter_widgets.append(self.range_to_entry)
 
         # ── Right Bottom: Action Buttons Card (Swapped to Bottom, Renamed) ─
-        action_card = ttk.LabelFrame(right_box, text=" Action Buttons ", padding=(10, 8))
+        action_card = ModernCard(right_box, text="Action Buttons", padx=8, pady=6)
         action_card.grid(row=1, column=0, sticky="ew")
         action_card.columnconfigure(0, weight=1)
 
         # Top Row of Action Buttons: 3 utility buttons from left to right:
         # 1. Get FTDC Fail, 2. Get STDF, 3. Check STDF
-        sec_frame = ttk.Frame(action_card)
+        sec_frame = tk.Frame(action_card, bg=CARD_BG)
         sec_frame.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         for c in range(3):
             sec_frame.columnconfigure(c, weight=1, uniform="action_btns")
@@ -385,7 +438,7 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Get FTDC Fail",
             command=self.start_get_ftdc_fail,
-            padx=6, pady=10, font=("Segoe UI", 9, "bold"),
+            padx=6, pady=8, font=FONT_BUTTON,
         )
         self.get_ftdc_button.grid(row=0, column=0, sticky="ew", padx=(0, 4))
 
@@ -393,7 +446,7 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Get STDF",
             command=self.start_get_stdf,
-            padx=6, pady=10, font=("Segoe UI", 9, "bold"),
+            padx=6, pady=8, font=FONT_BUTTON,
         )
         self.get_stdf_button.grid(row=0, column=1, sticky="ew", padx=3)
 
@@ -401,16 +454,16 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Check STDF",
             command=self.start_check_stdf,
-            padx=6, pady=10, font=("Segoe UI", 9, "bold"),
+            padx=6, pady=8, font=FONT_BUTTON,
         )
         self.check_stdf_button.grid(row=0, column=2, sticky="ew", padx=(4, 0))
 
-        # Bottom Row: Run Analysis (Get Data) kept as Accent.TButton with larger height
-        self.convert_button = ttk.Button(
+        # Bottom Row: Run Analysis (Get Data)
+        self.convert_button = ModernAccentButton(
             action_card,
             text="⚡ Run Analysis (Get Data)",
             command=self.start_get_data,
-            style="Accent.TButton",
+            pady=10,
         )
         self.convert_button.grid(row=1, column=0, sticky="ew", pady=(4, 2))
 
@@ -423,28 +476,30 @@ class FTDCCheckerFrame(ttk.Frame):
         ]
 
         # ── 3. Live Progress & Execution Status Bar ────────────────────────
-        progress_card = ttk.LabelFrame(workspace, text="", padding=(10, 6))
+        progress_card = ModernCard(workspace, text="", padx=10, pady=6)
         progress_card.grid(row=2, column=0, sticky="ew", padx=2, pady=(4, 0))
         progress_card.columnconfigure(1, weight=1)
 
         # Status text & percentage
-        status_row = ttk.Frame(progress_card)
+        status_row = tk.Frame(progress_card, bg=CARD_BG)
         status_row.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 4))
         status_row.columnconfigure(1, weight=1)
 
-        ttk.Label(status_row, text="Status:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(
+        tk.Label(status_row, text="Status:", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).grid(row=0, column=0, sticky="w")
+        tk.Label(
             status_row,
             textvariable=self.status_var,
-            font=("Segoe UI", 9),
-            foreground="#1E293B",
+            font=FONT_STATUS,
+            bg=CARD_BG,
+            fg=TEXT_FG,
         ).grid(row=0, column=1, sticky="w", padx=(6, 0))
 
-        ttk.Label(
+        tk.Label(
             status_row,
             textvariable=self.progress_text_var,
-            font=("Segoe UI", 9, "bold"),
-            foreground="#000000",
+            font=FONT_LABEL,
+            bg=CARD_BG,
+            fg=TEXT_FG,
             anchor="e",
         ).grid(row=0, column=2, sticky="e")
 
@@ -474,33 +529,37 @@ class FTDCCheckerFrame(ttk.Frame):
         ttk = self.ttk
 
         self._log_cur_height = 120
-        self._log_drawer = tk.Frame(parent, bg="#F1F5F9", bd=1, relief="solid")
-        self._log_drawer.place(relx=0, rely=1.0, relwidth=1.0, height=self._log_cur_height, anchor="sw")
+        self._log_drawer = tk.Frame(
+            parent, bg=MAIN_BG, bd=0, relief="flat",
+            highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=BORDER_COLOR
+        )
+    
+        self._log_drawer.place(x=10, rely=1, relwidth=0.985, height=self._log_cur_height, anchor="sw")#
 
         # Drag handle bar (Clean default light styling)
-        drag_bar = tk.Frame(self._log_drawer, bg="#E2E8F0", height=28, cursor="sb_v_double_arrow")
+        drag_bar = tk.Frame(self._log_drawer, bg=MAIN_BG, height=28, cursor="sb_v_double_arrow")
         drag_bar.pack(fill="x")
 
         tk.Label(
             drag_bar,
             text="⠿ Execution Console & Activity Log",
-            font=("Segoe UI", 9, "bold"),
-            bg="#E2E8F0",
-            fg="#1E293B",
+            font=FONT_LABEL,
+            bg=MAIN_BG,
+            fg=TEXT_FG,
             cursor="sb_v_double_arrow",
         ).pack(side="left", padx=10)
 
         tk.Label(
             drag_bar,
             text="(drag handle to resize)",
-            font=("Segoe UI", 8),
-            bg="#E2E8F0",
-            fg="#64748B",
+            font=FONT_SUBTITLE,
+            bg=MAIN_BG,
+            fg=TEXT_MUTED,
             cursor="sb_v_double_arrow",
         ).pack(side="left")
 
         # Console Tool Buttons
-        btn_box = tk.Frame(drag_bar, bg="#E2E8F0")
+        btn_box = tk.Frame(drag_bar, bg=MAIN_BG)
         btn_box.pack(side="right", padx=6, pady=2)
 
         def set_h(h):
@@ -508,7 +567,7 @@ class FTDCCheckerFrame(ttk.Frame):
             self._log_drawer.place_configure(height=h)
 
         def make_preset(text, h):
-            b = ModernHoverButton(btn_box, text=text, command=lambda: set_h(h), padx=5, pady=1, font=("Segoe UI", 8))
+            b = ModernHoverButton(btn_box, text=text, command=lambda: set_h(h), padx=5, pady=1, font=FONT_BUTTON_MINI)
             b.pack(side="left", padx=2)
 
         make_preset("Min", 28)
@@ -517,10 +576,10 @@ class FTDCCheckerFrame(ttk.Frame):
         make_preset("Max", 480)
 
         # Copy & Clear log buttons with ModernHoverButton
-        copy_btn = ModernHoverButton(btn_box, text="Copy Log", command=self.copy_log, padx=6, pady=1, font=("Segoe UI", 8))
+        copy_btn = ModernHoverButton(btn_box, text="Copy Log", command=self.copy_log, padx=6, pady=1, font=FONT_BUTTON_MINI)
         copy_btn.pack(side="left", padx=(6, 2))
 
-        clear_btn = ModernHoverButton(btn_box, text="Clear Log", command=self.clear_log, padx=6, pady=1, font=("Segoe UI", 8))
+        clear_btn = ModernHoverButton(btn_box, text="Clear Log", command=self.clear_log, padx=6, pady=1, font=FONT_BUTTON_MINI)
         clear_btn.pack(side="left", padx=2)
 
         # Smooth drag handlers without reflowing underlying workspace!
@@ -546,18 +605,18 @@ class FTDCCheckerFrame(ttk.Frame):
             w.bind("<ButtonRelease-1>", on_stop)
 
         # Console Text Box with Scrollbar (Default background color)
-        console_body = tk.Frame(self._log_drawer, bg="#FFFFFF")
+        console_body = tk.Frame(self._log_drawer, bg=LOG_BG)
         console_body.pack(fill="both", expand=True)
 
         self.log_text = tk.Text(
             console_body,
             wrap="word",
-            font=("Consolas", 9),
-            bg="#FFFFFF",
-            fg="#0F172A",
-            selectbackground="#2563EB",
-            selectforeground="#FFFFFF",
-            insertbackground="#0F172A",
+            font=FONT_LOG,
+            bg=LOG_BG,
+            fg=LOG_FG,
+            selectbackground=LOG_SELECT_BG,
+            selectforeground=LOG_SELECT_FG,
+            insertbackground=LOG_FG,
             relief="flat",
             borderwidth=0,
             padx=8,
@@ -617,9 +676,9 @@ class FTDCCheckerFrame(ttk.Frame):
         badge = tk.Label(
             hdr,
             textvariable=count_var,
-            font=("Segoe UI", 8, "bold"),
-            bg="#F1F5F9",
-            fg="#94A3B8",
+            font=FONT_BADGE,
+            bg=BADGE_EMPTY_BG,
+            fg=BADGE_EMPTY_FG,
             padx=7,
             pady=1,
             relief="flat",
@@ -635,21 +694,21 @@ class FTDCCheckerFrame(ttk.Frame):
             btn_frame,
             text="+ Add Files",
             command=lambda p=panel: self.select_files(p),
-            padx=6, pady=2, font=("Segoe UI", 8, "bold"),
+            padx=6, pady=2, font=FONT_BUTTON_MINI,
         ).pack(side="left", padx=(0, 3))
 
         ModernHoverButton(
             btn_frame,
             text="Remove Selected",
             command=lambda p=panel: self.remove_selected_files(p),
-            padx=6, pady=2, font=("Segoe UI", 8, "bold"),
+            padx=6, pady=2, font=FONT_BUTTON_MINI,
         ).pack(side="left", padx=2)
 
         ModernHoverButton(
             btn_frame,
             text="Clear Files",
             command=lambda p=panel: self.clear_files(p),
-            padx=6, pady=2, font=("Segoe UI", 8, "bold"),
+            padx=6, pady=2, font=FONT_BUTTON_MINI,
         ).pack(side="left", padx=(2, 0))
 
         # ── Listbox with Dynamic Auto-Hiding Scrollbar ─────────────────────
@@ -662,13 +721,16 @@ class FTDCCheckerFrame(ttk.Frame):
             list_frame,
             selectmode=tk.EXTENDED,
             height=3,
-            font=("Segoe UI", 9),
-            bg="#FFFFFF",
-            fg="#0F172A",
-            selectbackground="#2563EB",
-            selectforeground="#FFFFFF",
-            relief="solid",
-            borderwidth=1,
+            font=FONT_ENTRY,
+            bg=LISTBOX_BG,
+            fg=LISTBOX_FG,
+            selectbackground=LISTBOX_SELECT_BG,
+            selectforeground=LISTBOX_SELECT_FG,
+            relief="flat",
+            borderwidth=0,
+            highlightthickness=1,
+            highlightbackground=LISTBOX_BORDER,
+            highlightcolor=LISTBOX_BORDER,
         )
         listbox.pack(side="left", fill="both", expand=True)
 
@@ -703,20 +765,59 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def _sync_manual_filter_state(self):
         enabled = bool(self.manual_filter_var.get())
-        state = "normal" if enabled and not self.is_running and not self.is_scanning_tests else "disabled"
+        is_busy = self.is_running or self.is_scanning_tests
+        has_selected = bool(self.selected_tests_var.get().strip())
+        state = "normal" if enabled and not is_busy else "disabled"
+
+        # Requirement: Card BG is #F0F0F0 if manual filter is NOT enabled, otherwise #FFFFFF
+        card_bg = "#FFFFFF" if enabled else "#F0F0F0"
+        if hasattr(self, "filter_card") and self.filter_card:
+            try:
+                self.filter_card.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "filter_header") and self.filter_header:
+            try:
+                self.filter_header.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "range_frame") and self.range_frame:
+            try:
+                self.range_frame.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "_filter_card_labels"):
+            for lbl in self._filter_card_labels:
+                try:
+                    lbl.configure(bg=card_bg)
+                except Exception:
+                    pass
+        if hasattr(self, "manual_filter_cb") and self.manual_filter_cb:
+            try:
+                self.manual_filter_cb.configure(style="White.TCheckbutton" if enabled else "TCheckbutton")
+            except Exception:
+                pass
+
         for widget in self.filter_widgets:
             if widget is self.show_all_tests_button:
-                btn_state = "disabled" if self.is_running or self.is_scanning_tests else "normal"
+                btn_state = "normal" if enabled and not is_busy else "disabled"
                 try:
                     widget.configure(state=btn_state)
                 except Exception:
                     pass
-                continue
-            try:
-                widget.configure(state=("readonly" if widget is self.selected_entry and enabled else "disabled" if widget is self.selected_entry else state))
-            except Exception:
-                pass
-        self._sync_clear_selected_tests_button(bool(self.selected_tests_var.get().strip()))
+            elif widget is self.clear_selected_tests_button:
+                self._sync_clear_selected_tests_button(has_selected)
+            elif widget is self.selected_entry:
+                try:
+                    widget.configure(state="readonly" if enabled else "disabled")
+                except Exception:
+                    pass
+            else:
+                try:
+                    widget.configure(state=state)
+                except Exception:
+                    pass
+        self._sync_clear_selected_tests_button(has_selected)
 
     def _get_all_selected_files(self) -> List[str]:
         return [path for panel in self.PANELS for path in self.panel_files[panel]]
@@ -847,9 +948,9 @@ class FTDCCheckerFrame(ttk.Frame):
         if hasattr(self, "_panel_badges") and panel in self._panel_badges:
             badge = self._panel_badges[panel]
             if count > 0:
-                badge.configure(bg="#DCFCE7", fg="#15803D")
+                badge.configure(bg=BADGE_READY_BG, fg=BADGE_READY_FG)
             else:
-                badge.configure(bg="#F1F5F9", fg="#94A3B8")
+                badge.configure(bg=BADGE_EMPTY_BG, fg=BADGE_EMPTY_FG)
         if hasattr(self, "_update_panel_scrollbar"):
             self._update_panel_scrollbar(panel)
 
@@ -930,7 +1031,7 @@ class FTDCCheckerFrame(ttk.Frame):
             if hasattr(self, "_panel_count_vars") and panel in self._panel_count_vars:
                 self._panel_count_vars[panel].set("0 files")
             if hasattr(self, "_panel_badges") and panel in self._panel_badges:
-                self._panel_badges[panel].configure(bg="#F1F5F9", fg="#94A3B8")
+                self._panel_badges[panel].configure(bg=BADGE_EMPTY_BG, fg=BADGE_EMPTY_FG)
             if hasattr(self, "_update_panel_scrollbar"):
                 self._update_panel_scrollbar(panel)
 
@@ -947,9 +1048,15 @@ class FTDCCheckerFrame(ttk.Frame):
     def _sync_clear_selected_tests_button(self, has_selected_tests: bool):
         if self.clear_selected_tests_button is None:
             return
+        enabled = bool(self.manual_filter_var.get())
+        is_busy = self.is_running or self.is_scanning_tests
         if has_selected_tests:
             self.clear_selected_tests_button.grid()
-            self.clear_selected_tests_button.configure(state=("normal" if self.manual_filter_var.get() and not self.is_running and not self.is_scanning_tests else "disabled"))
+            btn_state = "normal" if enabled and not is_busy else "disabled"
+            try:
+                self.clear_selected_tests_button.configure(state=btn_state)
+            except Exception:
+                pass
         else:
             self.clear_selected_tests_button.grid_remove()
 
@@ -1003,6 +1110,13 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def _set_test_scan_running(self, running: bool):
         self.is_scanning_tests = running
+        if self.hub:
+            try:
+                self.hub.set_tab_busy(self.app_name, running)
+                if not running:
+                    self.hub.notify_tab_finished(self.app_name)
+            except Exception:
+                pass
         def apply():
             try:
                 if not self.root.winfo_exists():
@@ -1025,6 +1139,7 @@ class FTDCCheckerFrame(ttk.Frame):
             self._test_window.destroy()
         self._cached_tests = list(tests)
         self._test_window = tk.Toplevel(self.root)
+        self._test_window.configure(bg=MAIN_BG)
         self._test_window.title("Show All Test - Combined STDF Selection")
         self._test_window.geometry("980x560")
         self._test_window.minsize(820, 420)
@@ -1039,7 +1154,7 @@ class FTDCCheckerFrame(ttk.Frame):
         filter_row.columnconfigure(1, weight=1)
         self.ttk.Label(filter_row, text="Filter").grid(row=0, column=0, sticky="w")
         self._test_filter_var = tk.StringVar()
-        entry = self.ttk.Entry(filter_row, textvariable=self._test_filter_var)
+        entry = ModernEntry(filter_row, textvariable=self._test_filter_var)
         entry.grid(row=0, column=1, sticky="ew", padx=(8, 10))
         buttons = self.ttk.Frame(filter_row)
         buttons.grid(row=0, column=2, sticky="e")
@@ -1146,11 +1261,10 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def show_all_tests(self):
         from tkinter import messagebox
+        if not self.manual_filter_var.get():
+            return
         if self.is_scanning_tests:
             return
-        if not self.manual_filter_var.get():
-            self.manual_filter_var.set(True)
-            self._sync_manual_filter_state()
         if self.is_running:
             messagebox.showwarning("STDF GUID Checker", "Analysis is currently running.")
             return
@@ -1326,6 +1440,7 @@ class FTDCCheckerFrame(ttk.Frame):
                 )
 
         window = tk.Toplevel(self.root)
+        window.configure(bg=MAIN_BG)
         window.title(f"FTDC Result - {result.get('lot_id', '')}")
         window.transient(self.root)
         window.minsize(760, 180)
@@ -1344,7 +1459,7 @@ class FTDCCheckerFrame(ttk.Frame):
             return "#000000"
 
         title_text = f"Automatic FTDC Checker {APP_VERSION}"
-        title = tk.Label(container, text=title_text, font=("Segoe UI", 11, "bold"), anchor="w", fg="#000000")
+        title = tk.Label(container, text=title_text, font=("Segoe UI", 11, "bold"), anchor="w", bg=MAIN_BG, fg=TEXT_FG)
         title.grid(row=0, column=0, sticky="ew", pady=(0, 6))
 
         panels = ttk.Frame(container)
@@ -1353,14 +1468,14 @@ class FTDCCheckerFrame(ttk.Frame):
         panels.columnconfigure(1, weight=1)
 
         for col, (section_title, rows) in enumerate(summary_sections):
-            box = tk.Frame(panels, borderwidth=1, relief="solid", bg="#B7B7B7")
+            box = tk.Frame(panels, highlightthickness=1, highlightbackground=BORDER_COLOR, bd=0, relief="flat", bg=MAIN_BG)
             box.grid(row=0, column=col, sticky="nsew", padx=(0, 5) if col == 0 else (5, 0))
             box.columnconfigure(0, weight=1)
 
-            header = tk.Label(box, text=section_title, font=("Segoe UI", 10, "bold"), bg="#F0F0F0", anchor="w", padx=8, pady=4)
+            header = tk.Label(box, text=section_title, font=("Segoe UI", 10, "bold"), bg=MAIN_BG, fg=TEXT_FG, anchor="w", padx=8, pady=4)
             header.grid(row=0, column=0, sticky="ew")
 
-            table = tk.Frame(box, bg="#B7B7B7")
+            table = tk.Frame(box, bg=BORDER_COLOR)
             table.grid(row=1, column=0, sticky="nsew", padx=1, pady=(0, 1))
             table.columnconfigure(0, weight=1)
             table.columnconfigure(1, weight=0)
@@ -1377,13 +1492,13 @@ class FTDCCheckerFrame(ttk.Frame):
                         pass
 
                 metric_label = tk.Label(
-                    table, text=f"{metric}:", font=("Segoe UI", 9), bg="white",
-                    anchor="w", padx=7, pady=4, borderwidth=1, relief="solid"
+                    table, text=f"{metric}:", font=("Segoe UI", 9), bg=LIST_BG, fg=TEXT_FG,
+                    anchor="w", padx=7, pady=4, highlightthickness=1, highlightbackground=BORDER_COLOR, relief="flat", bd=0
                 )
                 metric_label.grid(row=r, column=0, sticky="ew")
                 value_label = tk.Label(
-                    table, text=value_text, font=("Segoe UI", 9, "bold"), fg=value_fg, bg="white",
-                    anchor="e", padx=7, pady=4, borderwidth=1, relief="solid"
+                    table, text=value_text, font=("Segoe UI", 9, "bold"), fg=value_fg, bg=LIST_BG,
+                    anchor="e", padx=7, pady=4, highlightthickness=1, highlightbackground=BORDER_COLOR, relief="flat", bd=0
                 )
                 value_label.grid(row=r, column=1, sticky="ew")
 
@@ -1391,7 +1506,8 @@ class FTDCCheckerFrame(ttk.Frame):
         details_frame.grid(row=2, column=0, sticky="nsew", pady=(6, 0))
         details_frame.columnconfigure(0, weight=1)
         details_frame.rowconfigure(0, weight=1)
-        details_text = tk.Text(details_frame, height=10, wrap="word")
+        details_text = tk.Text(details_frame, height=10, wrap="word", bg=LOG_BG, fg=LOG_FG,
+                               highlightthickness=1, highlightbackground=BORDER_COLOR, relief="flat", bd=0)
         details_text.grid(row=0, column=0, sticky="nsew", padx=(6, 0), pady=5)
         details_scroll = ttk.Scrollbar(details_frame, orient="vertical", command=details_text.yview)
         details_scroll.grid(row=0, column=1, sticky="ns", padx=(0, 6), pady=5)
@@ -1439,6 +1555,7 @@ class FTDCCheckerFrame(ttk.Frame):
         from tkinter import ttk
         
         dialog = tk.Toplevel(self.root)
+        dialog.configure(bg=MAIN_BG)
         dialog.title(title)
         dialog.transient(self.root)
         dialog.grab_set()
@@ -1465,10 +1582,10 @@ class FTDCCheckerFrame(ttk.Frame):
             dialog.destroy()
             
         for opt in options:
-            btn = ttk.Button(frame, text=opt, command=lambda o=opt: _on_select(o))
+            btn = ModernHoverButton(frame, text=opt, command=lambda o=opt: _on_select(o), padx=14, pady=6)
             btn.pack(fill="x", pady=5)
             
-        cancel_btn = ttk.Button(frame, text="Cancel", command=dialog.destroy)
+        cancel_btn = ModernHoverButton(frame, text="Cancel", command=dialog.destroy, padx=14, pady=6)
         cancel_btn.pack(fill="x", pady=(15, 0))
         
         dialog.update_idletasks()
@@ -1659,6 +1776,7 @@ class FTDCCheckerFrame(ttk.Frame):
         import tkinter as tk
 
         dialog = tk.Toplevel(parent or self.root)
+        dialog.configure(bg=MAIN_BG)
         dialog.title("Select Panel")
         dialog.resizable(False, False)
         dialog.transient(parent or self.root)
@@ -1682,7 +1800,7 @@ class FTDCCheckerFrame(ttk.Frame):
             def _on_click(p=panel):
                 selected[0] = p
                 dialog.destroy()
-            self.ttk.Button(btn_row, text=panel, command=_on_click).pack(
+            ModernHoverButton(btn_row, text=panel, command=_on_click, padx=12, pady=4).pack(
                 side="left", padx=4,
             )
 
@@ -1736,6 +1854,7 @@ class FTDCCheckerFrame(ttk.Frame):
         from tkinter import messagebox
 
         win = tk.Toplevel(self.root)
+        win.configure(bg=MAIN_BG)
         win.title(f"Check STDF \u2014 {lot_id}")
         win.geometry("960x490")
         win.minsize(880, 360)
@@ -1762,7 +1881,7 @@ class FTDCCheckerFrame(ttk.Frame):
         header_texts = ["File Name", "Total Parts", "Tested Good", "Status", "Action"]
 
         # ── Column header row ──────────────────────────────────────────────
-        header_frame = tk.Frame(list_frame, bg="#D0D0D0")
+        header_frame = tk.Frame(list_frame, bg=BORDER_COLOR)
         header_frame.grid(row=0, column=0, sticky="ew")
         for ci, (txt, wt) in enumerate(zip(header_texts, col_weights)):
             header_frame.columnconfigure(ci, weight=wt, uniform="col")
@@ -1770,13 +1889,13 @@ class FTDCCheckerFrame(ttk.Frame):
             px = 8 if ci == 0 else 4
             tk.Label(
                 header_frame, text=txt,
-                font=("Segoe UI", 9, "bold"), bg="#E0E0E0",
+                font=("Segoe UI", 9, "bold"), bg=MAIN_BG, fg=TEXT_FG,
                 anchor=align, padx=px, pady=4,
             ).grid(row=0, column=ci, sticky="nsew", padx=(0, 1), pady=(0, 1))
 
         # ── Scrollable canvas ──────────────────────────────────────────────
         canvas = tk.Canvas(
-            list_frame, bg="white", highlightthickness=0, borderwidth=0,
+            list_frame, bg=LIST_BG, highlightthickness=1, highlightbackground=BORDER_COLOR, borderwidth=0,
         )
         canvas.grid(row=1, column=0, sticky="nsew")
         v_scroll = self.ttk.Scrollbar(
@@ -1785,7 +1904,7 @@ class FTDCCheckerFrame(ttk.Frame):
         v_scroll.grid(row=1, column=1, sticky="ns")
         canvas.configure(yscrollcommand=v_scroll.set)
 
-        inner = tk.Frame(canvas, bg="#D0D0D0")
+        inner = tk.Frame(canvas, bg=BORDER_COLOR)
         canvas_win_id = canvas.create_window((0, 0), window=inner, anchor="nw")
 
         def _on_canvas_cfg(event):
@@ -1813,11 +1932,11 @@ class FTDCCheckerFrame(ttk.Frame):
             inner.columnconfigure(ci, weight=wt, uniform="col")
 
         # ── Scanning status banner (shown while discovering files) ─────────
-        scan_frame = tk.Frame(inner, bg="#FFFFFF")
+        scan_frame = tk.Frame(inner, bg=LIST_BG)
         scan_frame.grid(row=0, column=0, columnspan=5, sticky="ew", padx=0, pady=(8, 8))
         scan_frame.columnconfigure(0, weight=1)
 
-        scan_inner = tk.Frame(scan_frame, bg="#FFFFFF")
+        scan_inner = tk.Frame(scan_frame, bg=LIST_BG)
         scan_inner.grid(row=0, column=0, sticky="")
 
         scan_pbar = self.ttk.Progressbar(
@@ -1828,7 +1947,7 @@ class FTDCCheckerFrame(ttk.Frame):
 
         scan_lbl = tk.Label(
             scan_inner, text="Scanning folder for STDF files…",
-            font=("Segoe UI", 9), bg="#FFFFFF", fg="#888888",
+            font=("Segoe UI", 9), bg=LIST_BG, fg=TEXT_MUTED,
         )
         scan_lbl.pack(side="left")
 
@@ -1865,7 +1984,7 @@ class FTDCCheckerFrame(ttk.Frame):
             """Add a new row to the grid for a discovered file. Returns the widgets dict."""
             ri = _next_row[0]
             _next_row[0] += 1
-            bg = "#FFFFFF" if ri % 2 == 0 else "#F7F7F7"
+            bg = LIST_BG
 
             # col 0 — File Name
             fn_lbl = tk.Label(
@@ -1891,7 +2010,7 @@ class FTDCCheckerFrame(ttk.Frame):
             # col 3 — Status (text label)
             st_lbl = tk.Label(
                 inner, text="Checking…", font=cell_font,
-                bg=bg, fg="#888888", anchor="center", padx=4, pady=3,
+                bg=bg, fg=TEXT_MUTED, anchor="center", padx=4, pady=3,
             )
             st_lbl.grid(row=ri, column=3, sticky="nsew", padx=(0, 1), pady=(0, 1))
 
@@ -2646,6 +2765,7 @@ class FTDCCheckerFrame(ttk.Frame):
 
                     # ── Build window ───────────────────────────────────────
                     pop = tk.Toplevel(self.root)
+                    pop.configure(bg=MAIN_BG)
                     pop.title(f"FTDC Logs Result - {lot_id_val}")
                     pop.resizable(True, True)
                     pop.transient(self.root)
@@ -2659,7 +2779,7 @@ class FTDCCheckerFrame(ttk.Frame):
                     # ── Single flat table — header in row 0, data in rows 1+ ──
                     # No outer box, no canvas. One parent = perfect column alignment,
                     # zero gray area. Window height comes purely from widget sizes.
-                    table = tk.Frame(frm, bg="#B7B7B7")
+                    table = tk.Frame(frm, bg=BORDER_COLOR)
                     table.grid(row=0, column=0, sticky="nsew")
                     table.columnconfigure(0, weight=1)
                     table.columnconfigure(1, weight=1)
@@ -2671,10 +2791,10 @@ class FTDCCheckerFrame(ttk.Frame):
                     )):
                         tk.Label(
                             table, text=lbl,
-                            font=("Segoe UI", 9, "bold"), bg="#F0F0F0",
+                            font=("Segoe UI", 9, "bold"), bg=MAIN_BG, fg=TEXT_FG,
                             anchor="w", padx=8, pady=4,
                             width=chars,
-                            borderwidth=1, relief="solid",
+                            highlightthickness=1, highlightbackground=BORDER_COLOR, relief="flat", bd=0,
                         ).grid(row=0, column=col_idx, sticky="ew")
 
                     # Data rows
@@ -2690,7 +2810,8 @@ class FTDCCheckerFrame(ttk.Frame):
                                 width=chars, height=h,
                                 wrap="word",
                                 font=("Segoe UI", 9),
-                                bg="white", relief="solid", bd=1,
+                                bg=LIST_BG, fg=TEXT_FG,
+                                highlightthickness=1, highlightbackground=BORDER_COLOR, relief="flat", bd=0,
                                 padx=6, pady=4,
                                 cursor="xterm",
                             )
@@ -2700,7 +2821,7 @@ class FTDCCheckerFrame(ttk.Frame):
 
                     btn_row = self.ttk.Frame(frm)
                     btn_row.grid(row=1, column=0, sticky="e", pady=(10, 0))
-                    self.ttk.Button(btn_row, text="Close", command=pop.destroy).pack(side="right")
+                    ModernHoverButton(btn_row, text="Close", command=pop.destroy, padx=14, pady=4).pack(side="right")
 
                     # Let tkinter measure the true content size, then apply it
                     def _fit_window():
@@ -2759,6 +2880,13 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def _set_running(self, running: bool):
         self.is_running = running
+        if self.hub:
+            try:
+                self.hub.set_tab_busy(self.app_name, running)
+                if not running:
+                    self.hub.notify_tab_finished(self.app_name)
+            except Exception:
+                pass
         def apply():
             try:
                 if not self.root.winfo_exists():

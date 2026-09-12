@@ -39,7 +39,7 @@ class ModernHoverButton(tk.Frame):
     """Modern flat button with light-blue hover fill and darker border."""
     def __init__(
         self, parent, text="", command=None, font=("Segoe UI", 9, "bold"),
-        padx=10, pady=5, bg="#F8FAFC", border_color="#CBD5E1",
+        padx=10, pady=5, bg="#FFFFFF", border_color="#E0E0E0",
         hover_bg="#E0F2FE", hover_border="#7DD3FC", hover_fg="#0369A1",
         **kwargs
     ):
@@ -51,7 +51,7 @@ class ModernHoverButton(tk.Frame):
         self._hover_bg = hover_bg
         self._hover_border = hover_border
         self._hover_fg = hover_fg
-        self._default_fg = "#1E293B"
+        self._default_fg = "#0F172A"
 
         self.inner = tk.Label(
             self, text=text, font=font, bg=bg, fg=self._default_fg,
@@ -87,8 +87,8 @@ class ModernHoverButton(tk.Frame):
             st = kwargs.pop("state")
             self._state = st
             if st == "disabled":
-                super().configure(bg="#E2E8F0")
-                self.inner.configure(bg="#F1F5F9", fg="#94A3B8", cursor="arrow")
+                super().configure(bg="#E0E0E0")
+                self.inner.configure(bg="#F0F0F0", fg="#94A3B8", cursor="arrow")
             else:
                 super().configure(bg=self._border)
                 self.inner.configure(bg=self._bg, fg=self._default_fg, cursor="hand2")
@@ -122,8 +122,8 @@ class ModernHoverButton(tk.Frame):
 class ModernGreenProgressBar(tk.Canvas):
     """Thick, responsive modern green progress bar."""
     def __init__(
-        self, parent, height=18, bg="#E2E8F0", bar_color="#10B981",
-        border_color="#CBD5E1", **kwargs
+        self, parent, height=18, bg="#FFFFFF", bar_color="#10B981",
+        border_color="#E0E0E0", **kwargs
     ):
         super().__init__(
             parent, height=height, bg=bg, highlightthickness=1,
@@ -158,6 +158,26 @@ class ModernGreenProgressBar(tk.Canvas):
         bar_w = int(w * fraction)
         if bar_w > 0:
             self.create_rectangle(0, 0, bar_w, h, fill=self.bar_color, width=0)
+
+
+class ModernCard(tk.LabelFrame):
+    """High-performance modern card container with centralized background."""
+    def __init__(self, parent, text="", font=("Segoe UI", 9, "bold"), padx=8, pady=6, **kwargs):
+        super().__init__(
+            parent,
+            text=f" {text.strip()} " if text.strip() else "",
+            font=font,
+            fg="#0F172A",
+            bg="#F0F0F0",
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            highlightcolor="#E0E0E0",
+            padx=padx,
+            pady=pady,
+            **kwargs
+        )
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) #os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -248,6 +268,18 @@ class STDFGuidCheckerApp:
         self.tk = tk
         self.ttk = ttk
         sv_ttk.set_theme("light")
+        try:
+            self.root.tk.eval("""
+                proc configure_colors {} {
+                    ttk::style configure . -background "#F0F0F0" -font SunValleyBodyFont
+                    tk_setPalette background "#F0F0F0" foreground "#0F172A" selectBackground "#2563EB" selectForeground "#FFFFFF"
+                }
+            """)
+            self.root.tk.call("tk_setPalette", "background", "#F0F0F0")
+            self.root.update_idletasks()
+        except Exception:
+            pass
+
         self.panel_files: Dict[str, List[str]] = {panel: [] for panel in self.PANELS}
         self.panel_listboxes: Dict[str, Any] = {}
         self._panel_scrollbars: Dict[str, Any] = {}
@@ -268,6 +300,11 @@ class STDFGuidCheckerApp:
         self.root.geometry("1260x820")
         self.root.minsize(1060, 680)
         self.style = ttk.Style()
+        self.style.configure(".", background="#F0F0F0")
+        self.style.configure("TFrame", background="#F0F0F0")
+        self.style.configure("TLabel", background="#F0F0F0", foreground="#0F172A")
+        self.style.configure("TCheckbutton", background="#F0F0F0", foreground="#0F172A")
+        self.style.configure("White.TCheckbutton", background="#FFFFFF", foreground="#0F172A")
         self.style.configure("Accent.TButton", font=("Segoe UI", 11, "bold"), padding=(16, 14))
         self.style.configure("Action.TButton", font=("Segoe UI", 9, "bold"), padding=(10, 8))
         self.style.configure("MiniAction.TButton", font=("Segoe UI", 8), padding=(6, 3))
@@ -341,12 +378,22 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         tk = self.tk
         ttk = self.ttk
 
-        # ── Color Palette & Theming Constants ──────────────────────────────
-        self._nav_bg = "#0F172A"         # Slate-900 header
-        self._nav_tab_hover = "#1E293B"   # Slate-800 tab hover
-        self._nav_tab_active = "#2563EB"  # Vibrant blue active tab
-        self._nav_text = "#94A3B8"        # Slate-400 inactive text
-        self._nav_text_active = "#FFFFFF" # Crisp white active text
+        # ── Color Palette & Theming Constants (Dark Blue Navbar) ───────────
+        self._nav_bg = "#172554"         # Dark blue header (Tailwind blue-950)
+        self._nav_border = "#1E3A8A"     # Dark blue bottom border
+        self._nav_tab_bg = "#1E3A8A"     # Inactive button surface (rich dark blue)
+        self._nav_tab_border = "#2563EB" # Inactive button border
+        self._nav_tab_hover = "#2563EB"  # Hover fill
+        self._nav_tab_hover_border = "#38BDF8"
+        self._nav_tab_hover_fg = "#FFFFFF"
+        self._nav_tab_active = "#2563EB" # Vibrant blue active tab
+        self._nav_tab_active_border = "#60A5FA"
+        self._nav_text = "#E2E8F0"       # Crisp light text for inactive tab
+        self._nav_text_active = "#FFFFFF"# Crisp white active text
+        self._nav_title_fg = "#FFFFFF"   # White navbar brand title
+        self._nav_badge_bg = "#1E3A8A"   # Dark blue badge background
+        self._nav_badge_fg = "#38BDF8"   # Sky blue badge text
+        self._nav_badge_border = "#2563EB"
         self._active_tab = None
         self._nav_items = {}
         self._tab_frames = {}
@@ -395,7 +442,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
     def _build_top_navbar(self, parent):
         tk = self.tk
-        nav = tk.Frame(parent, bg=self._nav_bg, height=52)
+        nav = tk.Frame(parent, bg=self._nav_bg, height=52, highlightthickness=1, highlightbackground=self._nav_border, bd=0)
         nav.pack(side="top", fill="x")
         nav.pack_propagate(False)
 
@@ -409,7 +456,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             text="Automatic FTDC Checker",
             font=("Segoe UI", 12, "bold"),
             bg=self._nav_bg,
-            fg="#FFFFFF",
+            fg=self._nav_title_fg,
         ).pack(side="left", pady=14)
 
         # Version Badge
@@ -417,16 +464,19 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             brand_frame,
             text=f"{APP_VERSION}",
             font=("Segoe UI", 8, "bold"),
-            bg="#1E293B",
-            fg="#38BDF8",
+            bg=self._nav_badge_bg,
+            fg=self._nav_badge_fg,
             padx=6,
             pady=2,
             relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self._nav_badge_border,
         )
         v_badge.pack(side="left", padx=(8, 12), pady=16)
 
         # Subtle Vertical Divider
-        tk.Frame(brand_frame, bg="#334155", width=1, height=22).pack(
+        tk.Frame(brand_frame, bg=self._nav_border, width=1, height=22).pack(
             side="left", padx=(0, 8), pady=15
         )
 
@@ -445,32 +495,37 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         tk.Label(
             status_frame,
             text="● Online",
-            font=("Segoe UI", 9),
+            font=("Segoe UI", 9, "bold"),
             bg=self._nav_bg,
             fg="#10B981",
         ).pack(side="right", pady=16)
 
     def _build_nav_tab(self, parent, name: str):
         tk = self.tk
+        is_active = (name == "FTDC Checker")
         tab_btn = tk.Label(
             parent,
             text=name,
-            font=("Segoe UI", 9, "bold" if name == "FTDC Checker" else "normal"),
-            bg=self._nav_tab_active if name == "FTDC Checker" else self._nav_bg,
-            fg=self._nav_text_active if name == "FTDC Checker" else self._nav_text,
+            font=("Segoe UI", 9, "bold"),
+            bg=self._nav_tab_active if is_active else self._nav_tab_bg,
+            fg=self._nav_text_active if is_active else self._nav_text,
             padx=14,
             pady=6,
             cursor="hand2",
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self._nav_tab_active_border if is_active else self._nav_tab_border,
         )
         tab_btn.pack(side="left", padx=3, pady=11)
 
         def on_enter(e):
             if self._active_tab != name:
-                tab_btn.configure(bg=self._nav_tab_hover, fg="#F1F5F9")
+                tab_btn.configure(bg=self._nav_tab_hover, fg=self._nav_tab_hover_fg, highlightbackground=self._nav_tab_hover_border)
 
         def on_leave(e):
             if self._active_tab != name:
-                tab_btn.configure(bg=self._nav_bg, fg=self._nav_text)
+                tab_btn.configure(bg=self._nav_tab_bg, fg=self._nav_text, highlightbackground=self._nav_tab_border)
 
         def on_click(e):
             self._switch_tab(name)
@@ -494,12 +549,14 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     bg=self._nav_tab_active,
                     fg=self._nav_text_active,
                     font=("Segoe UI", 9, "bold"),
+                    highlightbackground=self._nav_tab_active_border,
                 )
             else:
                 tab_btn.configure(
-                    bg=self._nav_bg,
+                    bg=self._nav_tab_bg,
                     fg=self._nav_text,
-                    font=("Segoe UI", 9, "normal"),
+                    font=("Segoe UI", 9, "bold"),
+                    highlightbackground=self._nav_tab_border,
                 )
         self._active_tab = tab_name
 
@@ -624,14 +681,16 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         right_box.rowconfigure(1, weight=0)  # Action Buttons (Bottom)
 
         # ── Right Top: Test Parameter Filter Card (Swapped to Top) ─────────
-        filter_card = ttk.LabelFrame(right_box, text=" Test Parameter Filter ", padding=(10, 8))
+        filter_card = ModernCard(right_box, text="Test Parameter Filter", padx=8, pady=6)
         filter_card.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
         filter_card.columnconfigure(0, weight=1)
+        self.filter_card = filter_card
 
         # Header Row: Show All Test + Clear Selected + Manual Filter toggle
-        filter_header = ttk.Frame(filter_card)
+        filter_header = tk.Frame(filter_card, bg="#F0F0F0")
         filter_header.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         filter_header.columnconfigure(1, weight=1)
+        self.filter_header = filter_header
 
         self.show_all_tests_button = ModernHoverButton(
             filter_header,
@@ -651,50 +710,65 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         self.clear_selected_tests_button.grid(row=0, column=1, sticky="w", padx=(6, 0))
         self.clear_selected_tests_button.grid_remove()
 
-        ttk.Checkbutton(
+        self.manual_filter_cb = ttk.Checkbutton(
             filter_header,
             text="Manual Filter",
             variable=self.manual_filter_var,
             command=self._sync_manual_filter_state,
-        ).grid(row=0, column=2, sticky="e")
+        )
+        self.manual_filter_cb.grid(row=0, column=2, sticky="e")
+
+        self._filter_card_labels = []
 
         # Parameter Selection Field
-        ttk.Label(filter_card, text="Test Parameter Selection", font=("Segoe UI", 9, "bold")).grid(
-            row=1, column=0, sticky="w", pady=(3, 1)
-        )
+        param_label = tk.Label(filter_card, text="Test Parameter Selection", font=("Segoe UI", 9, "bold"), bg="#F0F0F0", fg="#0F172A")
+        param_label.grid(row=1, column=0, sticky="w", pady=(3, 1))
+        self._filter_card_labels.append(param_label)
+
         self.selected_entry = ttk.Entry(filter_card, textvariable=self.selected_tests_var, state="readonly", font=("Segoe UI", 8))
         self.selected_entry.grid(row=2, column=0, sticky="ew")
         self.filter_widgets.append(self.selected_entry)
 
-        ttk.Label(filter_card, textvariable=self._selected_test_count_var, style="Subtext.TLabel").grid(
-            row=3, column=0, sticky="w", pady=(1, 4)
-        )
+        count_label = tk.Label(filter_card, textvariable=self._selected_test_count_var, font=("Segoe UI", 8), bg="#F0F0F0", fg="#64748B")
+        count_label.grid(row=3, column=0, sticky="w", pady=(1, 4))
+        self._filter_card_labels.append(count_label)
 
         # Direct Test Numbers Input
-        ttk.Label(filter_card, text="Test Numbers", font=("Segoe UI", 9, "bold")).grid(
-            row=4, column=0, sticky="w", pady=(2, 1)
-        )
+        num_label = tk.Label(filter_card, text="Test Numbers", font=("Segoe UI", 9, "bold"), bg="#F0F0F0", fg="#0F172A")
+        num_label.grid(row=4, column=0, sticky="w", pady=(2, 1))
+        self._filter_card_labels.append(num_label)
+
         self.typed_entry = ttk.Entry(filter_card, textvariable=self.tests_var)
         self.typed_entry.grid(row=5, column=0, sticky="ew")
         self.filter_widgets.append(self.typed_entry)
-        ttk.Label(
+
+        fmt_label = tk.Label(
             filter_card,
             text='Format: space or comma separated (e.g. "1001 1002")',
-            style="Subtext.TLabel",
-        ).grid(row=6, column=0, sticky="w", pady=(1, 6))
+            font=("Segoe UI", 8), bg="#F0F0F0", fg="#64748B",
+        )
+        fmt_label.grid(row=6, column=0, sticky="w", pady=(1, 6))
+        self._filter_card_labels.append(fmt_label)
 
         # Range Filtering
-        range_frame = ttk.Frame(filter_card)
+        range_frame = tk.Frame(filter_card, bg="#F0F0F0")
         range_frame.grid(row=7, column=0, sticky="ew", pady=(2, 2))
         range_frame.columnconfigure(1, weight=1)
         range_frame.columnconfigure(3, weight=1)
+        self.range_frame = range_frame
 
-        ttk.Label(range_frame, text="Range From:").grid(row=0, column=0, sticky="w", padx=(0, 4))
+        rf_label = tk.Label(range_frame, text="Range From:", font=("Segoe UI", 8), bg="#F0F0F0", fg="#64748B")
+        rf_label.grid(row=0, column=0, sticky="w", padx=(0, 4))
+        self._filter_card_labels.append(rf_label)
+
         self.range_from_entry = ttk.Entry(range_frame, textvariable=self.range_from_var)
         self.range_from_entry.grid(row=0, column=1, sticky="ew", padx=(0, 8))
         self.filter_widgets.append(self.range_from_entry)
 
-        ttk.Label(range_frame, text="Range To:").grid(row=0, column=2, sticky="w", padx=(4, 4))
+        rt_label = tk.Label(range_frame, text="Range To:", font=("Segoe UI", 8), bg="#F0F0F0", fg="#64748B")
+        rt_label.grid(row=0, column=2, sticky="w", padx=(4, 4))
+        self._filter_card_labels.append(rt_label)
+
         self.range_to_entry = ttk.Entry(range_frame, textvariable=self.range_to_var)
         self.range_to_entry.grid(row=0, column=3, sticky="ew")
         self.filter_widgets.append(self.range_to_entry)
@@ -804,19 +878,19 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         ttk = self.ttk
 
         self._log_cur_height = 120
-        self._log_drawer = tk.Frame(parent, bg="#F1F5F9", bd=1, relief="solid")
+        self._log_drawer = tk.Frame(parent, bg="#F0F0F0", highlightthickness=1, highlightbackground="#E0E0E0", bd=0, relief="flat")
         self._log_drawer.place(relx=0, rely=1.0, relwidth=1.0, height=self._log_cur_height, anchor="sw")
 
         # Drag handle bar (Clean default light styling)
-        drag_bar = tk.Frame(self._log_drawer, bg="#E2E8F0", height=28, cursor="sb_v_double_arrow")
+        drag_bar = tk.Frame(self._log_drawer, bg="#F0F0F0", height=28, cursor="sb_v_double_arrow")
         drag_bar.pack(fill="x")
 
         tk.Label(
             drag_bar,
             text="⠿ Execution Console & Activity Log",
             font=("Segoe UI", 9, "bold"),
-            bg="#E2E8F0",
-            fg="#1E293B",
+            bg="#F0F0F0",
+            fg="#0F172A",
             cursor="sb_v_double_arrow",
         ).pack(side="left", padx=10)
 
@@ -824,13 +898,13 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             drag_bar,
             text="(drag handle to resize)",
             font=("Segoe UI", 8),
-            bg="#E2E8F0",
-            fg="#64748B",
+            bg="#F0F0F0",
+            fg="#475569",
             cursor="sb_v_double_arrow",
         ).pack(side="left")
 
         # Console Tool Buttons
-        btn_box = tk.Frame(drag_bar, bg="#E2E8F0")
+        btn_box = tk.Frame(drag_bar, bg="#F0F0F0")
         btn_box.pack(side="right", padx=6, pady=2)
 
         def set_h(h):
@@ -948,8 +1022,8 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             hdr,
             textvariable=count_var,
             font=("Segoe UI", 8, "bold"),
-            bg="#F1F5F9",
-            fg="#94A3B8",
+            bg="#CBD5E1",
+            fg="#334155",
             padx=7,
             pady=1,
             relief="flat",
@@ -1034,6 +1108,35 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _sync_manual_filter_state(self):
         enabled = bool(self.manual_filter_var.get())
         state = "normal" if enabled and not self.is_running and not self.is_scanning_tests else "disabled"
+
+        card_bg = "#FFFFFF" if enabled else "#F0F0F0"
+        if hasattr(self, "filter_card") and self.filter_card:
+            try:
+                self.filter_card.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "filter_header") and self.filter_header:
+            try:
+                self.filter_header.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "range_frame") and self.range_frame:
+            try:
+                self.range_frame.configure(bg=card_bg)
+            except Exception:
+                pass
+        if hasattr(self, "_filter_card_labels"):
+            for lbl in self._filter_card_labels:
+                try:
+                    lbl.configure(bg=card_bg)
+                except Exception:
+                    pass
+        if hasattr(self, "manual_filter_cb") and self.manual_filter_cb:
+            try:
+                self.manual_filter_cb.configure(style="White.TCheckbutton" if enabled else "TCheckbutton")
+            except Exception:
+                pass
+
         for widget in self.filter_widgets:
             try:
                 # Do not disable show_all_tests_button when manual_filter is False;
@@ -1170,7 +1273,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             if count > 0:
                 badge.configure(bg="#DCFCE7", fg="#15803D")
             else:
-                badge.configure(bg="#F1F5F9", fg="#94A3B8")
+                badge.configure(bg="#CBD5E1", fg="#334155")
         if hasattr(self, "_update_panel_scrollbar"):
             self._update_panel_scrollbar(panel)
 
@@ -1247,7 +1350,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             if hasattr(self, "_panel_count_vars") and panel in self._panel_count_vars:
                 self._panel_count_vars[panel].set("0 files")
             if hasattr(self, "_panel_badges") and panel in self._panel_badges:
-                self._panel_badges[panel].configure(bg="#F1F5F9", fg="#94A3B8")
+                self._panel_badges[panel].configure(bg="#CBD5E1", fg="#334155")
             if hasattr(self, "_update_panel_scrollbar"):
                 self._update_panel_scrollbar(panel)
 
@@ -1659,14 +1762,14 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         panels.columnconfigure(1, weight=1)
 
         for col, (section_title, rows) in enumerate(summary_sections):
-            box = tk.Frame(panels, borderwidth=1, relief="solid", bg="#B7B7B7")
+            box = tk.Frame(panels, borderwidth=1, relief="solid", bg="#E0E0E0")
             box.grid(row=0, column=col, sticky="nsew", padx=(0, 5) if col == 0 else (5, 0))
             box.columnconfigure(0, weight=1)
 
             header = tk.Label(box, text=section_title, font=("Segoe UI", 10, "bold"), bg="#F0F0F0", anchor="w", padx=8, pady=4)
             header.grid(row=0, column=0, sticky="ew")
 
-            table = tk.Frame(box, bg="#B7B7B7")
+            table = tk.Frame(box, bg="#E0E0E0")
             table.grid(row=1, column=0, sticky="nsew", padx=1, pady=(0, 1))
             table.columnconfigure(0, weight=1)
             table.columnconfigure(1, weight=0)
@@ -2070,7 +2173,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         header_texts = ["File Name", "Total Parts", "Tested Good", "Status", "Action"]
 
         # ── Column header row ──────────────────────────────────────────────
-        header_frame = tk.Frame(list_frame, bg="#D0D0D0")
+        header_frame = tk.Frame(list_frame, bg="#E0E0E0")
         header_frame.grid(row=0, column=0, sticky="ew")
         for ci, (txt, wt) in enumerate(zip(header_texts, col_weights)):
             header_frame.columnconfigure(ci, weight=wt, uniform="col")
@@ -2078,13 +2181,13 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             px = 8 if ci == 0 else 4
             tk.Label(
                 header_frame, text=txt,
-                font=("Segoe UI", 9, "bold"), bg="#E0E0E0",
+                font=("Segoe UI", 9, "bold"), bg="#F0F0F0", fg="#0F172A",
                 anchor=align, padx=px, pady=4,
             ).grid(row=0, column=ci, sticky="nsew", padx=(0, 1), pady=(0, 1))
 
         # ── Scrollable canvas ──────────────────────────────────────────────
         canvas = tk.Canvas(
-            list_frame, bg="white", highlightthickness=0, borderwidth=0,
+            list_frame, bg="#FFFFFF", highlightthickness=1, highlightbackground="#E0E0E0", borderwidth=0,
         )
         canvas.grid(row=1, column=0, sticky="nsew")
         v_scroll = self.ttk.Scrollbar(
@@ -2093,7 +2196,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         v_scroll.grid(row=1, column=1, sticky="ns")
         canvas.configure(yscrollcommand=v_scroll.set)
 
-        inner = tk.Frame(canvas, bg="#D0D0D0")
+        inner = tk.Frame(canvas, bg="#E0E0E0")
         canvas_win_id = canvas.create_window((0, 0), window=inner, anchor="nw")
 
         def _on_canvas_cfg(event):
@@ -2173,7 +2276,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             """Add a new row to the grid for a discovered file. Returns the widgets dict."""
             ri = _next_row[0]
             _next_row[0] += 1
-            bg = "#FFFFFF" if ri % 2 == 0 else "#F7F7F7"
+            bg = "#FFFFFF"
 
             # col 0 — File Name
             fn_lbl = tk.Label(
@@ -2984,7 +3087,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     # ── Single flat table — header in row 0, data in rows 1+ ──
                     # No outer box, no canvas. One parent = perfect column alignment,
                     # zero gray area. Window height comes purely from widget sizes.
-                    table = tk.Frame(frm, bg="#B7B7B7")
+                    table = tk.Frame(frm, bg="#E0E0E0")
                     table.grid(row=0, column=0, sticky="nsew")
                     table.columnconfigure(0, weight=1)
                     table.columnconfigure(1, weight=1)
@@ -3264,10 +3367,18 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 #       multiprocessing.freeze_support()
 # =============================================================================
 def main():
-    import tkinter as tk
-    root = tk.Tk()
-    STDFGuidCheckerApp(root)
-    root.mainloop()
+    try:
+        import sys, os
+        hub_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "PTS_Hub")
+        if hub_dir not in sys.path:
+            sys.path.insert(0, hub_dir)
+        from PTS_Hub.main import launch_hub
+        launch_hub()
+    except Exception:
+        import tkinter as tk
+        root = tk.Tk()
+        STDFGuidCheckerApp(root)
+        root.mainloop()
 
 
 if __name__ == "__main__":
