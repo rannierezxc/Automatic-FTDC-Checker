@@ -15,8 +15,7 @@ import mmap
 import os
 import re
 import struct
-from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 LogFunc = Optional[Callable[[str], None]]
@@ -84,24 +83,9 @@ def _path_filename_sort_key(path: str) -> Tuple[int, str, str, str]:
     return 1, base_name, "", abs_path.casefold()
 
 
-def _gui_path_filename_sort_key(path: str):
-    """Sort key matching the GUI timestamp-from-filename ordering."""
-    return _path_filename_sort_key(path)
-
-
-def _path_modified_sort_key(path: str):
-    """Backward-compatible alias for older callers."""
-    return _path_filename_sort_key(path)
-
-
 def sort_paths_by_filename_timestamp(input_paths: Sequence[str]) -> List[str]:
     """Sort STDF paths using the shared GUI timestamp-from-filename rule."""
     return sorted(list(input_paths or []), key=_path_filename_sort_key)
-
-
-def sort_paths_by_modified(input_paths: Sequence[str]) -> List[str]:
-    """Backward-compatible wrapper using the shared GUI timestamp sort key."""
-    return sort_paths_by_filename_timestamp(input_paths)
 
 
 def _format_stdf_timestamp(value) -> str:
@@ -415,29 +399,6 @@ class STDFReader:
             fields["ABRT_CNT"], offset = self._read_u4_at(data, offset, end)
             fields["GOOD_CNT"], offset = self._read_u4_at(data, offset, end)
             fields["FUNC_CNT"], offset = self._read_u4_at(data, offset, end)
-        except (IndexError, struct.error):
-            pass
-        return fields or None
-
-    def parse_sdr_compact(self, data, start=0, end=None):
-        fields = {}
-        offset = start
-        end = self._limit_for(data, end)
-        try:
-            fields["HEAD_NUM"], offset = self._read_u1_at(data, offset, end)
-            fields["SITE_GRP"], offset = self._read_u1_at(data, offset, end)
-            fields["SITE_CNT"], offset = self._read_u1_at(data, offset, end)
-            site_numbers = []
-            for _ in range(fields["SITE_CNT"]):
-                site_num, offset = self._read_u1_at(data, offset, end)
-                site_numbers.append(site_num)
-            fields["SITE_NUM_LIST"] = site_numbers
-            fields["SITE_NUM_LIST_TEXT"] = ", ".join(str(s) for s in site_numbers)
-            for key in ("HAND_TYP", "HAND_ID", "CARD_TYP", "CARD_ID", "LOAD_TYP",
-                        "LOAD_ID", "DIB_TYP", "DIB_ID", "CABL_TYP", "CABL_ID",
-                        "CONT_TYP", "CONT_ID", "LASR_TYP", "LASR_ID", "EXTR_TYP",
-                        "EXTR_ID"):
-                fields[key], offset = self._read_cn_at(data, offset, end)
         except (IndexError, struct.error):
             pass
         return fields or None
@@ -910,45 +871,6 @@ def parse_stdf_file(
         "PARTS": filtered_parts, "RESULTS": filtered_results,
         "TEST_META": {}, "MIR": mir_info, "MRR": mrr_info, "SDR": [],
     }, {}, 0
-
-
-def parse_mrr_only(filepath: str) -> Optional[Dict]:
-    """Parse only the MRR record from an STDF file for fast integrity checking.
-
-    Scans records sequentially until the MRR (type=1, sub=20) is found, then
-    returns its fields dict. Utilizes a fast memory-mapped loop to avoid generator overhead.
-    """
-    try:
-        with STDFReader(filepath) as reader:
-            mm = reader._mm
-            file_size = reader.file_size
-            if mm is not None:
-                if file_size >= 5 and mm[2] == 0 and mm[3] == 10:
-                    reader.endian = ">" if mm[4] == 1 else "<"
-                    reader._rebuild_structs()
-                endian = reader.endian
-                s_H_unpack = struct.Struct(f"{endian}H").unpack_from
-                offset = 0
-                while offset + 4 <= file_size:
-                    rec_len = s_H_unpack(mm, offset)[0]
-                    rec_typ = mm[offset + 2]
-                    rec_sub = mm[offset + 3]
-                    body_start = offset + 4
-                    body_end = body_start + rec_len
-                    if body_end > file_size:
-                        break
-                    if rec_typ == 1 and rec_sub == 20:  # MRR
-                        return reader.parse_mrr_compact(mm, start=body_start, end=body_end)
-                    offset = body_end
-            else:
-                for rec_typ, rec_sub, data, start, end in reader.record_spans():
-                    if data is None:
-                        continue
-                    if rec_typ == 1 and rec_sub == 20:  # MRR
-                        return reader.parse_mrr_compact(data, start=start, end=end)
-    except Exception:
-        return None
-    return None
 
 
 def parse_check_summary(filepath: str) -> Dict:

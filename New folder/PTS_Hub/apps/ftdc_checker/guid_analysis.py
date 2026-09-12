@@ -19,13 +19,33 @@ import sys
 from array import array as _CArray
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
-from stdf_parser import (
-    ByteProgressFunc, LogFunc, ProgressFunc,
-    _count_files_text, _emit_log, sort_paths_by_filename_timestamp,
-    parse_stdf_file, _parse_stdf_worker,
-)
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_HUB_ROOT = os.path.dirname(os.path.dirname(_CURRENT_DIR))
+for _p in (_HUB_ROOT, _CURRENT_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+try:
+    from apps.ftdc_checker.stdf_parser import (
+        ByteProgressFunc, LogFunc, ProgressFunc,
+        _count_files_text, _emit_log, sort_paths_by_filename_timestamp,
+        parse_stdf_file, _parse_stdf_worker,
+    )
+except ImportError:
+    try:
+        from .stdf_parser import (
+            ByteProgressFunc, LogFunc, ProgressFunc,
+            _count_files_text, _emit_log, sort_paths_by_filename_timestamp,
+            parse_stdf_file, _parse_stdf_worker,
+        )
+    except ImportError:
+        from stdf_parser import (
+            ByteProgressFunc, LogFunc, ProgressFunc,
+            _count_files_text, _emit_log, sort_paths_by_filename_timestamp,
+            parse_stdf_file, _parse_stdf_worker,
+        )
 
 # -- Parallelism configuration ------------------------------------------------
 # Files within a panel are CPU-bound to parse (a multi-million-record walk), so
@@ -62,12 +82,21 @@ def _resolve_worker_count(max_workers, n_files):
 
 # ── Production WXY mapping (loaded from mask_wxy_map.json) ───────────────────
 def _get_json_path(filename: str) -> str:
+    try:
+        from core.config import get_asset_path
+        return get_asset_path(filename)
+    except ImportError:
+        pass
     base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    candidate = os.path.join(base_dir, filename)
-    if os.path.isfile(candidate):
-        return candidate
-    module_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(module_dir, filename)
+    for candidate in (
+        os.path.join(base_dir, "assets", filename),
+        os.path.join(base_dir, filename),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), filename),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", filename),
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+    return os.path.join(base_dir, filename)
 
 
 _MASK_WXY_JSON_PATH = _get_json_path("mask_wxy_map.json")
@@ -144,12 +173,6 @@ def _format_coord_value(value: object) -> str:
         return str(int(round(number)))
     return f"{number:.6f}".rstrip("0").rstrip(".")
 
-
-def _make_wxy(wafer_value: object, x_value: object, y_value: object) -> str:
-    wafer = _format_coord_value(wafer_value)
-    x_coord = _format_coord_value(x_value)
-    y_coord = _format_coord_value(y_value)
-    return f"{wafer}_{x_coord}_{y_coord}" if wafer and x_coord and y_coord else ""
 
 
 def _parse_int_field(value: object, field_name: str) -> int:
@@ -361,7 +384,6 @@ def parse_panel_wxy_parts(
             done_bytes = 0
             with ProcessPoolExecutor(max_workers=workers) as ex:
                 future_to_path = {ex.submit(_parse_stdf_worker, t): t[0] for t in tasks}
-                from concurrent.futures import as_completed
                 for fut in as_completed(future_to_path):
                     fpath, parsed = fut.result()
                     parsed_by_path[fpath] = parsed

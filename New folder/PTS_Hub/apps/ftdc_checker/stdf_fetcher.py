@@ -22,6 +22,12 @@ import shutil
 import sys
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_HUB_ROOT = os.path.dirname(os.path.dirname(_CURRENT_DIR))
+for _p in (_HUB_ROOT, _CURRENT_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 LOCAL_DEST_BASE = r"C:\FTDC"
 STDF_EXTENSIONS = frozenset({".stdf", ".std", ".bak", ".old", ".stdf_open", ".std_open"})
@@ -74,12 +80,21 @@ _MPCS_KEY = "mpcs"
 
 
 def _get_json_path(filename: str) -> str:
+    try:
+        from core.config import get_asset_path
+        return get_asset_path(filename)
+    except ImportError:
+        pass
     base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    candidate = os.path.join(base_dir, filename)
-    if os.path.isfile(candidate):
-        return candidate
-    module_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(module_dir, filename)
+    for candidate in (
+        os.path.join(base_dir, "assets", filename),
+        os.path.join(base_dir, filename),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), filename),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", filename),
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+    return os.path.join(base_dir, filename)
 
 _MPC_PARTNUMBER_JSON_PATH = _get_json_path("mpc_partnumber.json")
 
@@ -283,16 +298,6 @@ def resolve_mpc_details(mpc_text: str) -> Tuple[List[str], List[str], List[str]]
 
     return devices_unique, testers_unique, network_paths
 
-
-def resolve_device_names(mpc_text: str) -> List[str]:
-    """
-    Look up the exact MPC key in mpc_partnumber.json and return the
-    list of unique device names it maps to (typically one).
-
-    Raises ValueError if the MPC is not found in the JSON file.
-    """
-    devices, _, _ = resolve_mpc_details(mpc_text)
-    return devices
 
 
 # ── Local destination cache ───────────────────────────────────────────────────

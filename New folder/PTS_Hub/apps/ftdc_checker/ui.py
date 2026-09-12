@@ -1,211 +1,108 @@
 """
-Tkinter GUI for the optimized GUID checker.
-Extracted from v25 monolith. Uses optimized parser and analysis modules.
+Automatic FTDC Checker Application Frame.
+Encapsulated within FTDCCheckerFrame (Zone 1, Zone 2, Zone 3).
 """
 import os
-import sv_ttk
+import sys
 import multiprocessing
 import re
 import threading
 import traceback
 import xml.etree.ElementTree as ET
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox, filedialog
 import tkinter.font as tkfont
-from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
-from stdf_parser import (
-    STDFReader, scan_test_list, parse_filter_values, parse_stdf_file,
-    _count_files_text, _format_limit_text,
-    _emit_log, _format_stdf_timestamp, _prepare_scanned_test_row,
-    ByteProgressFunc, LogFunc, ProgressFunc,
-)
-from guid_analysis import (
-    analyze_guid_data, parse_panel_wxy_parts, resolve_wxy_test_numbers,
-    MPC_WXY_TEST_MAP, WXY_KEYS, UNSUPPORTED_MPC_WXY_MESSAGE,
-    normalize_mpc_key, _parse_wxy_from_mpc_text, _format_coord_value,
-)
-from excel_output import (
-    write_result_excel, build_summary_and_details, build_details_text, _fmt,
-)
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+if APP_DIR not in sys.path:
+    sys.path.insert(0, APP_DIR)
+HUB_ROOT = os.path.dirname(os.path.dirname(APP_DIR))
+if HUB_ROOT not in sys.path:
+    sys.path.insert(0, HUB_ROOT)
 
+try:
+    from core.widgets import ModernHoverButton, ModernGreenProgressBar
+    from core.config import get_asset_path, ICON_PATH, APP_VERSION
+    from core.theme import setup_theme
+except ImportError:
+    # Fallback when run directly inside apps/ftdc_checker
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+    from core.widgets import ModernHoverButton, ModernGreenProgressBar
+    from core.config import get_asset_path, ICON_PATH, APP_VERSION
+    from core.theme import setup_theme
 
-# ── Custom Modern UX Widgets ──────────────────────────────────────────────────
-
-class ModernHoverButton(tk.Frame):
-    """Modern flat button with light-blue hover fill and darker border."""
-    def __init__(
-        self, parent, text="", command=None, font=("Segoe UI", 9, "bold"),
-        padx=10, pady=5, bg="#F8FAFC", border_color="#CBD5E1",
-        hover_bg="#E0F2FE", hover_border="#7DD3FC", hover_fg="#0369A1",
-        **kwargs
-    ):
-        super().__init__(parent, bg=border_color, padx=1, pady=1)
-        self.command = command
-        self._state = "normal"
-        self._bg = bg
-        self._border = border_color
-        self._hover_bg = hover_bg
-        self._hover_border = hover_border
-        self._hover_fg = hover_fg
-        self._default_fg = "#1E293B"
-
-        self.inner = tk.Label(
-            self, text=text, font=font, bg=bg, fg=self._default_fg,
-            padx=padx, pady=pady, cursor="hand2"
+try:
+    from apps.ftdc_checker.stdf_parser import (
+        STDFReader, scan_test_list, parse_filter_values, parse_stdf_file,
+        _count_files_text, _format_limit_text,
+        _emit_log, _format_stdf_timestamp, _prepare_scanned_test_row,
+        ByteProgressFunc, LogFunc, ProgressFunc, parse_check_summary,
+        _path_filename_sort_key, _extract_first_filename_timestamp,
+    )
+    from apps.ftdc_checker.guid_analysis import (
+        analyze_guid_data, parse_panel_wxy_parts, resolve_wxy_test_numbers,
+        MPC_WXY_TEST_MAP, WXY_KEYS, UNSUPPORTED_MPC_WXY_MESSAGE,
+        normalize_mpc_key, _parse_wxy_from_mpc_text, _format_coord_value,
+        _parse_int_field,
+    )
+    from apps.ftdc_checker.excel_output import (
+        write_result_excel, build_summary_and_details, build_details_text, _fmt,
+    )
+    from apps.ftdc_checker.stdf_fetcher import (
+        LOCAL_DEST_BASE, STDF_EXTENSIONS, resolve_mpc_details,
+        search_stdf_files, copy_stdf_files, resolve_network_paths,
+        existing_stdf_basenames, get_common_paths,
+    )
+except ImportError:
+    try:
+        from .stdf_parser import (
+            STDFReader, scan_test_list, parse_filter_values, parse_stdf_file,
+            _count_files_text, _format_limit_text,
+            _emit_log, _format_stdf_timestamp, _prepare_scanned_test_row,
+            ByteProgressFunc, LogFunc, ProgressFunc, parse_check_summary,
+            _path_filename_sort_key, _extract_first_filename_timestamp,
         )
-        self.inner.pack(fill="both", expand=True)
-
-        for w in (self, self.inner):
-            w.bind("<Enter>", self._on_enter)
-            w.bind("<Leave>", self._on_leave)
-            w.bind("<Button-1>", self._on_click)
-
-    def _on_enter(self, e):
-        if self._state == "normal":
-            super().configure(bg=self._hover_border)
-            self.inner.configure(bg=self._hover_bg, fg=self._hover_fg)
-
-    def _on_leave(self, e):
-        if self._state == "normal":
-            super().configure(bg=self._border)
-            self.inner.configure(bg=self._bg, fg=self._default_fg)
-
-    def _on_click(self, e):
-        if self._state == "normal" and self.command:
-            self.command()
-
-    def configure(self, cnf=None, **kwargs):
-        if cnf is not None:
-            kwargs.update(cnf)
-        if "command" in kwargs:
-            self.command = kwargs.pop("command")
-        if "state" in kwargs:
-            st = kwargs.pop("state")
-            self._state = st
-            if st == "disabled":
-                super().configure(bg="#E2E8F0")
-                self.inner.configure(bg="#F1F5F9", fg="#94A3B8", cursor="arrow")
-            else:
-                super().configure(bg=self._border)
-                self.inner.configure(bg=self._bg, fg=self._default_fg, cursor="hand2")
-        if "text" in kwargs:
-            self.inner.configure(text=kwargs.pop("text"))
-        if kwargs:
-            super().configure(**kwargs)
-
-    def config(self, cnf=None, **kwargs):
-        self.configure(cnf=cnf, **kwargs)
-
-    def cget(self, key):
-        if key == "state":
-            return self._state
-        if key == "command":
-            return self.command
-        if key == "text":
-            return self.inner.cget("text")
-        return super().cget(key)
-
-    def __getitem__(self, key):
-        if key == "state":
-            return self._state
-        if key == "command":
-            return self.command
-        if key == "text":
-            return self.inner.cget("text")
-        return super().__getitem__(key)
-
-
-class ModernGreenProgressBar(tk.Canvas):
-    """Thick, responsive modern green progress bar."""
-    def __init__(
-        self, parent, height=18, bg="#E2E8F0", bar_color="#10B981",
-        border_color="#CBD5E1", **kwargs
-    ):
-        super().__init__(
-            parent, height=height, bg=bg, highlightthickness=1,
-            highlightbackground=border_color, **kwargs
+        from .guid_analysis import (
+            analyze_guid_data, parse_panel_wxy_parts, resolve_wxy_test_numbers,
+            MPC_WXY_TEST_MAP, WXY_KEYS, UNSUPPORTED_MPC_WXY_MESSAGE,
+            normalize_mpc_key, _parse_wxy_from_mpc_text, _format_coord_value,
+            _parse_int_field,
         )
-        self.bar_color = bar_color
-        self.bg_color = bg
-        self._value = 0.0
-        self._max = 100.0
-        self.bind("<Configure>", lambda e: self._draw())
+        from .excel_output import (
+            write_result_excel, build_summary_and_details, build_details_text, _fmt,
+        )
+        from .stdf_fetcher import (
+            LOCAL_DEST_BASE, STDF_EXTENSIONS, resolve_mpc_details,
+            search_stdf_files, copy_stdf_files, resolve_network_paths,
+            existing_stdf_basenames, get_common_paths,
+        )
+    except ImportError:
+        from stdf_parser import (
+            STDFReader, scan_test_list, parse_filter_values, parse_stdf_file,
+            _count_files_text, _format_limit_text,
+            _emit_log, _format_stdf_timestamp, _prepare_scanned_test_row,
+            ByteProgressFunc, LogFunc, ProgressFunc, parse_check_summary,
+            _path_filename_sort_key, _extract_first_filename_timestamp,
+        )
+        from guid_analysis import (
+            analyze_guid_data, parse_panel_wxy_parts, resolve_wxy_test_numbers,
+            MPC_WXY_TEST_MAP, WXY_KEYS, UNSUPPORTED_MPC_WXY_MESSAGE,
+            normalize_mpc_key, _parse_wxy_from_mpc_text, _format_coord_value,
+            _parse_int_field,
+        )
+        from excel_output import (
+            write_result_excel, build_summary_and_details, build_details_text, _fmt,
+        )
+        from stdf_fetcher import (
+            LOCAL_DEST_BASE, STDF_EXTENSIONS, resolve_mpc_details,
+            search_stdf_files, copy_stdf_files, resolve_network_paths,
+            existing_stdf_basenames, get_common_paths,
+        )
 
-    def configure(self, **kwargs):
-        if "value" in kwargs:
-            self._value = max(0.0, min(self._max, float(kwargs.pop("value"))))
-            self._draw()
-        if "maximum" in kwargs:
-            self._max = float(kwargs.pop("maximum"))
-            self._draw()
-        if kwargs:
-            super().configure(**kwargs)
-
-    def config(self, **kwargs):
-        self.configure(**kwargs)
-
-    def _draw(self):
-        self.delete("all")
-        w = self.winfo_width()
-        h = self.winfo_height()
-        if w <= 1 or h <= 1:
-            return
-        fraction = self._value / self._max if self._max > 0 else 0
-        bar_w = int(w * fraction)
-        if bar_w > 0:
-            self.create_rectangle(0, 0, bar_w, h, fill=self.bar_color, width=0)
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__)) #os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-icon_path = os.path.join(BASE_DIR, 'FTDC_Checker_icon.ico')
-_FILENAME_TIMESTAMP_RE = re.compile(r"\d{14}")
-APP_VERSION = "v1.3"
-
-
-def _extract_first_filename_timestamp(path: str) -> str:
-    """Return the first valid YYYYMMDDHHMMSS timestamp found in the filename.
-
-    Some STDF files can represent the same datalog using different naming
-    conventions, for example:
-      - mmt-271300725.900_e_20260714082531_6140_2607142300.std.old
-      - ATA5831_MMT-271300725.900_1__20260714082531.std
-
-    Plain filename sorting puts the ATA-prefixed version first because of
-    lexicographical order. This helper extracts the first 14-digit timestamp
-    from left to right and validates it as YYYYMMDDHHMMSS, so both naming
-    conventions are arranged by the actual datalog timestamp instead.
-    """
-    filename = os.path.basename(os.path.abspath(path))
-    for match in _FILENAME_TIMESTAMP_RE.finditer(filename):
-        timestamp = match.group(0)
-        try:
-            datetime.strptime(timestamp, "%Y%m%d%H%M%S")
-        except ValueError:
-            continue
-        return timestamp
-    return ""
-
-
-def _path_filename_sort_key(path: str) -> Tuple[int, str, str, str]:
-    """Return a deterministic ascending datalog sort key.
-
-    Files are ordered primarily by the first valid YYYYMMDDHHMMSS timestamp
-    found in the filename, scanning from left to right. The base filename and
-    absolute path are used only as deterministic tie-breakers.
-
-    Files with no valid 14-digit timestamp fall back behind timestamped files
-    and are then ordered by filename, case-insensitively.
-    """
-    abs_path = os.path.abspath(path)
-    base_name = os.path.basename(abs_path).casefold()
-    timestamp = _extract_first_filename_timestamp(abs_path)
-    if timestamp:
-        return 0, timestamp, base_name, abs_path.casefold()
-    return 1, base_name, "", abs_path.casefold()
+icon_path = get_asset_path("FTDC_Checker_icon.ico")
 
 
 def _merge_test_rows(rows):
@@ -231,23 +128,24 @@ def _merge_test_rows(rows):
     return sorted(merged.values(), key=lambda item: int(item["TEST_NUM"]))
 
 
-class STDFGuidCheckerApp:
+
+class FTDCCheckerFrame(ttk.Frame):
     PANELS = ("FIRST PASS", "RETEST", "QC")
 
-    def __init__(self, root):
+    def __init__(self, parent, hub=None):
         import tkinter as tk
         from tkinter import ttk
-        import ctypes
-        try:
-    # Set an arbitrary string as your App ID
-            myappid = 'FTDC_Checker' 
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-        except Exception as e:
-            pass # Handle gracefully if not running on Windows
-        self.root = root
-        self.tk = tk
+        super().__init__(parent)
+        self.parent = parent
+        self.hub = hub
+        self.root = self.winfo_toplevel() if hasattr(self, "winfo_toplevel") else parent
+        self.tk_mod = tk
         self.ttk = ttk
-        sv_ttk.set_theme("light")
+        try:
+            self.style = setup_theme(self.root)
+        except Exception:
+            self.style = ttk.Style()
+
         self.panel_files: Dict[str, List[str]] = {panel: [] for panel in self.PANELS}
         self.panel_listboxes: Dict[str, Any] = {}
         self._panel_scrollbars: Dict[str, Any] = {}
@@ -262,32 +160,6 @@ class STDFGuidCheckerApp:
         self._cached_tests: List[Dict[str, object]] = []
         self._test_scan_cache: Dict[Tuple[str, int, int], List[Dict[str, object]]] = {}
         self._analysis_cache: Dict[Tuple[object, ...], Dict[str, object]] = {}
-
-        self.root.title(f"Automatic FTDC Checker {APP_VERSION}")
-        self.root.iconbitmap(default=icon_path)
-        self.root.geometry("1260x820")
-        self.root.minsize(1060, 680)
-        self.style = ttk.Style()
-        self.style.configure("Accent.TButton", font=("Segoe UI", 11, "bold"), padding=(16, 14))
-        self.style.configure("Action.TButton", font=("Segoe UI", 9, "bold"), padding=(10, 8))
-        self.style.configure("MiniAction.TButton", font=("Segoe UI", 8), padding=(6, 3))
-        self.style.configure("CardHeader.TLabel", font=("Segoe UI", 10, "bold"))
-        self.style.configure("Subtext.TLabel", font=("Segoe UI", 8), foreground="#64748B")
-
-        # Register Neon Green fill style on default tkinter Progressbar
-        try:
-            self.root.tk.eval('''
-image create photo neon_pbar -width 20 -height 12
-neon_pbar put #00E676 -to 0 0 20 12
-catch {ttk::style element create Neon.pbar image neon_pbar}
-ttk::style layout Neon.Horizontal.TProgressbar {
-    Horizontal.Progressbar.trough -sticky nswe -children {
-        Neon.pbar -side left -sticky ns
-    }
-}
-''')
-        except Exception:
-            pass
 
         self.lot_id_var = tk.StringVar()
         self.mpc_var = tk.StringVar()
@@ -337,219 +209,17 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         # never blocks the UI (best-effort; failures are ignored).
         self.root.after(200, self._prewarm_mpc_connection)
 
+
     def _build_ui(self):
-        tk = self.tk
+
+        tk = self.tk_mod
         ttk = self.ttk
 
-        # ── Color Palette & Theming Constants ──────────────────────────────
-        self._nav_bg = "#0F172A"         # Slate-900 header
-        self._nav_tab_hover = "#1E293B"   # Slate-800 tab hover
-        self._nav_tab_active = "#2563EB"  # Vibrant blue active tab
-        self._nav_text = "#94A3B8"        # Slate-400 inactive text
-        self._nav_text_active = "#FFFFFF" # Crisp white active text
-        self._active_tab = None
-        self._nav_items = {}
-        self._tab_frames = {}
-
-        # ── Root Outer Container ───────────────────────────────────────────
-        outer = ttk.Frame(self.root)
-        outer.pack(fill="both", expand=True)
-
-        # ── 1. Modern Top Navigation Bar ───────────────────────────────────
-        self._build_top_navbar(outer)
-
-        # ── 2. Content Area for Tabs ───────────────────────────────────────
-        self._content_area = ttk.Frame(outer)
-        self._content_area.pack(fill="both", expand=True)
-
-        # ── 3. Tab Pages ───────────────────────────────────────────────────
-        # Tab 1: FTDC Checker (Main app)
-        ftdc_tab = ttk.Frame(self._content_area)
-        self._tab_frames["FTDC Checker"] = ftdc_tab
-        self._build_ftdc_tab(ftdc_tab)
-
-        # Tab 2: STDF2SUM (Placeholder)
-        stdf2sum_tab = ttk.Frame(self._content_area)
-        self._tab_frames["STDF2SUM"] = stdf2sum_tab
-        self._build_placeholder_tab(
-            stdf2sum_tab,
-            title="STDF2SUM Converter",
-            subtitle="Batch-convert STDF datalogs to standardized summary formats.",
-            icon="📊",
-        )
-
-        # Tab 3: Data Analysis (Placeholder)
-        analysis_tab = ttk.Frame(self._content_area)
-        self._tab_frames["Data Analysis"] = analysis_tab
-        self._build_placeholder_tab(
-            analysis_tab,
-            title="Data Analysis Hub",
-            subtitle="Advanced parametric distribution, yield trend analytics, and outlier detection.",
-            icon="📈",
-        )
-
-        # Default active tab
-        self._switch_tab("FTDC Checker")
-
-    # ── Top Navigation Bar ─────────────────────────────────────────────────
-
-    def _build_top_navbar(self, parent):
-        tk = self.tk
-        nav = tk.Frame(parent, bg=self._nav_bg, height=52)
-        nav.pack(side="top", fill="x")
-        nav.pack_propagate(False)
-
-        # Left branding block
-        brand_frame = tk.Frame(nav, bg=self._nav_bg)
-        brand_frame.pack(side="left", padx=(16, 12), fill="y")
-
-        # Brand Title
-        tk.Label(
-            brand_frame,
-            text="Automatic FTDC Checker",
-            font=("Segoe UI", 12, "bold"),
-            bg=self._nav_bg,
-            fg="#FFFFFF",
-        ).pack(side="left", pady=14)
-
-        # Version Badge
-        v_badge = tk.Label(
-            brand_frame,
-            text=f"{APP_VERSION}",
-            font=("Segoe UI", 8, "bold"),
-            bg="#1E293B",
-            fg="#38BDF8",
-            padx=6,
-            pady=2,
-            relief="flat",
-        )
-        v_badge.pack(side="left", padx=(8, 12), pady=16)
-
-        # Subtle Vertical Divider
-        tk.Frame(brand_frame, bg="#334155", width=1, height=22).pack(
-            side="left", padx=(0, 8), pady=15
-        )
-
-        # Tabs Container
-        tabs_frame = tk.Frame(nav, bg=self._nav_bg)
-        tabs_frame.pack(side="left", fill="y", padx=4)
-
-        nav_tabs = ["FTDC Checker", "STDF2SUM", "Data Analysis"]
-        for tab_name in nav_tabs:
-            self._build_nav_tab(tabs_frame, tab_name)
-
-        # Right side status indicator
-        status_frame = tk.Frame(nav, bg=self._nav_bg)
-        status_frame.pack(side="right", padx=(0, 16), fill="y")
-
-        tk.Label(
-            status_frame,
-            text="● Online",
-            font=("Segoe UI", 9),
-            bg=self._nav_bg,
-            fg="#10B981",
-        ).pack(side="right", pady=16)
-
-    def _build_nav_tab(self, parent, name: str):
-        tk = self.tk
-        tab_btn = tk.Label(
-            parent,
-            text=name,
-            font=("Segoe UI", 9, "bold" if name == "FTDC Checker" else "normal"),
-            bg=self._nav_tab_active if name == "FTDC Checker" else self._nav_bg,
-            fg=self._nav_text_active if name == "FTDC Checker" else self._nav_text,
-            padx=14,
-            pady=6,
-            cursor="hand2",
-        )
-        tab_btn.pack(side="left", padx=3, pady=11)
-
-        def on_enter(e):
-            if self._active_tab != name:
-                tab_btn.configure(bg=self._nav_tab_hover, fg="#F1F5F9")
-
-        def on_leave(e):
-            if self._active_tab != name:
-                tab_btn.configure(bg=self._nav_bg, fg=self._nav_text)
-
-        def on_click(e):
-            self._switch_tab(name)
-
-        tab_btn.bind("<Enter>", on_enter)
-        tab_btn.bind("<Leave>", on_leave)
-        tab_btn.bind("<Button-1>", on_click)
-
-        self._nav_items[name] = tab_btn
-
-    def _switch_tab(self, tab_name: str):
-        if tab_name == self._active_tab and self._tab_frames[tab_name].winfo_ismapped():
-            return
-        for frame in self._tab_frames.values():
-            frame.pack_forget()
-        self._tab_frames[tab_name].pack(fill="both", expand=True)
-
-        for name, tab_btn in self._nav_items.items():
-            if name == tab_name:
-                tab_btn.configure(
-                    bg=self._nav_tab_active,
-                    fg=self._nav_text_active,
-                    font=("Segoe UI", 9, "bold"),
-                )
-            else:
-                tab_btn.configure(
-                    bg=self._nav_bg,
-                    fg=self._nav_text,
-                    font=("Segoe UI", 9, "normal"),
-                )
-        self._active_tab = tab_name
-
-    def _build_placeholder_tab(self, parent, title: str, subtitle: str, icon: str = "🚀"):
-        parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(0, weight=1)
-
-        center_card = self.ttk.LabelFrame(parent, text="", padding=30)
-        center_card.grid(row=0, column=0)
-
-        icon_lbl = self.tk.Label(center_card, text=icon, font=("Segoe UI", 36))
-        icon_lbl.pack(pady=(0, 10))
-
-        self.ttk.Label(
-            center_card,
-            text=title,
-            font=("Segoe UI", 16, "bold"),
-        ).pack(pady=(0, 6))
-
-        self.ttk.Label(
-            center_card,
-            text=subtitle,
-            font=("Segoe UI", 10),
-            foreground="#64748B",
-            wraplength=420,
-            justify="center",
-        ).pack(pady=(0, 16))
-
-        badge = self.tk.Label(
-            center_card,
-            text="MODULE IN DEVELOPMENT • COMING SOON",
-            font=("Segoe UI", 8, "bold"),
-            bg="#E2E8F0",
-            fg="#475569",
-            padx=10,
-            pady=4,
-        )
-        badge.pack()
-
-    # ── FTDC Checker Tab (Redesigned Modern Layout) ────────────────────────
-
-    def _build_ftdc_tab(self, main):
-        tk = self.tk
-        ttk = self.ttk
-
-        main.columnconfigure(0, weight=1)
-        main.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
         # ── Upper Workspace Frame (Stable: never resizes on log height change) ──
-        workspace = ttk.Frame(main)
+        workspace = ttk.Frame(self)
         workspace.pack(fill="both", expand=True, padx=8, pady=(6, 125))
 
         workspace.columnconfigure(0, weight=1)
@@ -797,10 +467,10 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         self.progress_bar.grid(row=1, column=1, columnspan=2, sticky="ew")
 
         # ── 4. Overlay Log Drawer (Covers over bottom area with ZERO lag!) ──
-        self._build_log_overlay_drawer(main)
+        self._build_log_overlay_drawer(self)
 
     def _build_log_overlay_drawer(self, parent):
-        tk = self.tk
+        tk = self.tk_mod
         ttk = self.ttk
 
         self._log_cur_height = 120
@@ -914,11 +584,11 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def clear_log(self):
         """Clear execution log console."""
         self.log_text.configure(state="normal")
-        self.log_text.delete("1.0", self.tk.END)
+        self.log_text.delete("1.0", tk.END)
         self.log_text.configure(state="disabled")
 
     def _build_file_panel(self, parent, panel: str, row_index: int):
-        tk = self.tk
+        tk = self.tk_mod
         ttk = self.ttk
 
         panel_colors = {
@@ -1035,15 +705,15 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         enabled = bool(self.manual_filter_var.get())
         state = "normal" if enabled and not self.is_running and not self.is_scanning_tests else "disabled"
         for widget in self.filter_widgets:
+            if widget is self.show_all_tests_button:
+                btn_state = "disabled" if self.is_running or self.is_scanning_tests else "normal"
+                try:
+                    widget.configure(state=btn_state)
+                except Exception:
+                    pass
+                continue
             try:
-                # Do not disable show_all_tests_button when manual_filter is False;
-                # clicking it will automatically enable manual filter for convenience.
-                if widget is self.show_all_tests_button:
-                    widget.configure(state="disabled" if self.is_running or self.is_scanning_tests else "normal")
-                elif widget is self.selected_entry:
-                    widget.configure(state="readonly" if enabled else "disabled")
-                else:
-                    widget.configure(state=state)
+                widget.configure(state=("readonly" if widget is self.selected_entry and enabled else "disabled" if widget is self.selected_entry else state))
             except Exception:
                 pass
         self._sync_clear_selected_tests_button(bool(self.selected_tests_var.get().strip()))
@@ -1053,14 +723,31 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
     def log(self, message: str):
         def append():
-            self.log_text.configure(state="normal")
-            self.log_text.insert("end", message + "\n")
-            self.log_text.see("end")
-            self.log_text.configure(state="disabled")
-        self.root.after(0, append)
+            try:
+                if not self.root.winfo_exists():
+                    return
+                self.log_text.configure(state="normal")
+                self.log_text.insert("end", message + "\n")
+                self.log_text.see("end")
+                self.log_text.configure(state="disabled")
+            except Exception:
+                pass
+        try:
+            self.root.after(0, append)
+        except Exception:
+            pass
 
     def set_status(self, message: str):
-        self.root.after(0, lambda: self.status_var.set(message))
+        def apply():
+            try:
+                if self.root.winfo_exists():
+                    self.status_var.set(message)
+            except Exception:
+                pass
+        try:
+            self.root.after(0, apply)
+        except Exception:
+            pass
 
     def update_progress(self, fraction: float, message: str = ""):
         # Thread-safe: just overwrite the shared state; the UI timer reads it
@@ -1115,14 +802,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _sort_panel_files_by_name(self, panel: str):
         self.panel_files[panel].sort(key=self._file_name_sort_key)
 
-    # Backwards-compatible aliases for any internal/older calls.
-    # Behavior is intentionally timestamp ascending from filename, not Date Modified.
-    def _file_modified_sort_key(self, path: str) -> Tuple[str, str]:
-        return self._file_name_sort_key(path)
-
-    def _sort_panel_files_by_modified(self, panel: str):
-        self._sort_panel_files_by_name(panel)
-
     def _file_cache_signature(self, path: str) -> Tuple[str, int, int]:
         # Keep modified time in the cache signature for correctness: if an STDF
         # file is edited/replaced while keeping the same filename, the cached
@@ -1160,8 +839,8 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         self._sort_panel_files_by_name(panel)
         listbox = self.panel_listboxes[panel]
         listbox.delete(0, "end")
-        for path in self.panel_files[panel]:
-            listbox.insert("end", path)
+        if self.panel_files[panel]:
+            listbox.insert("end", *self.panel_files[panel])
         count = len(self.panel_files[panel])
         if hasattr(self, "_panel_count_vars") and panel in self._panel_count_vars:
             self._panel_count_vars[panel].set(f"{count} file{'s' if count != 1 else ''}")
@@ -1179,9 +858,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             self.refresh_file_list(panel)
 
     def select_files(self, panel: str):
-        from tkinter import filedialog
-        from  stdf_fetcher import LOCAL_DEST_BASE
-
         # Default to the FTDC extraction folder for the current Lot ID
         initial_dir = None
         lot_id = self.lot_id_var.get().strip()
@@ -1198,9 +874,11 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         if not paths:
             return
         added = 0
+        existing = set(self.panel_files[panel])
         for path in paths:
-            if path not in self.panel_files[panel]:
+            if path not in existing:
                 self.panel_files[panel].append(path)
+                existing.add(path)
                 added += 1
         self.refresh_file_list(panel)
         self.log(f"[{panel}] Added {added} file(s). Total loaded: {len(self.panel_files[panel])}")
@@ -1210,7 +888,8 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         if not indices:
             return
         for idx in sorted([int(i) for i in indices], reverse=True):
-            del self.panel_files[panel][idx]
+            if 0 <= idx < len(self.panel_files[panel]):
+                del self.panel_files[panel][idx]
         self.refresh_file_list(panel)
         self.log(f"[{panel}] Removed {len(indices)} selected file(s).")
 
@@ -1222,7 +901,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
     def clear_all(self):
         self.log_text.config(state="normal")
-        self.log_text.delete(1.0, self.tk.END)
+        self.log_text.delete(1.0, tk.END)
         self.log_text.config(state="disabled")
         self.progress_bar.configure(value=0)
         self.status_var.set("Ready")
@@ -1240,6 +919,10 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         self.range_to_var.set("")
         self._selected_test_count_var.set("No test parameters selected")
         self._sync_manual_filter_state()
+        
+        self._test_scan_cache.clear()
+        self._analysis_cache.clear()
+        self._cached_tests.clear()
         
         for panel in self.PANELS:
             self.panel_files[panel].clear()
@@ -1321,12 +1004,20 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _set_test_scan_running(self, running: bool):
         self.is_scanning_tests = running
         def apply():
+            try:
+                if not self.root.winfo_exists():
+                    return
+            except Exception:
+                return
             if running:
                 self._start_progress_polling()
             else:
                 self._stop_progress_polling()
             self._sync_manual_filter_state()
-        self.root.after(0, apply)
+        try:
+            self.root.after(0, apply)
+        except Exception:
+            pass
 
     def _open_test_window(self, tests: List[Dict[str, object]], source_label: str):
         import tkinter as tk
@@ -1394,6 +1085,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         children = self._test_tree.get_children()
         if children:
             self._test_tree.delete(*children)
+        to_select = []
         for test in self._cached_tests:
             if keyword and keyword not in test.get("_SEARCH_TEXT", ""):
                 continue
@@ -1408,7 +1100,9 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                 ),
             )
             if str(test.get("TEST_NUM", "")) in selected:
-                self._test_tree.selection_add(item_id)
+                to_select.append(item_id)
+        if to_select:
+            self._test_tree.selection_set(to_select)
 
     def _apply_selected_tests_from_window(self):
         from tkinter import messagebox
@@ -1487,7 +1181,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _show_result_popup(self, result: Dict[str, object]):
         from tkinter import messagebox
 
-        tk = self.tk
+        tk = self.tk_mod
         ttk = self.ttk
 
         summary_sections, detail_rows, fp_status, total_status, _, ftdc_criteria = build_summary_and_details(result)
@@ -2015,7 +1709,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         background so the user gets immediate visual feedback.
         """
         from tkinter import messagebox
-        from  stdf_fetcher import LOCAL_DEST_BASE, STDF_EXTENSIONS
 
         lot_id_val = self.lot_id_var.get().strip().upper()
         if not lot_id_val:
@@ -2041,7 +1734,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         """
         import tkinter as tk
         from tkinter import messagebox
-        from  stdf_parser import parse_check_summary
 
         win = tk.Toplevel(self.root)
         win.title(f"Check STDF \u2014 {lot_id}")
@@ -2509,6 +2201,9 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     scan_pbar.stop()
                     scan_lbl.configure(text=f"Error: {m}", fg="#C00000")
                     scan_pbar.pack_forget()
+                    if _owns_running[0]:
+                        _owns_running[0] = False
+                        self._set_running(False)
                 self.root.after(0, _gen_err)
 
         # ── Window close handler ──────────────────────────────────────────
@@ -2535,10 +2230,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def start_get_stdf(self):
         """Search a network directory for STDF files matching the Lot ID and copy them locally."""
         from tkinter import messagebox
-        from  stdf_fetcher import (
-            resolve_mpc_details, search_stdf_files, copy_stdf_files,
-            resolve_network_paths, existing_stdf_basenames,
-        )
 
         lot_id_val = self.lot_id_var.get().strip().upper()
         self.lot_id_var.set(lot_id_val)
@@ -2705,7 +2396,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _get_stdf_confirm(self, found_files: list, lot_id: str, device_names: list):
         """Show a confirmation dialog on the main thread, then start the copy phase."""
         from tkinter import messagebox
-        from  stdf_fetcher import copy_stdf_files, get_common_paths
 
         def _shorten_path(path: str, keep: int = 2) -> str:
             """Return a short, readable tail of a network path, e.g.
@@ -2819,21 +2509,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         def _cell_text(td) -> str:
             """Return all visible text inside a <td> element, joined and stripped."""
             return "".join(td.xpath(".//text()")).strip()
-
-        def _ftdc_check_text(text: str) -> str:
-            """Extract the human-readable check name from a Reply Message cell."""
-            if "[" in text:
-                return text.split("[")[0].strip()
-            matches = re.findall(r'(\b\w+\b)\s+Failed', text)
-            return ", ".join(m.strip() for m in matches) if matches else text.strip()
-
-        def _extract_y_value(extra_data: str) -> str:
-            """Return the numeric part after 'Y=' from a semicolon-delimited string."""
-            for part in extra_data.split(";"):
-                part = part.strip()
-                if part.upper().startswith("Y="):
-                    return part[2:].strip()
-            return ""
 
         # ── Background worker ──────────────────────────────────────────────
         def _worker():
@@ -3080,9 +2755,16 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
         threading.Thread(target=_worker, daemon=True).start()
 
+    start_ftdc_fail = start_get_ftdc_fail
+
     def _set_running(self, running: bool):
         self.is_running = running
         def apply():
+            try:
+                if not self.root.winfo_exists():
+                    return
+            except Exception:
+                return
             if running:
                 self._start_progress_polling()
             else:
@@ -3099,7 +2781,10 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     except Exception:
                         pass
             self._sync_manual_filter_state()
-        self.root.after(0, apply)
+        try:
+            self.root.after(0, apply)
+        except Exception:
+            pass
 
     def start_get_data(self):
         from tkinter import messagebox
@@ -3263,14 +2948,25 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 #       import multiprocessing
 #       multiprocessing.freeze_support()
 # =============================================================================
+# Backward compatibility alias
+STDFGuidCheckerApp = FTDCCheckerFrame
+
+
 def main():
-    import tkinter as tk
     root = tk.Tk()
-    STDFGuidCheckerApp(root)
+    setup_theme(root)
+    root.title(f"Automatic FTDC Checker {APP_VERSION}")
+    try:
+        root.iconbitmap(default=icon_path)
+    except Exception:
+        pass
+    root.geometry("1260x820")
+    root.minsize(1060, 680)
+    app = FTDCCheckerFrame(root)
+    app.pack(fill="both", expand=True)
     root.mainloop()
 
 
 if __name__ == "__main__":
-    # Must be the first thing that runs in the frozen/child process.
     multiprocessing.freeze_support()
     main()
