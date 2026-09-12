@@ -423,14 +423,15 @@ class FTDCCheckerFrame(ttk.Frame):
         self.filter_widgets.append(self.range_to_entry)
 
         # ── Right Bottom: Action Buttons Card (Swapped to Bottom, Renamed) ─
-        action_card = ModernCard(right_box, text="Action Buttons", padx=8, pady=6)
+        action_card = ModernCard(right_box, text="Action Buttons", padx=8, pady=14)
         action_card.grid(row=1, column=0, sticky="ew")
         action_card.columnconfigure(0, weight=1)
+        self.action_card = action_card
 
         # Top Row of Action Buttons: 3 utility buttons from left to right:
         # 1. Get FTDC Fail, 2. Get STDF, 3. Check STDF
         sec_frame = tk.Frame(action_card, bg=CARD_BG)
-        sec_frame.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        sec_frame.grid(row=0, column=0, sticky="ew", pady=(2, 10))
         for c in range(3):
             sec_frame.columnconfigure(c, weight=1, uniform="action_btns")
 
@@ -438,7 +439,7 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Get FTDC Fail",
             command=self.start_get_ftdc_fail,
-            padx=6, pady=8, font=FONT_BUTTON,
+            padx=6, pady=16, font=("Segoe UI", 12, "bold"),
         )
         self.get_ftdc_button.grid(row=0, column=0, sticky="ew", padx=(0, 4))
 
@@ -446,7 +447,7 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Get STDF",
             command=self.start_get_stdf,
-            padx=6, pady=8, font=FONT_BUTTON,
+            padx=6, pady=16, font=("Segoe UI", 12, "bold"),
         )
         self.get_stdf_button.grid(row=0, column=1, sticky="ew", padx=3)
 
@@ -454,7 +455,7 @@ class FTDCCheckerFrame(ttk.Frame):
             sec_frame,
             text="Check STDF",
             command=self.start_check_stdf,
-            padx=6, pady=8, font=FONT_BUTTON,
+            padx=6, pady=16, font=("Segoe UI", 12, "bold"),
         )
         self.check_stdf_button.grid(row=0, column=2, sticky="ew", padx=(4, 0))
 
@@ -463,7 +464,7 @@ class FTDCCheckerFrame(ttk.Frame):
             action_card,
             text="⚡ Run Analysis (Get Data)",
             command=self.start_get_data,
-            pady=10,
+            pady=20,
         )
         self.convert_button.grid(row=1, column=0, sticky="ew", pady=(4, 2))
 

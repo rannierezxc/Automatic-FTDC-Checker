@@ -9,8 +9,8 @@ import sv_ttk
 MAIN_BG = "#F0F0F0"              # Overarching application background
 CARD_BG = "#F0F0F0"              # Card / container frame background
 CONTAINER_BG = "#F0F0F0"         # Workspace and inner container background
-CARD_BORDER = "#E0E0E0"          # Card perimeter border
-BORDER_COLOR = "#E0E0E0"         # Generic border color
+CARD_BORDER = "#B0B0B0"          # Card perimeter border
+BORDER_COLOR = "#B0B0B0"         # Generic border color
 
 # ── Text Colors ───────────────────────────────────────────────────────────────
 TEXT_FG = "#0F172A"              # Primary text color (deep slate)
@@ -94,7 +94,7 @@ FONT_LABEL = ("Segoe UI", 9, "bold")
 FONT_LABEL_NORMAL = ("Segoe UI", 9, "normal")
 FONT_ENTRY = ("Segoe UI", 9)
 FONT_BUTTON = ("Segoe UI", 9, "bold")
-FONT_BUTTON_ACCENT = ("Segoe UI", 10, "bold")
+FONT_BUTTON_ACCENT = ("Segoe UI", 12, "bold")
 FONT_BUTTON_MINI = ("Segoe UI", 8, "bold")
 FONT_BADGE = ("Segoe UI", 8, "bold")
 FONT_STATUS = ("Segoe UI", 9)
