@@ -189,6 +189,12 @@ class HubWindow:
         self._active_tab = tab_name
         self._update_all_nav_styles()
 
+        if hasattr(target_frame, "on_tab_activated"):
+            try:
+                target_frame.on_tab_activated()
+            except Exception:
+                pass
+
     def set_tab_busy(self, tab_name: str, is_busy: bool):
         """Update the busy/processing status of a tab without interrupting navigation."""
         if tab_name not in self._app_frames:

@@ -364,11 +364,14 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         self._http_session = None
         self._http_session_lock = threading.Lock()
         self._mpc_lookup_url = "http://mth-vm-eaprd1/MPHL/getlot/mes.asmx/GetLotByLotId"
+        self._ftdc_fail_cache: Dict[str, List[Tuple[str, str, str]]] = {}
+        self._ftdc_fail_threads: Dict[str, threading.Thread] = {}
         self._build_ui()
         self._update_selected_test_summary()
         self._sync_manual_filter_state()
         # Attach MPC auto-lookup: fires 500ms after the user stops typing in Lot ID
         self.lot_id_var.trace_add("write", self._on_lot_id_changed)
+        self.mpc_var.trace_add("write", self._on_mpc_changed)
         # Fix 6: prewarm DNS + TCP to the MES host at startup so the FIRST real
         # lookup does not pay cold connection setup. Runs in the background and
         # never blocks the UI (best-effort; failures are ignored).
@@ -2060,6 +2063,129 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def _on_mpc_changed(self, *args):
+        lot_id = self.lot_id_var.get().strip().upper()
+        mpc_val = self.mpc_var.get().strip()
+        if lot_id and len(mpc_val) == 12:
+            self._trigger_background_ftdc_fail_if_needed(lot_id, mpc_val)
+
+    def _trigger_background_ftdc_fail_if_needed(self, lot_id: str, mpc_val: str):
+        """Automatically trigger Get FTDC Fail in the background if MPC has 2 or more tester types."""
+        lot_id_upper = lot_id.strip().upper()
+        mpc_clean = mpc_val.strip()
+        if not lot_id_upper or len(mpc_clean) != 12:
+            return
+        if lot_id_upper in self._ftdc_fail_cache:
+            return
+        th = self._ftdc_fail_threads.get(lot_id_upper)
+        if th is not None and th.is_alive():
+            return
+        try:
+            from stdf_fetcher import resolve_mpc_details
+            _, testers, _ = resolve_mpc_details(mpc_clean)
+        except Exception:
+            return
+        if len(testers) < 2:
+            return
+
+        def _bg_worker():
+            self.log(
+                f"Get FTDC Fail: Background fetch triggered for Lot ID '{lot_id_upper}' "
+                f"(MPC '{mpc_clean}' has {len(testers)} tester types: {', '.join(testers)})…"
+            )
+            entries = self._fetch_ftdc_fail_data(lot_id_upper)
+            if entries:
+                testers_found = [t for _, _, t in entries if t]
+                t_str = f" (detected tester(s): {', '.join(testers_found)})" if testers_found else ""
+                self.log(f"Get FTDC Fail: Cached {len(entries)} FAIL row(s) for '{lot_id_upper}'{t_str}.")
+            else:
+                self.log(f"Get FTDC Fail: No FAIL rows found or server unavailable for '{lot_id_upper}'.")
+
+        t = threading.Thread(target=_bg_worker, daemon=True)
+        self._ftdc_fail_threads[lot_id_upper] = t
+        t.start()
+
+    def _fetch_ftdc_fail_data(self, lot_id: str) -> List[Tuple[str, str, str]]:
+        """POST to the FTDC filter endpoint for lot_id and return FAIL rows as
+        [(reply_msg, comment, tester_val), ...]. Results are cached in self._ftdc_fail_cache."""
+        lot_id_upper = lot_id.strip().upper()
+        if not lot_id_upper:
+            return []
+        if lot_id_upper in self._ftdc_fail_cache:
+            return self._ftdc_fail_cache[lot_id_upper]
+
+        try:
+            import requests as _requests
+            from lxml import html as _lxml_html
+        except ImportError:
+            return []
+
+        def _cell_text(td) -> str:
+            return "".join(td.xpath(".//text()")).strip()
+
+        TIMEOUT_SECONDS = 15
+        url = "http://mph-vm-mphl2prd:8080/ftdc/filter.php"
+        payload = {
+            "lotid": lot_id_upper,
+            "mpc": "", "equipment": "", "stepname": "",
+            "device": "", "rcode": "", "rstr": "",
+            "bizrule": "", "submit": "",
+        }
+        try:
+            resp = _requests.post(url, data=payload, timeout=TIMEOUT_SECONDS)
+            if resp.status_code != 200:
+                return []
+
+            parsed = _lxml_html.fromstring(resp.text)
+            raw_rows: List[List[str]] = []
+            for tr in parsed.xpath("//table//tr"):
+                cells = [_cell_text(td) for td in tr.xpath(".//td")]
+                if any(cells):
+                    raw_rows.append(cells)
+
+            # Header detection for Tester / Equipment column
+            tester_col_idx = None
+            for tr in parsed.xpath("//table//tr"):
+                th_cells = [_cell_text(th).upper() for th in tr.xpath(".//th")]
+                if th_cells:
+                    for idx, h in enumerate(th_cells):
+                        if "TESTER" in h or "EQUIP" in h:
+                            tester_col_idx = idx
+                            break
+                    if tester_col_idx is not None:
+                        break
+
+            fail_entries: List[Tuple[str, str, str]] = []
+            for r in raw_rows:
+                try:
+                    if len(r) <= 6:
+                        continue
+                    if "FAIL" not in r[6].upper():
+                        continue
+                    reply_msg = r[7] if len(r) > 7 else ""
+                    comment   = r[9] if len(r) > 9 else ""
+
+                    tester_val = ""
+                    if tester_col_idx is not None and len(r) > tester_col_idx:
+                        tester_val = r[tester_col_idx].strip()
+                    else:
+                        for c in r:
+                            c_up = c.upper()
+                            if any(kw in c_up for kw in ("V93K", "LTX", "TESTER", "ADV", "FUSION", "D10")):
+                                tester_val = c.strip()
+                                break
+                        if not tester_val and len(r) > 3:
+                            tester_val = r[3].strip()
+
+                    fail_entries.append((reply_msg, comment, tester_val))
+                except Exception:
+                    continue
+
+            self._ftdc_fail_cache[lot_id_upper] = fail_entries
+            return fail_entries
+        except Exception:
+            return []
+
 
     # ── Check STDF ─────────────────────────────────────────────────────────
 
@@ -2640,7 +2766,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         from tkinter import messagebox
         from  stdf_fetcher import (
             resolve_mpc_details, search_stdf_files, copy_stdf_files,
-            resolve_network_paths, existing_stdf_basenames,
+            copy_stdf_files_per_file, resolve_network_paths, existing_stdf_basenames,
         )
 
         lot_id_val = self.lot_id_var.get().strip().upper()
@@ -2681,19 +2807,44 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             messagebox.showerror("Configuration Error", str(exc), parent=self.root)
             return
 
-        # Prompt for Tester if multiple exist
+        # Prompt for Tester if multiple exist (with automatic resolution via FTDC Fail cache)
+        chosen_tester = None
         if len(testers) > 1:
-            chosen_tester = self._prompt_selection(
-                "Select Tester Type",
-                f"MPC '{mpc_val}' is capable of multiple testers.\n\n"
-                f"Please select the tester used:",
-                testers
-            )
+            # If background FTDC Fail thread is in progress, wait briefly
+            th = self._ftdc_fail_threads.get(lot_id_val)
+            if th is not None and th.is_alive():
+                self.update_progress(0.03, "Checking FTDC tester logs…")
+                th.join(timeout=2.5)
+
+            cached_fails = self._ftdc_fail_cache.get(lot_id_val)
+            if cached_fails:
+                for _, _, ftdc_tester in cached_fails:
+                    if not ftdc_tester:
+                        continue
+                    ftdc_tester_up = ftdc_tester.upper()
+                    for t in testers:
+                        if t.strip().upper() in ftdc_tester_up:
+                            chosen_tester = t
+                            break
+                    if chosen_tester:
+                        self.log(
+                            f"Get STDF: Automatically selected tester '{chosen_tester}' "
+                            f"matching FTDC tester '{ftdc_tester}'."
+                        )
+                        break
+
             if not chosen_tester:
-                self._set_running(False)
-                self.reset_progress("Cancelled tester selection")
-                self.log("Get STDF: Tester selection cancelled by user.")
-                return
+                chosen_tester = self._prompt_selection(
+                    "Select Tester Type",
+                    f"MPC '{mpc_val}' is capable of multiple testers.\n\n"
+                    f"Please select the tester used:",
+                    testers
+                )
+                if not chosen_tester:
+                    self._set_running(False)
+                    self.reset_progress("Cancelled tester selection")
+                    self.log("Get STDF: Tester selection cancelled by user.")
+                    return
         elif len(testers) == 1:
             chosen_tester = testers[0]
         else:
@@ -2808,7 +2959,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     def _get_stdf_confirm(self, found_files: list, lot_id: str, device_names: list):
         """Show a confirmation dialog on the main thread, then start the copy phase."""
         from tkinter import messagebox
-        from  stdf_fetcher import copy_stdf_files, get_common_paths
+        from  stdf_fetcher import copy_stdf_files, copy_stdf_files_per_file, get_common_paths
 
         def _shorten_path(path: str, keep: int = 2) -> str:
             """Return a short, readable tail of a network path, e.g.
@@ -2828,29 +2979,32 @@ ttk::style layout Neon.Horizontal.TProgressbar {
         else:
             common_line = "\n"
 
-        file_list = "\n".join(f"  • {os.path.basename(f)}" for f in found_files)
-        confirm_msg = (
-            f"Found {len(found_files)} STDF file(s) matching Lot ID '{lot_id}'\n"
-            f"in device folder(s): {', '.join(device_names)}\n"
-            f"{common_line}"
-            f"{file_list}\n\n"
-            f"Copy all files to C:\\FTDC\\{lot_id}?"
+        self.log(
+            f"Get STDF: Found {len(found_files)} matching STDF file(s) for Lot ID '{lot_id}' "
+            f"in device folder(s) {', '.join(device_names)}{common_line}."
         )
-
-        if not messagebox.askyesno("Get STDF — Confirm Copy", confirm_msg, parent=self.root):
-            self._set_running(False)
-            self.reset_progress("Copy cancelled")
-            self.log("Get STDF: Copy cancelled by user.")
-            return
+        for f in found_files:
+            self.log(f"  • {os.path.basename(f)}")
+        self.log(f"Get STDF: Automatically proceeding to copy all files to C:\\FTDC\\{lot_id}…")
 
         # ── Phase 2: copy (background thread) ─────────────────────────────
         self.log(f"Get STDF: Copying {len(found_files)} file(s)…")
 
         def _copy_worker():
             try:
-                dest_dir = copy_stdf_files(
+                # Per-file progress: the bar fills 0→100% for each file.
+                def _per_file_progress(fraction, message):
+                    self.update_progress(fraction, message)
+
+                def _file_counter(file_idx, total, filename):
+                    # Reset the bar to 0% at the start of each new file.
+                    self.update_progress(0.0, f"Copying {file_idx}/{total}: {filename}")
+
+                dest_dir = copy_stdf_files_per_file(
                     found_files, lot_id,
-                    logger=self.log, progress_callback=self.update_progress,
+                    logger=self.log,
+                    per_file_progress_callback=_per_file_progress,
+                    file_counter_callback=_file_counter,
                 )
                 self.update_progress(1.0, "STDF files copied")
 
@@ -2887,7 +3041,8 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     # ── Get FTDC Fail ─────────────────────────────────────────────────────
 
     def start_get_ftdc_fail(self):
-        """POST to the FTDC filter endpoint using the current Lot ID and display FAIL rows."""
+        """POST to the FTDC filter endpoint using the current Lot ID and display FAIL rows.
+        If results are already cached, displays them immediately without re-querying."""
         import tkinter as tk
         from tkinter import messagebox
 
@@ -2914,29 +3069,19 @@ ttk::style layout Neon.Horizontal.TProgressbar {
             )
             return
 
-        # ── Lock controls and start progress ──────────────────────────────
-        self._set_running(True)
-        self.update_progress(0.05, "Connecting to FTDC server…")
+        # ── 1. Check cache first ───────────────────────────────────────────
+        if lot_id_val in self._ftdc_fail_cache:
+            self.log(f"Get FTDC Fail: Displaying cached FTDC logs result for '{lot_id_val}'.")
+            self._set_running(True)
+            self.update_progress(1.0, "FTDC fetch complete")
+            self.set_status("FTDC fetch complete")
+            self._show_ftdc_fail_popup(lot_id_val, self._ftdc_fail_cache[lot_id_val])
+            return
 
         # ── Helpers ────────────────────────────────────────────────────────
         def _cell_text(td) -> str:
             """Return all visible text inside a <td> element, joined and stripped."""
             return "".join(td.xpath(".//text()")).strip()
-
-        def _ftdc_check_text(text: str) -> str:
-            """Extract the human-readable check name from a Reply Message cell."""
-            if "[" in text:
-                return text.split("[")[0].strip()
-            matches = re.findall(r'(\b\w+\b)\s+Failed', text)
-            return ", ".join(m.strip() for m in matches) if matches else text.strip()
-
-        def _extract_y_value(extra_data: str) -> str:
-            """Return the numeric part after 'Y=' from a semicolon-delimited string."""
-            for part in extra_data.split(";"):
-                part = part.strip()
-                if part.upper().startswith("Y="):
-                    return part[2:].strip()
-            return ""
 
         # ── Background worker ──────────────────────────────────────────────
         def _worker():
@@ -2976,10 +3121,6 @@ ttk::style layout Neon.Horizontal.TProgressbar {
 
                 self.root.after(0, lambda: self.update_progress(0.60, "Parsing FTDC response…"))
 
-                # ── Parse HTML table ───────────────────────────────────────
-                # Use ".//td" + join all text nodes so nested elements (spans, etc.)
-                # are included — fixes the "no data" issue with .//td/text() which
-                # only captures direct text children.
                 parsed = _lxml_html.fromstring(resp.text)
                 raw_rows: List[List[str]] = []
                 for tr in parsed.xpath("//table//tr"):
@@ -2987,9 +3128,21 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     if any(cells):       # skip pure-header <th> rows
                         raw_rows.append(cells)
 
+                # Header detection for Tester / Equipment column
+                tester_col_idx = None
+                for tr in parsed.xpath("//table//tr"):
+                    th_cells = [_cell_text(th).upper() for th in tr.xpath(".//th")]
+                    if th_cells:
+                        for idx, h in enumerate(th_cells):
+                            if "TESTER" in h or "EQUIP" in h:
+                                tester_col_idx = idx
+                                break
+                        if tester_col_idx is not None:
+                            break
+
                 self.root.after(0, lambda: self.update_progress(0.80, "Scanning for FAIL rows…"))
 
-                fail_entries: List[tuple] = []
+                fail_entries: List[Tuple[str, str, str]] = []
                 for r in raw_rows:
                     try:
                         if len(r) <= 6:
@@ -2998,155 +3151,27 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                             continue
                         reply_msg = r[7] if len(r) > 7 else ""
                         comment   = r[9] if len(r) > 9 else ""
-                        fail_entries.append((reply_msg, comment))
+
+                        tester_val = ""
+                        if tester_col_idx is not None and len(r) > tester_col_idx:
+                            tester_val = r[tester_col_idx].strip()
+                        else:
+                            for c in r:
+                                c_up = c.upper()
+                                if any(kw in c_up for kw in ("V93K", "LTX", "TESTER", "ADV", "FUSION", "D10")):
+                                    tester_val = c.strip()
+                                    break
+                            if not tester_val and len(r) > 3:
+                                tester_val = r[3].strip()
+
+                        fail_entries.append((reply_msg, comment, tester_val))
                     except Exception:
                         continue
 
+                # Cache the results
+                self._ftdc_fail_cache[lot_id_val] = fail_entries
                 self.root.after(0, lambda: self.update_progress(1.0, "FTDC fetch complete"))
-
-                # ── Show result popup ──────────────────────────────────────
-                def _show_popup():
-                    _finish(True)
-
-                    if not fail_entries:
-                        messagebox.showinfo(
-                            "FTDC Logs Result",
-                            "No FTDC Fail found on FTDC Logs, kindly check MES FTDC Data.",
-                            parent=self.root,
-                        )
-                        return
-
-                    MAX_WIN_W = 550   # px — cap before word-wrap kicks in
-                    MAX_WIN_H = 700   # px — cap before vertical scroll kicks in
-                    CELL_PAD  = 20    # px — horizontal padding allowance per cell
-
-                    cell_font  = tkfont.Font(family="Segoe UI", size=9)
-                    char_w_px  = max(cell_font.measure("0"), 1)
-                    line_h_px  = max(cell_font.metrics("linespace"), 1)
-
-                    # Measure natural pixel width of each column from its content
-                    def _col_natural_px(texts, header):
-                        return max(
-                            cell_font.measure(header),
-                            *(cell_font.measure(t) for t in texts),
-                            1,
-                        ) + CELL_PAD * 2
-
-                    reply_natural   = _col_natural_px([rm for rm, _ in fail_entries], "Reply Message")
-                    comment_natural = _col_natural_px([cm for _, cm in fail_entries], "Comment")
-
-                    avail_w        = MAX_WIN_W - 28          # subtract frm padding + borders
-                    reply_col_px   = min(reply_natural,   int(avail_w * 0.65))
-                    comment_col_px = min(comment_natural, avail_w - reply_col_px)
-
-                    reply_chars   = max(8, reply_col_px   // char_w_px)
-                    comment_chars = max(8, comment_col_px // char_w_px)
-
-                    # Simulate word-wrap to get the lines each cell needs
-                    def _lines_needed(text: str, col_px: int) -> int:
-                        if not text:
-                            return 1
-                        inner_w = max(col_px - CELL_PAD * 2, char_w_px)
-                        total = 0
-                        for para in (text.splitlines() or [""]):
-                            if not para:
-                                total += 1
-                                continue
-                            cur_w = line_count = 0
-                            line_count = 1
-                            for word in para.split():
-                                ww = cell_font.measure(word + " ")
-                                if cur_w + ww > inner_w and cur_w > 0:
-                                    line_count += 1
-                                    cur_w = ww
-                                else:
-                                    cur_w += ww
-                            total += line_count
-                        return max(1, total)
-
-                    row_heights = [
-                        max(
-                            _lines_needed(rm, reply_col_px),
-                            _lines_needed(cm, comment_col_px),
-                        )
-                        for rm, cm in fail_entries
-                    ]
-
-                    # ── Build window ───────────────────────────────────────
-                    pop = tk.Toplevel(self.root)
-                    pop.title(f"FTDC Logs Result - {lot_id_val}")
-                    pop.resizable(True, True)
-                    pop.transient(self.root)
-                    pop.columnconfigure(0, weight=1)
-                    pop.rowconfigure(0, weight=1)
-
-                    frm = self.ttk.Frame(pop, padding=12)
-                    frm.grid(row=0, column=0, sticky="nsew")
-                    frm.columnconfigure(0, weight=1)
-
-                    # ── Single flat table — header in row 0, data in rows 1+ ──
-                    # No outer box, no canvas. One parent = perfect column alignment,
-                    # zero gray area. Window height comes purely from widget sizes.
-                    table = tk.Frame(frm, bg="#E0E0E0")
-                    table.grid(row=0, column=0, sticky="nsew")
-                    table.columnconfigure(0, weight=1)
-                    table.columnconfigure(1, weight=1)
-
-                    # Header row
-                    for col_idx, (lbl, chars) in enumerate((
-                        ("Reply Message", reply_chars),
-                        ("Comment",       comment_chars),
-                    )):
-                        tk.Label(
-                            table, text=lbl,
-                            font=("Segoe UI", 9, "bold"), bg="#F0F0F0",
-                            anchor="w", padx=8, pady=4,
-                            width=chars,
-                            borderwidth=1, relief="solid",
-                        ).grid(row=0, column=col_idx, sticky="ew")
-
-                    # Data rows
-                    for r_idx, ((reply_msg, comment), h) in enumerate(
-                        zip(fail_entries, row_heights), start=1
-                    ):
-                        for c_idx, (text, chars) in enumerate((
-                            (reply_msg, reply_chars),
-                            (comment,   comment_chars),
-                        )):
-                            cell = tk.Text(
-                                table,
-                                width=chars, height=h,
-                                wrap="word",
-                                font=("Segoe UI", 9),
-                                bg="white", relief="solid", bd=1,
-                                padx=6, pady=4,
-                                cursor="xterm",
-                            )
-                            cell.insert("1.0", text)
-                            cell.configure(state="disabled")
-                            cell.grid(row=r_idx, column=c_idx, sticky="nsew")
-
-                    btn_row = self.ttk.Frame(frm)
-                    btn_row.grid(row=1, column=0, sticky="e", pady=(10, 0))
-                    self.ttk.Button(btn_row, text="Close", command=pop.destroy).pack(side="right")
-
-                    # Let tkinter measure the true content size, then apply it
-                    def _fit_window():
-                        pop.update_idletasks()
-                        w = min(pop.winfo_reqwidth(),  MAX_WIN_W)
-                        h = min(pop.winfo_reqheight(), MAX_WIN_H)
-                        # Centre over main window
-                        rx = self.root.winfo_rootx()
-                        ry = self.root.winfo_rooty()
-                        rw = self.root.winfo_width()
-                        rh = self.root.winfo_height()
-                        x  = rx + max((rw - w) // 2, 0)
-                        y  = ry + max((rh - h) // 2, 0)
-                        pop.geometry(f"{w}x{h}+{x}+{y}")
-
-                    pop.after(1, _fit_window)
-
-                self.root.after(0, _show_popup)
+                self.root.after(0, lambda: self._show_ftdc_fail_popup(lot_id_val, fail_entries))
 
             # ── Network / HTTP error handlers ──────────────────────────────
             except _requests.exceptions.ConnectionError:
@@ -3181,7 +3206,173 @@ ttk::style layout Neon.Horizontal.TProgressbar {
                     messagebox.showerror("FTDC Error", f"An unexpected error occurred:\n\n{m}", parent=self.root)
                 self.root.after(0, _gen_err)
 
+        # ── 2. Check if background fetch is running ────────────────────────
+        th = self._ftdc_fail_threads.get(lot_id_val)
+        if th is not None and th.is_alive():
+            self._set_running(True)
+            self.update_progress(0.50, "Waiting for background FTDC fetch…")
+            def _wait_and_show():
+                th.join(timeout=3.0)
+                cached = self._ftdc_fail_cache.get(lot_id_val)
+                if cached is not None:
+                    self.log(f"Get FTDC Fail: Displaying cached FTDC logs result for '{lot_id_val}'.")
+                    self.root.after(0, lambda: self._show_ftdc_fail_popup(lot_id_val, cached))
+                else:
+                    threading.Thread(target=_worker, daemon=True).start()
+            threading.Thread(target=_wait_and_show, daemon=True).start()
+            return
+
+        # ── 3. Fresh fetch ────────────────────────────────────────────────
+        self._set_running(True)
+        self.update_progress(0.05, "Connecting to FTDC server…")
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _show_ftdc_fail_popup(self, lot_id_val: str, fail_entries: List[Tuple[str, str, str]]):
+        """Display the FTDC FAIL popup table with Reply Message and Comment columns."""
+        import tkinter as tk
+        from tkinter import messagebox
+        import tkinter.font as tkfont
+
+        self._set_running(False)
+        self.update_progress(1.0, "FTDC fetch complete")
+        self.set_status("FTDC fetch complete")
+
+        if not fail_entries:
+            messagebox.showinfo(
+                "FTDC Logs Result",
+                "No FTDC Fail found on FTDC Logs, kindly check MES FTDC Data.",
+                parent=self.root,
+            )
+            return
+
+        MAX_WIN_W = 550   # px — cap before word-wrap kicks in
+        MAX_WIN_H = 700   # px — cap before vertical scroll kicks in
+        CELL_PAD  = 20    # px — horizontal padding allowance per cell
+
+        cell_font  = tkfont.Font(family="Segoe UI", size=9)
+        char_w_px  = max(cell_font.measure("0"), 1)
+        line_h_px  = max(cell_font.metrics("linespace"), 1)
+
+        # Measure natural pixel width of each column from its content
+        def _col_natural_px(texts, header):
+            return max(
+                cell_font.measure(header),
+                *(cell_font.measure(t) for t in texts),
+                1,
+            ) + CELL_PAD * 2
+
+        reply_natural   = _col_natural_px([rm for rm, _, _ in fail_entries], "Reply Message")
+        comment_natural = _col_natural_px([cm for _, cm, _ in fail_entries], "Comment")
+
+        avail_w        = MAX_WIN_W - 28          # subtract frm padding + borders
+        reply_col_px   = min(reply_natural,   int(avail_w * 0.65))
+        comment_col_px = min(comment_natural, avail_w - reply_col_px)
+
+        reply_chars   = max(8, reply_col_px   // char_w_px)
+        comment_chars = max(8, comment_col_px // char_w_px)
+
+        # Simulate word-wrap to get the lines each cell needs
+        def _lines_needed(text: str, col_px: int) -> int:
+            if not text:
+                return 1
+            inner_w = max(col_px - CELL_PAD * 2, char_w_px)
+            total = 0
+            for para in (text.splitlines() or [""]):
+                if not para:
+                    total += 1
+                    continue
+                cur_w = line_count = 0
+                line_count = 1
+                for word in para.split():
+                    ww = cell_font.measure(word + " ")
+                    if cur_w + ww > inner_w and cur_w > 0:
+                        line_count += 1
+                        cur_w = ww
+                    else:
+                        cur_w += ww
+                total += line_count
+            return max(1, total)
+
+        row_heights = [
+            max(
+                _lines_needed(rm, reply_col_px),
+                _lines_needed(cm, comment_col_px),
+            )
+            for rm, cm, _ in fail_entries
+        ]
+
+        # ── Build window ───────────────────────────────────────
+        pop = tk.Toplevel(self.root)
+        pop.configure(bg="#F0F0F0")
+        pop.title(f"FTDC Logs Result - {lot_id_val}")
+        pop.resizable(True, True)
+        pop.transient(self.root)
+        pop.columnconfigure(0, weight=1)
+        pop.rowconfigure(0, weight=1)
+
+        frm = self.ttk.Frame(pop, padding=12)
+        frm.grid(row=0, column=0, sticky="nsew")
+        frm.columnconfigure(0, weight=1)
+
+        # ── Single flat table — header in row 0, data in rows 1+ ──
+        table = tk.Frame(frm, bg="#E0E0E0")
+        table.grid(row=0, column=0, sticky="nsew")
+        table.columnconfigure(0, weight=1)
+        table.columnconfigure(1, weight=1)
+
+        # Header row
+        for col_idx, (lbl, chars) in enumerate((
+            ("Reply Message", reply_chars),
+            ("Comment",       comment_chars),
+        )):
+            tk.Label(
+                table, text=lbl,
+                font=("Segoe UI", 9, "bold"), bg="#F0F0F0", fg="#0F172A",
+                anchor="w", padx=8, pady=4,
+                width=chars,
+                highlightthickness=1, highlightbackground="#E0E0E0", relief="flat", bd=0,
+            ).grid(row=0, column=col_idx, sticky="ew")
+
+        # Data rows
+        for r_idx, ((reply_msg, comment, _), h) in enumerate(
+            zip(fail_entries, row_heights), start=1
+        ):
+            for c_idx, (text, chars) in enumerate((
+                (reply_msg, reply_chars),
+                (comment,   comment_chars),
+            )):
+                cell = tk.Text(
+                    table,
+                    width=chars, height=h,
+                    wrap="word",
+                    font=("Segoe UI", 9),
+                    bg="#FFFFFF", fg="#0F172A",
+                    highlightthickness=1, highlightbackground="#E0E0E0", relief="flat", bd=0,
+                    padx=6, pady=4,
+                    cursor="xterm",
+                )
+                cell.insert("1.0", text)
+                cell.configure(state="disabled")
+                cell.grid(row=r_idx, column=c_idx, sticky="nsew")
+
+        btn_row = self.ttk.Frame(frm)
+        btn_row.grid(row=1, column=0, sticky="e", pady=(10, 0))
+        ModernHoverButton(btn_row, text="Close", command=pop.destroy, padx=14, pady=4).pack(side="right")
+
+        # Let tkinter measure the true content size, then apply it
+        def _fit_window():
+            pop.update_idletasks()
+            w = min(pop.winfo_reqwidth(),  MAX_WIN_W)
+            h = min(pop.winfo_reqheight(), MAX_WIN_H)
+            rx = self.root.winfo_rootx()
+            ry = self.root.winfo_rooty()
+            rw = self.root.winfo_width()
+            rh = self.root.winfo_height()
+            x  = rx + max((rw - w) // 2, 0)
+            y  = ry + max((rh - h) // 2, 0)
+            pop.geometry(f"{w}x{h}+{x}+{y}")
+
+        pop.after(1, _fit_window)
 
     def _set_running(self, running: bool):
         self.is_running = running

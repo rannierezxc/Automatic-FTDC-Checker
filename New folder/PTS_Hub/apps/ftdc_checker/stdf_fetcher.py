@@ -758,3 +758,148 @@ def copy_stdf_files(
 
     _emit_log(f"Done - {copied}/{len(unique_paths)} file(s) copied to {dest_dir}", logger)
     return dest_dir
+
+
+# ── Per-file progress copy ────────────────────────────────────────────────────
+
+# Type alias for the per-file progress callback: (fraction_of_current_file, message)
+PerFileProgressFunc = Optional[Callable[[float, str], None]]
+# Type alias for the file-counter callback: (file_index_1based, total_files, filename)
+FileCounterFunc = Optional[Callable[[int, int, str], None]]
+
+# Minimum byte interval between progress reports to avoid flooding the UI timer.
+_PROGRESS_REPORT_INTERVAL = 1 * 1024 * 1024  # 1 MB
+
+
+def _fast_copy_file_with_progress(
+    src: str,
+    dst: str,
+    progress_callback: PerFileProgressFunc = None,
+    buffer_size: int = 8 * 1024 * 1024,
+) -> None:
+    """Copy a file with per-byte progress reporting.
+
+    Unlike :func:`_fast_copy_file`, this always uses the manual buffer-based
+    copy path (never ``CopyFileExW``) so that progress can be reported at
+    byte-level granularity. The callback receives ``(fraction, message)``
+    where *fraction* is 0.0–1.0 representing how much of the *current* file
+    has been copied.
+    """
+    try:
+        file_size = os.path.getsize(src)
+    except OSError:
+        file_size = 0
+
+    filename = os.path.basename(src)
+
+    if file_size == 0:
+        # Unknown/empty file — fall back to simple copy, report 0% then 100%.
+        if progress_callback:
+            progress_callback(0.0, f"Copying {filename}…")
+        _fast_copy_file(src, dst, buffer_size)
+        if progress_callback:
+            progress_callback(1.0, f"Copied {filename}")
+        return
+
+    if progress_callback:
+        progress_callback(0.0, f"Copying {filename}…")
+
+    bytes_copied = 0
+    last_reported_bytes = 0
+
+    with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
+        # Pre-allocate disk space to eliminate NTFS fragmentation.
+        try:
+            fdst.truncate(file_size)
+        except OSError:
+            pass
+        while True:
+            buf = fsrc.read(buffer_size)
+            if not buf:
+                break
+            fdst.write(buf)
+            bytes_copied += len(buf)
+
+            # Report progress at intervals to avoid flooding the UI.
+            if progress_callback and (bytes_copied - last_reported_bytes >= _PROGRESS_REPORT_INTERVAL):
+                frac = bytes_copied / file_size
+                progress_callback(min(frac, 0.99), f"Copying {filename}…")
+                last_reported_bytes = bytes_copied
+
+    # Preserve metadata.
+    try:
+        shutil.copystat(src, dst)
+    except OSError:
+        pass
+
+    if progress_callback:
+        progress_callback(1.0, f"Copied {filename}")
+
+
+def copy_stdf_files_per_file(
+    source_paths: List[str],
+    lot_id: str,
+    logger: LogFunc = None,
+    per_file_progress_callback: PerFileProgressFunc = None,
+    file_counter_callback: FileCounterFunc = None,
+) -> str:
+    """Copy STDF files with **per-file** progress reporting.
+
+    Unlike :func:`copy_stdf_files`, this copies files **sequentially** so
+    the progress bar can fill from 0 → 100 % for each individual file. The
+    *per_file_progress_callback* receives ``(fraction, message)`` where
+    *fraction* is 0.0–1.0 for the **current** file. The optional
+    *file_counter_callback* is called at the start of each file with
+    ``(1-based index, total, filename)`` so the UI can display a counter.
+
+    Duplicate handling is identical to :func:`copy_stdf_files`.
+    """
+    dest_dir = os.path.join(LOCAL_DEST_BASE, lot_id.strip())
+    os.makedirs(dest_dir, exist_ok=True)
+
+    # ── De-duplicate by basename (case-insensitive) ─────────────────────────
+    unique_paths: List[str] = []
+    seen_names: Set[str] = set()
+    for src in source_paths:
+        name_lower = os.path.basename(src).lower()
+        if name_lower in seen_names:
+            _emit_log(
+                f"  Skipped duplicate (same filename from another source): {os.path.basename(src)}",
+                logger,
+            )
+            continue
+        seen_names.add(name_lower)
+        unique_paths.append(src)
+
+    total = len(unique_paths)
+    if total != len(source_paths):
+        _emit_log(
+            f"Copying {total} unique file(s) "
+            f"({len(source_paths) - total} duplicate name(s) collapsed) to: {dest_dir}",
+            logger,
+        )
+    else:
+        _emit_log(f"Copying {total} file(s) to: {dest_dir}", logger)
+
+    copied = 0
+
+    for idx, src_path in enumerate(unique_paths):
+        filename = os.path.basename(src_path)
+        dest_path = os.path.join(dest_dir, filename)
+
+        # Notify the UI of the file counter.
+        if file_counter_callback:
+            file_counter_callback(idx + 1, total, filename)
+
+        try:
+            _fast_copy_file_with_progress(
+                src_path, dest_path,
+                progress_callback=per_file_progress_callback,
+            )
+            copied += 1
+            _emit_log(f"  Copied: {filename}", logger)
+        except (OSError, shutil.SameFileError) as exc:
+            _emit_log(f"  FAILED to copy {filename}: {exc}", logger)
+
+    _emit_log(f"Done - {copied}/{total} file(s) copied to {dest_dir}", logger)
+    return dest_dir
