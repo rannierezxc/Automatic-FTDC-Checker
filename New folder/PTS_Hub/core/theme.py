@@ -2,6 +2,7 @@
 Theme setup, ttk styling, and palette constants for PTS Hub.
 Single source of truth for all UI styling properties.
 """
+import logging
 from tkinter import ttk
 import sv_ttk
 
@@ -125,16 +126,16 @@ def setup_theme(root):
         """)
         root.tk.call("tk_setPalette", "background", MAIN_BG)
         root.update_idletasks()
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.warning("Failed to configure tk palette colors: %s", exc)
 
     style = ttk.Style()
 
     # Apply app background to root window
     try:
         root.configure(bg=MAIN_BG)
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.warning("Failed to configure root background: %s", exc)
 
     # Centralize ttk style backgrounds to MAIN_BG (#F0F0F0) and borders to BORDER_COLOR (#E0E0E0)
     style.configure(".", background=MAIN_BG)
@@ -170,8 +171,7 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     }
 }
 ''')
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.warning("Failed to register Neon.Horizontal.TProgressbar style: %s", exc)
 
     return style
-

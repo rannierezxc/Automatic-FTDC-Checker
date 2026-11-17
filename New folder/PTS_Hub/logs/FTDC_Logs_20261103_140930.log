@@ -1,0 +1,12 @@
+[2026-11-03 14:06:07] MPC Lookup [C:\USERS\A78133\AUTOMATIC-FTDC-CHECKER\NEW FOLDER\PTS_HUB]: Lot ID not found
+[2026-11-03 14:06:08] Lot Details Input: Lot ID = 'C:\USERS\A78133\AUTOMATIC-FTDC-CHECKER\NEW FOLDER\PTS_HUB'
+[2026-11-03 14:06:12] Lot Details Input: Lot ID = 'MMT-272500536.800'
+[2026-11-03 14:06:14] Lot Details Input: MPC = 'SG406QRTBA02'
+[2026-11-03 14:06:18] [Get FTDC Fail] Lot Details: Lot ID='MMT-272500536.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-03 14:06:18] Get FTDC Fail: Successfully connected using primary link: http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php
+[2026-11-03 14:06:18] Get FTDC Fail: SUCCESS for Lot ID 'MMT-272500536.800' via http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php — found 1 FAIL row(s).
+[2026-11-03 14:06:18]   FTDC Fail #1: Reply Message='Failed Validation Check1 Failed' | Comment='FT1 totalparts=14161 totalgood=12434 GUID=7 total reject=1727 RUID=1 BIN11=0 bin90=0 ; RET totalparts=1690 totalgood=1362 GUID=6 total reject=328 RUID=3 BIN11=0 bin90=0 ; QC qc_total=0 totalgood=0 total reject=0 qc_bin11=0 qc_bin90=0 other=0 ; Y=7; Z=0; Q=0; X=-14165; Trackinqty=14171' | Tester='ADVV93K-RF-009'
+[2026-11-03 14:06:20] ================================================================================
+[2026-11-03 14:06:20] [Get STDF] Lot Details: Lot ID='MMT-272500536.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-03 14:06:20] Get STDF: Lot ID 'MMT-272500536.800', MPC 'SG406QRTBA02'
+[2026-11-03 14:09:30] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261103_140930.log

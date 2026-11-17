@@ -1,0 +1,138 @@
+[2026-11-10 15:12:55] Help: Opening presentation 'Automatic_FTDC_Checker_Process_Flow.pptx' from \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\Automatic_FTDC_Checker
+[2026-11-10 15:14:28] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-11-10 15:14:30] Lot Details Input: MPC = '58974QRTBV60'
+[2026-11-10 15:14:35] [Check STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old] (cached): Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old] (cached): Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old] (cached): Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old] (cached): Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old] (cached): Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old] (cached): Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old] (cached): Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old] (cached): Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-11-10 15:14:36] Check STDF: 8 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-11-10 15:14:36] Check STDF: All 8 file(s) loaded from cache.
+[2026-11-10 15:14:36] Check STDF Lot Summary [MMT-271500654.900]: Files=8, Quantity Total Parts=20,045, Quantity Tested Good=13,812, Mismatches=None
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900_e_20260908221546_6140_2609091611.std.old' into FIRST PASS panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old' into RETEST panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old' into RETEST panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old' into RETEST panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900_q_20260910074509_6141_2609100806.std.old' into QC panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old' into QC panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old' into QC panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 'mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old' into RETEST panel.
+[2026-11-10 15:14:41] Check STDF [Load All]: Loaded 8 new file(s) (FIRST PASS: 1, RETEST: 4, QC: 3).
+[2026-11-10 15:14:43] [RETEST] Removed 1 selected file(s).
+[2026-11-10 15:14:46] Lot Details Input: First Pass Actual Good QTY = '8990'
+[2026-11-10 15:14:47] Lot Details Input: Total Actual Good QTY = '11355'
+[2026-11-10 15:14:47] [Run Analysis] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='8990', Total Actual Good QTY='11355'
+[2026-11-10 15:14:47] ================================================================================
+[2026-11-10 15:14:47] Starting Get Data...
+[2026-11-10 15:14:47] FIRST PASS files: 1
+[2026-11-10 15:14:47] RETEST files: 3
+[2026-11-10 15:14:47] QC files: 3
+[2026-11-10 15:14:47] Manual filter: Disabled / not used
+[2026-11-10 15:14:47] File parsing order: Timestamp ascending within each panel (first valid YYYYMMDDHHMMSS in filename; filename fallback).
+[2026-11-10 15:14:47] ================================================================================
+[2026-11-10 15:14:47] Starting STDF WXY / Duplicate GUID analysis
+[2026-11-10 15:14:47] Lot ID: MMT-271500654.900
+[2026-11-10 15:14:47] MPC: 58974QRTBV60
+[2026-11-10 15:14:47] First Pass Actual Good QTY: 8,990
+[2026-11-10 15:14:47] Total Actual Good QTY: 11,355
+[2026-11-10 15:14:47] WXY tests resolved from MPC prefix 58974: Wafer=432, X=433, Y=434
+[2026-11-10 15:14:47] Parsing 7 file(s) across ALL panels (FIRST PASS + RETEST + QC): 6 smaller file(s) in 6 worker process(es) + the largest datalog ('mmt-271500654.900_e_20260908221546_6140_2609091611.std.old') in the main process with live progress.
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [FIRST PASS] [1/1] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900_e_20260908221546_6140_2609091611.std.old
+[2026-11-10 15:14:58] FIRST PASS parts accumulated: 11,935
+[2026-11-10 15:14:58] FIRST PASS summary: total=11,935, PASS=9,038, FAIL=2,897, missing WXY=312
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [RETEST] [1/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old
+[2026-11-10 15:14:58] RETEST parts accumulated: 2,978
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [RETEST] [2/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old
+[2026-11-10 15:14:58] RETEST parts accumulated: 4,538
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [RETEST] [3/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old
+[2026-11-10 15:14:58] RETEST parts accumulated: 5,498
+[2026-11-10 15:14:58] RETEST summary: total=5,498, PASS=2,387, FAIL=3,111, missing WXY=237
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [QC] [1/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900_q_20260910074509_6141_2609100806.std.old
+[2026-11-10 15:14:58] QC parts accumulated: 240
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [QC] [2/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-11-10 15:14:58] QC parts accumulated: 250
+[2026-11-10 15:14:58] 
+[2026-11-10 15:14:58] [QC] [3/3] Processing C:/FTDC/MMT-271500654.900/mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old
+[2026-11-10 15:14:58] QC parts accumulated: 251
+[2026-11-10 15:14:58] QC summary: total=251, PASS=240, FAIL=11, missing WXY=3
+[2026-11-10 15:14:58] --------------------------------------------------------------------------------
+[2026-11-10 15:14:58] Duplicate WXY in FIRST PASS datalog (any test result): 0
+[2026-11-10 15:14:58] Duplicate GUID - FIRST PASS original duplicate: 36
+[2026-11-10 15:14:58] Duplicate GUID rule: the first duplicate against an established FIRST PASS PASS original is counted here.
+[2026-11-10 15:14:59] Duplicate GUID - RETEST duplicate UID: 35
+[2026-11-10 15:14:59] RETEST duplicate UID rule: a RETEST row whose immediately preceding RETEST occurrence for the same WXY was PASS is counted here.
+[2026-11-10 15:14:59] Total Duplicate GUID: 71
+[2026-11-10 15:14:59] FP rejects not in RETEST: 6
+[2026-11-10 15:14:59] FP rejects not in RETEST rule: FIRST PASS FAIL WXY missing from RETEST WXY, excluding FIRST PASS HARD_BIN 3 rejects.
+[2026-11-10 15:14:59] QC Sampling units good in previous operation: 240
+[2026-11-10 15:14:59] QC Sampling units failed/missing in previous operation: 0
+[2026-11-10 15:14:59] QC Duplicate GUID (within QC): 8
+[2026-11-10 15:14:59] Calculated First Pass QTY = FIRST PASS PASS parts - Duplicate GUID = 9,002
+[2026-11-10 15:14:59] Comparison = Calculated First Pass QTY (9,002) - First Pass Actual Good QTY (8,990) = 12
+[2026-11-10 15:14:59] First Pass Result: PASS
+[2026-11-10 15:14:59] Total PASS parts = FIRST PASS PASS (9,038) + RETEST PASS (2,387) = 11,425
+[2026-11-10 15:14:59] Total Good = Total PASS parts - Total Duplicate GUID = 11,354
+[2026-11-10 15:14:59] Total Good Comparison = Total Good (11,354) - Total Actual Good QTY (11,355) = -1
+[2026-11-10 15:14:59] Total Good Result: FAIL
+[2026-11-10 15:14:59] FTDC Check 1: FAIL  |  Check 2: PASS  |  Check 4: PASS
+[2026-11-10 15:14:59] Remarks: There is abnormality or discrepancy observed in RETEST process. Please check.
+[2026-11-10 15:14:59] --------------------------------------------------------------------------------
+[2026-11-10 15:14:59] Run Analysis Detailed Report (WXY, Counts, FTDC Criteria & Result):
+[2026-11-10 15:14:59]   [General]
+[2026-11-10 15:14:59]   Lot ID: MMT-271500654.900
+[2026-11-10 15:14:59]   MPC: 58974QRTBV60
+[2026-11-10 15:14:59]   Remarks: There is abnormality or discrepancy observed in RETEST process. Please check.
+[2026-11-10 15:14:59]   Wafer Test Number: 432
+[2026-11-10 15:14:59]   X Test Number: 433
+[2026-11-10 15:14:59]   Y Test Number: 434
+[2026-11-10 15:14:59]   [FTDC Criteria]
+[2026-11-10 15:14:59]   Remarks: There is abnormality or discrepancy observed in RETEST process. Please check.
+[2026-11-10 15:14:59]   [Check 1] - If Total Actual Good QTY is greater than Total Tested Good w/o Duplicate UID, then result will be 'FAIL'. Otherwise, result will be 'PASS'.
+[2026-11-10 15:14:59]   [Result: FAIL] - 12 excess units in FP actual compared to STDF | -1 excess units in TOTAL actual compared to STDF
+[2026-11-10 15:14:59]   [Check 2] - If there are too many good units that were retested, then result will be 'FAIL'.
+[2026-11-10 15:14:59]   [Result: PASS] - Total duplicate good units are less than or equal to 72 units.
+[2026-11-10 15:14:59]   [Check 4] - If all QC samples are confirmed FT good parts, then result will be 'PASS'. Otherwise, it will be 'FAIL'.
+[2026-11-10 15:14:59]   [Result: PASS] - All QC units are confirmed PASS in previous operation.
+[2026-11-10 15:14:59]   These are the possible reasons for Check 1 and/or Check 4 Fail:
+[2026-11-10 15:14:59]   1) Corrupted STDF - Please double check each STDF, retrieve all corrupted datalog.
+[2026-11-10 15:14:59]   2) Wrong/Incomplete STDF files attached - Kindly make sure you attached the previous FT step stdf and all RETESTs stdf. Also, if the datalog/summary was cut off, then attach the continuation of that STDF/datalog.
+[2026-11-10 15:14:59]   3) Duplicate WXY in FIRST PASS - Please verify and confirm if there are duplicate WXYs in the FIRST PASS stdf.
+[2026-11-10 15:14:59]   4) Incorrect Actual Good QTY input - Kindly double check the ACTUAL GOOD QUANTITY, perform recount if possible.
+[2026-11-10 15:14:59]   [FT]
+[2026-11-10 15:14:59]   Duplicate Good UID: 71
+[2026-11-10 15:14:59]   FP rejects not in RETEST: 6
+[2026-11-10 15:14:59]   BIN3 NO RETEST: 0
+[2026-11-10 15:14:59]   FIRST PASS Total parts: 11,935
+[2026-11-10 15:14:59]   FIRST PASS PASS parts: 9,038
+[2026-11-10 15:14:59]   FIRST PASS FAIL parts: 2,897
+[2026-11-10 15:14:59]   FIRST PASS Missing WXY: 312
+[2026-11-10 15:14:59]   RETEST Total parts: 5,498
+[2026-11-10 15:14:59]   RETEST PASS parts: 2,387
+[2026-11-10 15:14:59]   RETEST FAIL parts: 3,111
+[2026-11-10 15:14:59]   RETEST Missing WXY: 237
+[2026-11-10 15:14:59]   [QC]
+[2026-11-10 15:14:59]   Total parts: 251
+[2026-11-10 15:14:59]   PASS parts: 240
+[2026-11-10 15:14:59]   FAIL parts: 11
+[2026-11-10 15:14:59]   Missing WXY: 3
+[2026-11-10 15:14:59]   Duplicate GUID within QC: 8
+[2026-11-10 15:15:00]   QC Sampling units good in previous operation: 240
+[2026-11-10 15:15:00]   [FT]
+[2026-11-10 15:15:00]   Calculated First Pass QTY: 9,002
+[2026-11-10 15:15:00]   Total PASS parts: 11,425
+[2026-11-10 15:15:00]   Total Good: 11,354
+[2026-11-10 15:15:00] Run Analysis Final Result: First Pass Result=PASS | Total Good Result=FAIL | Check 1=FAIL | Check 2=PASS | Check 4=PASS
+[2026-11-10 15:15:00] Run Analysis Remarks: There is abnormality or discrepancy observed in RETEST process. Please check.
+[2026-11-10 15:15:03] Attach to PPO: Files ready - automatically attaching 'MMT-271500654.900_FTDC_20261110151459.xlsx' & 'MMT-271500654.900_FTDC_Result_20261110151459.png' to '\\chip\PPOonline\58974\MMT-271500654.900'.
+[2026-11-10 15:15:17] Attach to PPO: SUCCESS - Attached 'MMT-271500654.900_FTDC_20261110151459.xlsx' & 'MMT-271500654.900_FTDC_Result_20261110151459.png' to 4 PPO subfolder(s): \\chip\PPOonline\58974\MMT-271500654.900\A260909-0279\MMT-271500654.900_FTDC_20261110151459.xlsx, \\chip\PPOonline\58974\MMT-271500654.900\A260909-0279\MMT-271500654.900_FTDC_Result_20261110151459.png, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0015\MMT-271500654.900_FTDC_20261110151459.xlsx, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0015\MMT-271500654.900_FTDC_Result_20261110151459.png, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0078\MMT-271500654.900_FTDC_20261110151459.xlsx, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0078\MMT-271500654.900_FTDC_Result_20261110151459.png, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0113\MMT-271500654.900_FTDC_20261110151459.xlsx, \\chip\PPOonline\58974\MMT-271500654.900\A260910-0113\MMT-271500654.900_FTDC_Result_20261110151459.png
+[2026-11-10 20:21:52] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261110_202152.log

@@ -1,0 +1,493 @@
+[2026-11-05 15:07:10] Lot Details Input: Lot ID = 'MMT-272500536.900'
+[2026-11-05 15:07:12] Lot Details Input: MPC = 'SG406QRTBA02'
+[2026-11-05 15:07:12] [Check STDF] Lot Details: Lot ID='MMT-272500536.900', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-05 15:07:13] Check STDF [mmt-272500536.900_e_20261103232010_ft2_2611040121.stdf.old]: Status=Completed, Total Parts=387, Tested Good=273, Mismatch/Discrepancy=None
+[2026-11-05 15:07:14] Check STDF [mmt-272500536.900_w_rj1_20261101033951_ft1_2611010932.stdf.old]: Status=Completed, Total Parts=2724, Tested Good=2145, Mismatch/Discrepancy=None
+[2026-11-05 15:07:15] Check STDF [mmt-272500536.900_e_20261104032355_ft2_2611040823.stdf.old]: Status=Completed, Total Parts=3480, Tested Good=3263, Mismatch/Discrepancy=None
+[2026-11-05 15:07:15] Check STDF [mmt-272500536.900_e_20261104084459_ft2_2611040914.stdf.old]: Status=Completed, Total Parts=282, Tested Good=240, Mismatch/Discrepancy=None
+[2026-11-05 15:07:16] Check STDF [mmt-272500536.900_e_20261104095838_ft2_2611041430.stdf.old]: Status=Completed, Total Parts=1353, Tested Good=1039, Mismatch/Discrepancy=None
+[2026-11-05 15:07:18] Check STDF [mmt-272500536.900_w_rj1_20261105052405_ft2_2611050554.stdf.old]: Status=Completed, Total Parts=365, Tested Good=364, Mismatch/Discrepancy=None
+[2026-11-05 15:07:18] Check STDF [mmt-272500536.900_w_rj1_20261104231957_ft2_2611050518.stdf.old]: Status=Completed, Total Parts=2836, Tested Good=2400, Mismatch/Discrepancy=None
+[2026-11-05 15:07:18] Check STDF [mmt-272500536.900_e_20261031041546_ft1_2611010333.stdf.old]: Status=Completed, Total Parts=14682, Tested Good=11979, Mismatch/Discrepancy=None
+[2026-11-05 15:07:19] Check STDF [mmt-272500536.900_e_20261104143249_ft2_2611042251.stdf.old]: Status=Completed, Total Parts=8382, Tested Good=6528, Mismatch/Discrepancy=None
+[2026-11-05 15:07:19] Check STDF [mmt-272500536.900_q_20261105062900_qc1_2611050720.stdf.old]: Status=Completed, Total Parts=490, Tested Good=480, Mismatch/Discrepancy=None
+[2026-11-05 15:07:19] Check STDF [mmt-272500536.900_q_rj1_20261105072151_qc1_2611050734.stdf.old]: Status=Completed, Total Parts=10, Tested Good=10, Mismatch/Discrepancy=None
+[2026-11-05 15:07:19] Check STDF Lot Summary [MMT-272500536.900]: Files=11, Quantity Total Parts=34,991, Quantity Tested Good=28,721, Mismatches=None
+[2026-11-05 15:07:22] Loaded 'mmt-272500536.900_e_20261103232010_ft2_2611040121.stdf.old' into FIRST PASS panel.
+[2026-11-05 15:07:23] Loaded 'mmt-272500536.900_e_20261104032355_ft2_2611040823.stdf.old' into FIRST PASS panel.
+[2026-11-05 15:07:23] Loaded 'mmt-272500536.900_e_20261104084459_ft2_2611040914.stdf.old' into FIRST PASS panel.
+[2026-11-05 15:07:23] Loaded 'mmt-272500536.900_e_20261104095838_ft2_2611041430.stdf.old' into FIRST PASS panel.
+[2026-11-05 15:07:24] Loaded 'mmt-272500536.900_e_20261104143249_ft2_2611042251.stdf.old' into FIRST PASS panel.
+[2026-11-05 15:07:24] Loaded 'mmt-272500536.900_w_rj1_20261104231957_ft2_2611050518.stdf.old' into RETEST panel.
+[2026-11-05 15:07:25] Loaded 'mmt-272500536.900_w_rj1_20261105052405_ft2_2611050554.stdf.old' into RETEST panel.
+[2026-11-05 15:07:25] Loaded 'mmt-272500536.900_q_20261105062900_qc1_2611050720.stdf.old' into QC panel.
+[2026-11-05 15:07:26] Loaded 'mmt-272500536.900_q_rj1_20261105072151_qc1_2611050734.stdf.old' into QC panel.
+[2026-11-05 15:07:47] Lot Details Input: Total Actual Good QTY = '13663'
+[2026-11-05 15:07:49] Lot Details Input: First Pass Actual Good QTY = '123123'
+[2026-11-05 15:07:49] [Run Analysis] Lot Details: Lot ID='MMT-272500536.900', MPC='SG406QRTBA02', First Pass Actual Good QTY='123123', Total Actual Good QTY='13663'
+[2026-11-05 15:07:49] ================================================================================
+[2026-11-05 15:07:49] Starting Get Data...
+[2026-11-05 15:07:49] FIRST PASS files: 5
+[2026-11-05 15:07:49] RETEST files: 2
+[2026-11-05 15:07:49] QC files: 2
+[2026-11-05 15:07:49] Manual filter: Disabled / not used
+[2026-11-05 15:07:49] File parsing order: Timestamp ascending within each panel (first valid YYYYMMDDHHMMSS in filename; filename fallback).
+[2026-11-05 15:07:49] ================================================================================
+[2026-11-05 15:07:49] Starting SG406 Multi-Identifier STDF Analysis (WXY + UID + BT MACID + ZB MACID)
+[2026-11-05 15:07:49] Lot ID: MMT-272500536.900
+[2026-11-05 15:07:49] MPC: SG406QRTBA02
+[2026-11-05 15:07:49] First Pass Actual Good QTY: 123,123
+[2026-11-05 15:07:49] Total Actual Good QTY: 13,663
+[2026-11-05 15:07:49] SG406 Tests resolved: Wafer=93005, X=93006, Y=93007 | UID=93009 | BT=[94016, 94017, 94018, 94019, 94020, 94021] | ZB=[94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029]
+[2026-11-05 15:07:49] Parsing 9 file(s) across ALL panels (FIRST PASS + RETEST + QC): 8 smaller file(s) in 8 worker process(es) + the largest datalog ('mmt-272500536.900_e_20261104143249_ft2_2611042251.stdf.old') in the main process with live progress.
+[2026-11-05 15:07:59] 
+[2026-11-05 15:07:59] [FIRST PASS] [1/5] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_e_20261103232010_ft2_2611040121.stdf.old
+[2026-11-05 15:07:59] FIRST PASS parts accumulated: 387
+[2026-11-05 15:07:59] 
+[2026-11-05 15:07:59] [FIRST PASS] [2/5] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_e_20261104032355_ft2_2611040823.stdf.old
+[2026-11-05 15:07:59] FIRST PASS parts accumulated: 3,867
+[2026-11-05 15:07:59] 
+[2026-11-05 15:07:59] [FIRST PASS] [3/5] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_e_20261104084459_ft2_2611040914.stdf.old
+[2026-11-05 15:07:59] FIRST PASS parts accumulated: 4,149
+[2026-11-05 15:07:59] 
+[2026-11-05 15:07:59] [FIRST PASS] [4/5] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_e_20261104095838_ft2_2611041430.stdf.old
+[2026-11-05 15:07:59] FIRST PASS parts accumulated: 5,502
+[2026-11-05 15:07:59] 
+[2026-11-05 15:07:59] [FIRST PASS] [5/5] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_e_20261104143249_ft2_2611042251.stdf.old
+[2026-11-05 15:08:00] FIRST PASS parts accumulated: 13,884
+[2026-11-05 15:08:00] FIRST PASS summary: total=13,884, PASS=11,343, FAIL=2,541, missing WXY=280, missing UID=280, missing BT=2,540, missing ZB=2,540
+[2026-11-05 15:08:00] 
+[2026-11-05 15:08:00] [RETEST] [1/2] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_w_rj1_20261104231957_ft2_2611050518.stdf.old
+[2026-11-05 15:08:00] RETEST parts accumulated: 2,836
+[2026-11-05 15:08:00] 
+[2026-11-05 15:08:00] [RETEST] [2/2] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_w_rj1_20261105052405_ft2_2611050554.stdf.old
+[2026-11-05 15:08:00] RETEST parts accumulated: 3,201
+[2026-11-05 15:08:00] RETEST summary: total=3,201, PASS=2,764, FAIL=437, missing WXY=27, missing UID=27, missing BT=437, missing ZB=437
+[2026-11-05 15:08:00] 
+[2026-11-05 15:08:00] [QC] [1/2] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_q_20261105062900_qc1_2611050720.stdf.old
+[2026-11-05 15:08:00] QC parts accumulated: 490
+[2026-11-05 15:08:00] 
+[2026-11-05 15:08:00] [QC] [2/2] Processing C:/FTDC/MMT-272500536.900/mmt-272500536.900_q_rj1_20261105072151_qc1_2611050734.stdf.old
+[2026-11-05 15:08:00] QC parts accumulated: 500
+[2026-11-05 15:08:00] QC summary: total=500, PASS=490, FAIL=10, missing WXY=0, missing UID=0, missing BT=10, missing ZB=10
+[2026-11-05 15:08:00] --------------------------------------------------------------------------------
+[2026-11-05 15:08:00] [WXY] FP Datalog Duplicate: 0 | FP Duplicate Good: 441 | RETEST Duplicate Good: 0 | Total Duplicate Good: 441 | Calc FP Good: 10,902 (Delta: -112,221) | Total Good: 13,666 (Delta: 3) | QC Good Prev Op: 490 | QC Fail/Missing Prev Op: 0
+[2026-11-05 15:08:00] [UID] FP Datalog Duplicate: 0 | FP Duplicate Good: 441 | RETEST Duplicate Good: 0 | Total Duplicate Good: 441 | Calc FP Good: 10,902 (Delta: -112,221) | Total Good: 13,666 (Delta: 3) | QC Good Prev Op: 490 | QC Fail/Missing Prev Op: 0
+[2026-11-05 15:08:00] [BT MACID] FP Datalog Duplicate: 0 | FP Duplicate Good: 440 | RETEST Duplicate Good: 0 | Total Duplicate Good: 440 | Calc FP Good: 10,903 (Delta: -112,220) | Total Good: 13,667 (Delta: 4) | QC Good Prev Op: 490 | QC Fail/Missing Prev Op: 0
+[2026-11-05 15:08:00] [ZB MACID] FP Datalog Duplicate: 0 | FP Duplicate Good: 440 | RETEST Duplicate Good: 0 | Total Duplicate Good: 440 | Calc FP Good: 10,903 (Delta: -112,220) | Total Good: 13,667 (Delta: 4) | QC Good Prev Op: 490 | QC Fail/Missing Prev Op: 0
+[2026-11-05 15:08:00] First Pass Result: FAIL  |  Total Good Result: PASS
+[2026-11-05 15:08:00] FTDC Check 1: PASS  |  Check 2: FAIL  |  Check 4: PASS
+[2026-11-05 15:08:00] Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-11-05 15:08:00] --------------------------------------------------------------------------------
+[2026-11-05 15:08:00] Run Analysis Detailed Report (WXY, Counts, FTDC Criteria & Result):
+[2026-11-05 15:08:00]   [General]
+[2026-11-05 15:08:00]   Lot ID: MMT-272500536.900
+[2026-11-05 15:08:00]   MPC: SG406QRTBA02
+[2026-11-05 15:08:00]   Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-11-05 15:08:00]   Wafer Test Number: 93,005
+[2026-11-05 15:08:00]   X Test Number: 93,006
+[2026-11-05 15:08:00]   Y Test Number: 93,007
+[2026-11-05 15:08:00]   UID Test Number: 93,009
+[2026-11-05 15:08:00]   BT MACID Test Numbers: 94016, 94017, 94018, 94019, 94020, 94021
+[2026-11-05 15:08:00]   ZB MACID Test Numbers: 94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029
+[2026-11-05 15:08:00]   [FTDC Criteria]
+[2026-11-05 15:08:00]   Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-11-05 15:08:00]   [Check 1] - If Total Actual Good QTY is greater than Total Tested Good w/o Duplicate (or if any internal duplicate is observed in FIRST PASS) for WXY, UID, BT MACID, or ZB MACID, then result will be 'FAIL'. Otherwise, result will be 'PASS'.
+[2026-11-05 15:08:00]   [Result: PASS]
+[2026-11-05 15:08:00]     - WXY [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -112221 | TOTAL variance: 3
+[2026-11-05 15:08:00]     - UID [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -112221 | TOTAL variance: 3
+[2026-11-05 15:08:00]     - BT MACID [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -112220 | TOTAL variance: 4
+[2026-11-05 15:08:00]     - ZB MACID [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -112220 | TOTAL variance: 4
+[2026-11-05 15:08:00]   [Check 2] - If duplicate good units exceed 72 units for WXY, UID, BT MACID, or ZB MACID individually, then result will be 'FAIL'.
+[2026-11-05 15:08:00]   [Result: FAIL]
+[2026-11-05 15:08:00]     - WXY [FAIL]: Total duplicate good units = 441 (limit <= 72)
+[2026-11-05 15:08:01]     - UID [FAIL]: Total duplicate good units = 441 (limit <= 72)
+[2026-11-05 15:08:01]     - BT MACID [FAIL]: Total duplicate good units = 440 (limit <= 72)
+[2026-11-05 15:08:01]     - ZB MACID [FAIL]: Total duplicate good units = 440 (limit <= 72)
+[2026-11-05 15:08:01]   [Check 4] - If all QC samples are confirmed FT good parts across WXY, UID, BT MACID, and ZB MACID, then result will be 'PASS'. Otherwise, it will be 'FAIL'.
+[2026-11-05 15:08:02]   [Result: PASS]
+[2026-11-05 15:08:02]     - WXY [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-05 15:08:02]     - UID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-05 15:08:02]     - BT MACID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-05 15:08:02]     - ZB MACID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-05 15:08:02]   These are the possible reasons for Check 1 and/or Check 4 Fail:
+[2026-11-05 15:08:02]   1) Corrupted STDF - Please double check each STDF, retrieve all corrupted datalog.
+[2026-11-05 15:08:02]   2) Wrong/Incomplete STDF files attached - Kindly make sure you attached the previous FT step stdf and all RETESTs stdf. Also, if the datalog/summary was cut off, then attach the continuation of that STDF/datalog.
+[2026-11-05 15:08:02]   3) Duplicate WXY / UID / BT MACID / ZB MACID in FIRST PASS - Please verify and confirm if there are duplicates in the FIRST PASS stdf.
+[2026-11-05 15:08:02]   4) Incorrect Actual Good QTY input - Kindly double check the ACTUAL GOOD QUANTITY, perform recount if possible.
+[2026-11-05 15:08:02]   [FT]
+[2026-11-05 15:08:02]   Duplicate Good WXY: 441
+[2026-11-05 15:08:02]   Duplicate Good UID: 441
+[2026-11-05 15:08:02]   Duplicate Good BT MACID: 440
+[2026-11-05 15:08:03]   Duplicate Good ZB MACID: 440
+[2026-11-05 15:08:03]   FP rejects not in RETEST (WXY): 28
+[2026-11-05 15:08:03]   FP rejects not in RETEST (UID): 28
+[2026-11-05 15:08:03]   FP rejects not in RETEST (BT MACID): 1
+[2026-11-05 15:08:03]   FP rejects not in RETEST (ZB MACID): 1
+[2026-11-05 15:08:03]   BIN3 NO RETEST: 0
+[2026-11-05 15:08:03]   FIRST PASS Total parts: 13,884
+[2026-11-05 15:08:03]   FIRST PASS PASS parts: 11,343
+[2026-11-05 15:08:03]   FIRST PASS FAIL parts: 2,541
+[2026-11-05 15:08:03]   FIRST PASS Missing WXY: 280
+[2026-11-05 15:08:03]   FIRST PASS Missing UID: 280
+[2026-11-05 15:08:03]   FIRST PASS Missing BT MACID: 2,540
+[2026-11-05 15:08:03]   FIRST PASS Missing ZB MACID: 2,540
+[2026-11-05 15:08:03]   RETEST Total parts: 3,201
+[2026-11-05 15:08:03]   RETEST PASS parts: 2,764
+[2026-11-05 15:08:03]   RETEST FAIL parts: 437
+[2026-11-05 15:08:03]   RETEST Missing WXY: 27
+[2026-11-05 15:08:03]   RETEST Missing UID: 27
+[2026-11-05 15:08:03]   RETEST Missing BT MACID: 437
+[2026-11-05 15:08:03]   RETEST Missing ZB MACID: 437
+[2026-11-05 15:08:03]   [QC]
+[2026-11-05 15:08:03]   Total parts: 500
+[2026-11-05 15:08:03]   PASS parts: 490
+[2026-11-05 15:08:03]   FAIL parts: 10
+[2026-11-05 15:08:03]   Missing WXY: 0
+[2026-11-05 15:08:03]   Missing UID: 0
+[2026-11-05 15:08:03]   Missing BT MACID: 10
+[2026-11-05 15:08:03]   Missing ZB MACID: 10
+[2026-11-05 15:08:03]   Duplicate WXY within QC: 10
+[2026-11-05 15:08:03]   Duplicate UID within QC: 10
+[2026-11-05 15:08:03]   Duplicate BT MACID within QC: 0
+[2026-11-05 15:08:03]   Duplicate ZB MACID within QC: 0
+[2026-11-05 15:08:03]   QC Sampling units good in previous operation (WXY): 490
+[2026-11-05 15:08:04]   QC Sampling units good in previous operation (UID): 490
+[2026-11-05 15:08:04]   QC Sampling units good in previous operation (BT MACID): 490
+[2026-11-05 15:08:04]   QC Sampling units good in previous operation (ZB MACID): 490
+[2026-11-05 15:08:04]   [FT]
+[2026-11-05 15:08:04]   Calculated First Pass QTY (WXY): 10,902
+[2026-11-05 15:08:04]   Calculated First Pass QTY (UID): 10,902
+[2026-11-05 15:08:04]   Calculated First Pass QTY (BT MACID): 10,903
+[2026-11-05 15:08:04]   Calculated First Pass QTY (ZB MACID): 10,903
+[2026-11-05 15:08:04]   Total PASS parts: 14,107
+[2026-11-05 15:08:04]   Total Good (WXY): 13,666
+[2026-11-05 15:08:04]   Total Good (UID): 13,666
+[2026-11-05 15:08:04]   Total Good (BT MACID): 13,667
+[2026-11-05 15:08:04]   Total Good (ZB MACID): 13,667
+[2026-11-05 15:08:04] Run Analysis Final Result: First Pass Result=FAIL | Total Good Result=PASS | Check 1=PASS | Check 2=FAIL | Check 4=PASS
+[2026-11-05 15:08:04] Run Analysis Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-11-05 15:08:06] Attach Excel to PPO: Excel ready - automatically attaching 'MMT-272500536.900_FTDC_20261105150800.xlsx' to '\\chip\PPOonline\SG406\MMT-272500536.900'.
+[2026-11-05 15:08:19] Attach Excel to PPO: SUCCESS - Attached 'MMT-272500536.900_FTDC_20261105150800.xlsx' to 3 PPO subfolder(s): \\chip\PPOonline\SG406\MMT-272500536.900\A261105-0077\MMT-272500536.900_FTDC_20261105150800.xlsx, \\chip\PPOonline\SG406\MMT-272500536.900\A261105-0092\MMT-272500536.900_FTDC_20261105150800.xlsx, \\chip\PPOonline\SG406\MMT-272500536.900\M261104-0002\MMT-272500536.900_FTDC_20261105150800.xlsx
+[2026-11-05 15:08:26] Download & Open Excel: Preparing Excel workbook…
+[2026-11-05 15:08:26] Download & Open Excel: Downloaded Excel to 'C:\FTDC\MMT-272500536.900\MMT-272500536.900_FTDC_20261105150800.xlsx'
+[2026-11-05 15:08:26] Download & Open Excel: Opening 'C:\FTDC\MMT-272500536.900\MMT-272500536.900_FTDC_20261105150800.xlsx'
+[2026-11-06 07:21:07] [Run Analysis] Lot Details: Lot ID='MMT-272500536.900', MPC='SG406QRTBA02', First Pass Actual Good QTY='123123', Total Actual Good QTY='13663'
+[2026-11-06 07:21:07] ================================================================================
+[2026-11-06 07:21:07] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-11-06 07:22:41] Lot Details Input: Lot ID = 'MMT-272100938.800'
+[2026-11-06 07:22:45] ================================================================================
+[2026-11-06 07:22:45] Lot Details Input: MPC = 'SG406QRTBA02'
+[2026-11-06 07:22:45] [Get STDF] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-06 07:22:45] Get STDF: Lot ID 'MMT-272100938.800', MPC 'SG406QRTBA02'
+[2026-11-06 07:22:45]   Tester: V93K
+[2026-11-06 07:22:45]   Device folder(s): PIC32CX5109BZ*
+[2026-11-06 07:22:45]   Network base(s):
+[2026-11-06 07:22:45]     - \\acpnetapp02\ftdirectory\backend\data\stdf\v93k
+[2026-11-06 07:22:45]     - \\acpnetapp02\tsti\backend\data
+[2026-11-06 07:22:45]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-06 07:22:45]   Valid STDF filename conventions (mask 'SG406', V93K):
+[2026-11-06 07:22:45]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-06 07:22:45]     - RETEST: {lot}_w_rj{N}_{timestamp}
+[2026-11-06 07:22:45]     - QC: {lot}_q_{timestamp}
+[2026-11-06 07:22:45]     - QC RETEST: {lot}_q_rj{N}_{timestamp}
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ3-Engg (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T (server-side filter '*MMT-272100938.800*', 11 entries returned)
+[2026-11-06 07:22:52]   Skipped (not a valid STDF filename convention): mmt-272100938.800_correl_e_20261020233844_ft2_2610210008.stdf.old
+[2026-11-06 07:22:52]   Skipped (not a valid STDF filename convention): mmt-272100938.800_correl_e_20261021001347_ft2_2610210148.stdf.old
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:22:52] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-272100938.800*', 1 entry returned)
+[2026-11-06 07:22:52]   Directory search took 0.22s (11/11 folder(s) server-side filtered).
+[2026-11-06 07:22:52] Search complete — 10 matching file(s) found.
+[2026-11-06 07:22:52] Get STDF Summary: Tester Used='V93K', Files Found=10, Source Device Folder(s)=PIC32CX5109BZ31032T, RETRIEVED_DATALOG
+[2026-11-06 07:22:52] Get STDF: Found 10 matching STDF file(s) for Lot ID 'MMT-272100938.800' in device folder(s) PIC32CX5109BZ* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-06 07:22:52]   • mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old  [from folder: RETRIEVED_DATALOG (\\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52]   • mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:22:52] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-272100938.800…
+[2026-11-06 07:22:52] Get STDF: Copying 10 file(s)…
+[2026-11-06 07:22:52] Copying 10 file(s) to: C:\FTDC\MMT-272100938.800
+[2026-11-06 07:23:03]   Copied: mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old
+[2026-11-06 07:23:09]   Copied: mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old
+[2026-11-06 07:23:12]   Copied: mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old
+[2026-11-06 07:23:19]   Copied: mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old
+[2026-11-06 07:23:33]   Copied: mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old
+[2026-11-06 07:23:37]   Copied: mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old
+[2026-11-06 07:23:44]   Copied: mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old
+[2026-11-06 07:23:45]   Copied: mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old
+[2026-11-06 07:23:45]   Copied: mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old
+[2026-11-06 07:23:46]   Copied: mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old
+[2026-11-06 07:23:46] Done - 10/10 file(s) copied to C:\FTDC\MMT-272100938.800
+[2026-11-06 07:23:46] Check STDF pre-warm: Checking 10 file(s) in background for 'MMT-272100938.800'.
+[2026-11-06 07:23:48] Check STDF [mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old]: Status=Completed, Total Parts=1926, Tested Good=1378, Mismatch/Discrepancy=None
+[2026-11-06 07:23:57] Check STDF [mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old]: Status=Completed, Total Parts=10525, Tested Good=9519, Mismatch/Discrepancy=None
+[2026-11-06 07:23:57] Check STDF [mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old]: Status=Completed, Total Parts=2444, Tested Good=2262, Mismatch/Discrepancy=None
+[2026-11-06 07:23:58] Check STDF [mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old]: Status=Completed, Total Parts=367, Tested Good=343, Mismatch/Discrepancy=None
+[2026-11-06 07:23:58] Check STDF [mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old]: Status=Completed, Total Parts=1776, Tested Good=1333, Mismatch/Discrepancy=None
+[2026-11-06 07:23:59] Check STDF [mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old]: Status=Completed, Total Parts=35, Tested Good=34, Mismatch/Discrepancy=None
+[2026-11-06 07:23:59] Check STDF [mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old]: Status=Completed, Total Parts=488, Tested Good=465, Mismatch/Discrepancy=None
+[2026-11-06 07:23:59] Check STDF [mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old]: Status=Completed, Total Parts=2, Tested Good=2, Mismatch/Discrepancy=None
+[2026-11-06 07:24:00] Check STDF [mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old]: Status=Completed, Total Parts=8922, Tested Good=8258, Mismatch/Discrepancy=None
+[2026-11-06 07:24:02] Check STDF [mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old]: Status=Completed, Total Parts=16498, Tested Good=14976, Mismatch/Discrepancy=None
+[2026-11-06 07:24:03] Lot Details Input: First Pass Actual Good QTY = '2262'
+[2026-11-06 07:24:13] Lot Details Input: Total Actual Good QTY = '3938'
+[2026-11-06 07:24:14] [Check STDF] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='2262', Total Actual Good QTY='3938'
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old] (cached): Status=Completed, Total Parts=8922, Tested Good=8258, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old] (cached): Status=Completed, Total Parts=10525, Tested Good=9519, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old] (cached): Status=Completed, Total Parts=1926, Tested Good=1378, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old] (cached): Status=Completed, Total Parts=16498, Tested Good=14976, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old] (cached): Status=Completed, Total Parts=2444, Tested Good=2262, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old] (cached): Status=Completed, Total Parts=1776, Tested Good=1333, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old] (cached): Status=Completed, Total Parts=367, Tested Good=343, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old] (cached): Status=Completed, Total Parts=488, Tested Good=465, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old] (cached): Status=Completed, Total Parts=35, Tested Good=34, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF [mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old] (cached): Status=Completed, Total Parts=2, Tested Good=2, Mismatch/Discrepancy=None
+[2026-11-06 07:24:15] Check STDF: 10 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-11-06 07:24:15] Check STDF: All 10 file(s) loaded from cache.
+[2026-11-06 07:24:15] Check STDF Lot Summary [MMT-272100938.800]: Files=10, Quantity Total Parts=42,983, Quantity Tested Good=38,570, Mismatches=None
+[2026-11-06 07:25:15] Loaded 'mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old' into FIRST PASS panel.
+[2026-11-06 07:25:15] Loaded 'mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old' into FIRST PASS panel.
+[2026-11-06 07:25:15] Loaded 'mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old' into RETEST panel.
+[2026-11-06 07:25:18] Loaded 'mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old' into RETEST panel.
+[2026-11-06 07:25:18] Loaded 'mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old' into QC panel.
+[2026-11-06 07:25:19] Loaded 'mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old' into QC panel.
+[2026-11-06 07:25:19] Loaded 'mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old' into QC panel.
+[2026-11-06 07:34:07] ================================================================================
+[2026-11-06 07:34:07] [Get STDF] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='2262', Total Actual Good QTY='3938'
+[2026-11-06 07:34:07] Get STDF: Lot ID 'MMT-272100938.800', MPC 'SG406QRTBA02'
+[2026-11-06 07:34:07]   Tester: V93K
+[2026-11-06 07:34:07]   Device folder(s): PIC32CX5109BZ*
+[2026-11-06 07:34:07]   Network base(s):
+[2026-11-06 07:34:07]     - \\acpnetapp02\ftdirectory\backend\data\stdf\v93k
+[2026-11-06 07:34:07]     - \\acpnetapp02\tsti\backend\data
+[2026-11-06 07:34:07]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-06 07:34:07]   Valid STDF filename conventions (mask 'SG406', V93K):
+[2026-11-06 07:34:07]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-06 07:34:07]     - RETEST: {lot}_w_rj{N}_{timestamp}
+[2026-11-06 07:34:07]     - QC: {lot}_q_{timestamp}
+[2026-11-06 07:34:07]     - QC RETEST: {lot}_q_rj{N}_{timestamp}
+[2026-11-06 07:34:07]   Cache: 10 file(s) already in C:\FTDC\MMT-272100938.800 will be skipped.
+[2026-11-06 07:34:08]   Get STDF cache: 10 file(s) already in target folder will be skipped if unchanged (name + size + modified time).
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ3-Engg (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032 (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048T (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T (server-side filter '*MMT-272100938.800*', 12 entries returned)
+[2026-11-06 07:34:08]   Re-fetching (changed on network — size/modified time differs): mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-272100938.800*', 0 entries returned)
+[2026-11-06 07:34:08] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-272100938.800*', 1 entry returned)
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old
+[2026-11-06 07:34:08]   Skipped (not a valid STDF filename convention): mmt-272100938.800_correl_e_20261020233844_ft2_2610210008.stdf.old
+[2026-11-06 07:34:08]   Skipped (not a valid STDF filename convention): mmt-272100938.800_correl_e_20261021001347_ft2_2610210148.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old
+[2026-11-06 07:34:08]   Skipped (already in target folder, unchanged): mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old
+[2026-11-06 07:34:08]   Directory search took 0.24s (11/11 folder(s) server-side filtered).
+[2026-11-06 07:34:08] Search complete — 1 matching file(s) found.
+[2026-11-06 07:34:08] Get STDF Summary: Tester Used='V93K', Files Found=1, Source Device Folder(s)=PIC32CX5109BZ31032T
+[2026-11-06 07:34:08] Get STDF: Found 1 matching STDF file(s) for Lot ID 'MMT-272100938.800' in device folder(s) PIC32CX5109BZ* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-06 07:34:08]   • mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-06 07:34:08] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-272100938.800…
+[2026-11-06 07:34:08] Get STDF: Copying 1 file(s)…
+[2026-11-06 07:34:08] Copying 1 file(s) to: C:\FTDC\MMT-272100938.800
+[2026-11-06 07:34:29]   Copied: mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old
+[2026-11-06 07:34:29] Done - 1/1 file(s) copied to C:\FTDC\MMT-272100938.800
+[2026-11-06 07:34:29] Check STDF pre-warm: Checking 1 file(s) in background for 'MMT-272100938.800'.
+[2026-11-06 07:34:32] Check STDF [mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old]: Status=Completed, Total Parts=16498, Tested Good=14976, Mismatch/Discrepancy=None
+[2026-11-06 07:35:01] Lot Details Input: Total Actual Good QTY = '18,500'
+[2026-11-06 07:35:56] Lot Details Input: First Pass Actual Good QTY = '17'
+[2026-11-06 07:35:58] Lot Details Input: First Pass Actual Good QTY = '17238'
+[2026-11-06 07:35:59] [Check STDF] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_e_20261015115630_ft1_2610160210.stdf.old] (cached): Status=Completed, Total Parts=8922, Tested Good=8258, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_e_20261016040132_ft1_2610161853.stdf.old] (cached): Status=Completed, Total Parts=10525, Tested Good=9519, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_w_rj1_20261016185710_ft1_2610170014.stdf.old] (cached): Status=Completed, Total Parts=1926, Tested Good=1378, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old] (cached): Status=Completed, Total Parts=16498, Tested Good=14976, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old] (cached): Status=Completed, Total Parts=2444, Tested Good=2262, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old] (cached): Status=Completed, Total Parts=1776, Tested Good=1333, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old] (cached): Status=Completed, Total Parts=367, Tested Good=343, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old] (cached): Status=Completed, Total Parts=488, Tested Good=465, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old] (cached): Status=Completed, Total Parts=35, Tested Good=34, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF [mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old] (cached): Status=Completed, Total Parts=2, Tested Good=2, Mismatch/Discrepancy=None
+[2026-11-06 07:35:59] Check STDF: 10 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-11-06 07:35:59] Check STDF: All 10 file(s) loaded from cache.
+[2026-11-06 07:35:59] Check STDF Lot Summary [MMT-272100938.800]: Files=10, Quantity Total Parts=42,983, Quantity Tested Good=38,570, Mismatches=None
+[2026-11-06 07:36:05] 'mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old' already in FIRST PASS panel.
+[2026-11-06 07:36:14] [Run Analysis] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 07:36:14] ================================================================================
+[2026-11-06 07:36:14] Starting Get Data...
+[2026-11-06 07:36:14] FIRST PASS files: 2
+[2026-11-06 07:36:14] RETEST files: 2
+[2026-11-06 07:36:14] QC files: 3
+[2026-11-06 07:36:14] Manual filter: Disabled / not used
+[2026-11-06 07:36:14] File parsing order: Timestamp ascending within each panel (first valid YYYYMMDDHHMMSS in filename; filename fallback).
+[2026-11-06 07:36:14] ================================================================================
+[2026-11-06 07:36:14] Starting SG406 Multi-Identifier STDF Analysis (WXY + UID + BT MACID + ZB MACID)
+[2026-11-06 07:36:14] Lot ID: MMT-272100938.800
+[2026-11-06 07:36:14] MPC: SG406QRTBA02
+[2026-11-06 07:36:14] First Pass Actual Good QTY: 17,238
+[2026-11-06 07:36:14] Total Actual Good QTY: 18,500
+[2026-11-06 07:36:14] SG406 Tests resolved: Wafer=93005, X=93006, Y=93007 | UID=93009 | BT=[94016, 94017, 94018, 94019, 94020, 94021] | ZB=[94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029]
+[2026-11-06 07:36:14] Parsing 7 file(s) across ALL panels (FIRST PASS + RETEST + QC): 6 smaller file(s) in 6 worker process(es) + the largest datalog ('mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old') in the main process with live progress.
+[2026-11-06 07:36:31] 
+[2026-11-06 07:36:31] [FIRST PASS] [1/2] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_e_20261019081453_ft2_2610200335.stdf.old
+[2026-11-06 07:36:31] FIRST PASS parts accumulated: 16,498
+[2026-11-06 07:36:31] 
+[2026-11-06 07:36:31] [FIRST PASS] [2/2] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_e_20261020051831_ft2_2610200835.stdf.old
+[2026-11-06 07:36:31] FIRST PASS parts accumulated: 18,942
+[2026-11-06 07:36:32] FIRST PASS summary: total=18,942, PASS=17,238, FAIL=1,704, missing WXY=66, missing UID=66, missing BT=1,697, missing ZB=1,697
+[2026-11-06 07:36:32] 
+[2026-11-06 07:36:32] [RETEST] [1/2] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_w_rj1_20261021015125_ft2_2610210853.stdf.old
+[2026-11-06 07:36:32] RETEST parts accumulated: 1,776
+[2026-11-06 07:36:32] 
+[2026-11-06 07:36:32] [RETEST] [2/2] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_w_rj1_20261021090557_ft2_2610211027.stdf.old
+[2026-11-06 07:36:32] RETEST parts accumulated: 2,143
+[2026-11-06 07:36:32] RETEST summary: total=2,143, PASS=1,676, FAIL=467, missing WXY=32, missing UID=32, missing BT=467, missing ZB=467
+[2026-11-06 07:36:32] 
+[2026-11-06 07:36:32] [QC] [1/3] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_q_20261021114704_qc1_2610211255.stdf.old
+[2026-11-06 07:36:32] QC parts accumulated: 488
+[2026-11-06 07:36:32] 
+[2026-11-06 07:36:32] [QC] [2/3] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_q_rj1_20261021125719_qc1_2610211314.stdf.old
+[2026-11-06 07:36:32] QC parts accumulated: 523
+[2026-11-06 07:36:32] 
+[2026-11-06 07:36:32] [QC] [3/3] Processing C:/FTDC/MMT-272100938.800/mmt-272100938.800_q_rj2_20261021131848_qc1_2610211326.stdf.old
+[2026-11-06 07:36:32] QC parts accumulated: 525
+[2026-11-06 07:36:32] QC summary: total=525, PASS=501, FAIL=24, missing WXY=3, missing UID=3, missing BT=24, missing ZB=24
+[2026-11-06 07:36:32] --------------------------------------------------------------------------------
+[2026-11-06 07:36:32] [WXY] FP Datalog Duplicate: 0 | FP Duplicate Good: 364 | RETEST Duplicate Good: 0 | Total Duplicate Good: 364 | Calc FP Good: 16,874 (Delta: -364) | Total Good: 18,550 (Delta: 50) | QC Good Prev Op: 488 | QC Fail/Missing Prev Op: 0
+[2026-11-06 07:36:32] [UID] FP Datalog Duplicate: 0 | FP Duplicate Good: 364 | RETEST Duplicate Good: 0 | Total Duplicate Good: 364 | Calc FP Good: 16,874 (Delta: -364) | Total Good: 18,550 (Delta: 50) | QC Good Prev Op: 488 | QC Fail/Missing Prev Op: 0
+[2026-11-06 07:36:32] [BT MACID] FP Datalog Duplicate: 0 | FP Duplicate Good: 533 | RETEST Duplicate Good: 39 | Total Duplicate Good: 572 | Calc FP Good: 16,705 (Delta: -533) | Total Good: 18,342 (Delta: -158) | QC Good Prev Op: 488 | QC Fail/Missing Prev Op: 0
+[2026-11-06 07:36:32] [ZB MACID] FP Datalog Duplicate: 0 | FP Duplicate Good: 533 | RETEST Duplicate Good: 39 | Total Duplicate Good: 572 | Calc FP Good: 16,705 (Delta: -533) | Total Good: 18,342 (Delta: -158) | QC Good Prev Op: 488 | QC Fail/Missing Prev Op: 0
+[2026-11-06 07:36:32] First Pass Result: FAIL  |  Total Good Result: FAIL
+[2026-11-06 07:36:32] FTDC Check 1: FAIL  |  Check 2: FAIL  |  Check 4: PASS
+[2026-11-06 07:36:32] Remarks: There was an anomaly during lot processing. Please hold lot for review and assessment.
+[2026-11-06 07:36:32] --------------------------------------------------------------------------------
+[2026-11-06 07:36:32] Run Analysis Detailed Report (WXY, Counts, FTDC Criteria & Result):
+[2026-11-06 07:36:33]   [General]
+[2026-11-06 07:36:34]   Lot ID: MMT-272100938.800
+[2026-11-06 07:36:34]   MPC: SG406QRTBA02
+[2026-11-06 07:36:34]   Remarks: There was an anomaly during lot processing. Please hold lot for review and assessment.
+[2026-11-06 07:36:34]   Wafer Test Number: 93,005
+[2026-11-06 07:36:35]   X Test Number: 93,006
+[2026-11-06 07:36:35]   Y Test Number: 93,007
+[2026-11-06 07:36:35]   UID Test Number: 93,009
+[2026-11-06 07:36:35]   BT MACID Test Numbers: 94016, 94017, 94018, 94019, 94020, 94021
+[2026-11-06 07:36:36]   ZB MACID Test Numbers: 94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029
+[2026-11-06 07:36:36]   [FTDC Criteria]
+[2026-11-06 07:36:36]   Remarks: There was an anomaly during lot processing. Please hold lot for review and assessment.
+[2026-11-06 07:36:36]   [Check 1] - If Total Actual Good QTY is greater than Total Tested Good w/o Duplicate (or if any internal duplicate is observed in FIRST PASS) for WXY, UID, BT MACID, or ZB MACID, then result will be 'FAIL'. Otherwise, result will be 'PASS'.
+[2026-11-06 07:36:36]   [Result: FAIL]
+[2026-11-06 07:36:36]     - WXY [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -364 | TOTAL variance: 50
+[2026-11-06 07:36:36]     - UID [PASS]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -364 | TOTAL variance: 50
+[2026-11-06 07:36:36]     - BT MACID [FAIL]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -533 | TOTAL variance: -158
+[2026-11-06 07:36:36]     - ZB MACID [FAIL]: 0 duplicate unit(s) in FIRST PASS datalog | FP variance: -533 | TOTAL variance: -158
+[2026-11-06 07:36:36]   [Check 2] - If duplicate good units exceed 72 units for WXY, UID, BT MACID, or ZB MACID individually, then result will be 'FAIL'.
+[2026-11-06 07:36:36]   [Result: FAIL]
+[2026-11-06 07:36:36]     - WXY [FAIL]: Total duplicate good units = 364 (limit <= 72)
+[2026-11-06 07:36:36]     - UID [FAIL]: Total duplicate good units = 364 (limit <= 72)
+[2026-11-06 07:36:36]     - BT MACID [FAIL]: Total duplicate good units = 572 (limit <= 72)
+[2026-11-06 07:36:36]     - ZB MACID [FAIL]: Total duplicate good units = 572 (limit <= 72)
+[2026-11-06 07:36:36]   [Check 4] - If all QC samples are confirmed FT good parts across WXY, UID, BT MACID, and ZB MACID, then result will be 'PASS'. Otherwise, it will be 'FAIL'.
+[2026-11-06 07:36:36]   [Result: PASS]
+[2026-11-06 07:36:36]     - WXY [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-06 07:36:36]     - UID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-06 07:36:36]     - BT MACID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-06 07:36:36]     - ZB MACID [PASS]: All QC units confirmed PASS in previous operation.
+[2026-11-06 07:36:36]   These are the possible reasons for Check 1 and/or Check 4 Fail:
+[2026-11-06 07:36:36]   1) Corrupted STDF - Please double check each STDF, retrieve all corrupted datalog.
+[2026-11-06 07:36:36]   2) Wrong/Incomplete STDF files attached - Kindly make sure you attached the previous FT step stdf and all RETESTs stdf. Also, if the datalog/summary was cut off, then attach the continuation of that STDF/datalog.
+[2026-11-06 07:36:36]   3) Duplicate WXY / UID / BT MACID / ZB MACID in FIRST PASS - Please verify and confirm if there are duplicates in the FIRST PASS stdf.
+[2026-11-06 07:36:36]   4) Incorrect Actual Good QTY input - Kindly double check the ACTUAL GOOD QUANTITY, perform recount if possible.
+[2026-11-06 07:36:36]   [FT]
+[2026-11-06 07:36:36]   Duplicate Good WXY: 364
+[2026-11-06 07:36:36]   Duplicate Good UID: 364
+[2026-11-06 07:36:36]   Duplicate Good BT MACID: 572
+[2026-11-06 07:36:36]   Duplicate Good ZB MACID: 572
+[2026-11-06 07:36:37]   FP rejects not in RETEST (WXY): 53
+[2026-11-06 07:36:37]   FP rejects not in RETEST (UID): 53
+[2026-11-06 07:36:37]   FP rejects not in RETEST (BT MACID): 3
+[2026-11-06 07:36:37]   FP rejects not in RETEST (ZB MACID): 3
+[2026-11-06 07:36:37]   BIN3 NO RETEST: 0
+[2026-11-06 07:36:37]   FIRST PASS Total parts: 18,942
+[2026-11-06 07:36:37]   FIRST PASS PASS parts: 17,238
+[2026-11-06 07:36:37]   FIRST PASS FAIL parts: 1,704
+[2026-11-06 07:36:37]   FIRST PASS Missing WXY: 66
+[2026-11-06 07:36:37]   FIRST PASS Missing UID: 66
+[2026-11-06 07:36:37]   FIRST PASS Missing BT MACID: 1,697
+[2026-11-06 07:36:37]   FIRST PASS Missing ZB MACID: 1,697
+[2026-11-06 07:36:37]   RETEST Total parts: 2,143
+[2026-11-06 07:36:37]   RETEST PASS parts: 1,676
+[2026-11-06 07:36:37]   RETEST FAIL parts: 467
+[2026-11-06 07:36:37]   RETEST Missing WXY: 32
+[2026-11-06 07:36:37]   RETEST Missing UID: 32
+[2026-11-06 07:36:37]   RETEST Missing BT MACID: 467
+[2026-11-06 07:36:37]   RETEST Missing ZB MACID: 467
+[2026-11-06 07:36:37]   [QC]
+[2026-11-06 07:36:37]   Total parts: 525
+[2026-11-06 07:36:37]   PASS parts: 501
+[2026-11-06 07:36:37]   FAIL parts: 24
+[2026-11-06 07:36:37]   Missing WXY: 3
+[2026-11-06 07:36:37]   Missing UID: 3
+[2026-11-06 07:36:37]   Missing BT MACID: 24
+[2026-11-06 07:36:37]   Missing ZB MACID: 24
+[2026-11-06 07:36:37]   Duplicate WXY within QC: 34
+[2026-11-06 07:36:37]   Duplicate UID within QC: 34
+[2026-11-06 07:36:37]   Duplicate BT MACID within QC: 13
+[2026-11-06 07:36:37]   Duplicate ZB MACID within QC: 13
+[2026-11-06 07:36:37]   QC Sampling units good in previous operation (WXY): 488
+[2026-11-06 07:36:37]   QC Sampling units good in previous operation (UID): 488
+[2026-11-06 07:36:37]   QC Sampling units good in previous operation (BT MACID): 488
+[2026-11-06 07:36:37]   QC Sampling units good in previous operation (ZB MACID): 488
+[2026-11-06 07:36:37]   [FT]
+[2026-11-06 07:36:37]   Calculated First Pass QTY (WXY): 16,874
+[2026-11-06 07:36:37]   Calculated First Pass QTY (UID): 16,874
+[2026-11-06 07:36:37]   Calculated First Pass QTY (BT MACID): 16,705
+[2026-11-06 07:36:37]   Calculated First Pass QTY (ZB MACID): 16,705
+[2026-11-06 07:36:37]   Total PASS parts: 18,914
+[2026-11-06 07:36:37]   Total Good (WXY): 18,550
+[2026-11-06 07:36:37]   Total Good (UID): 18,550
+[2026-11-06 07:36:37]   Total Good (BT MACID): 18,342
+[2026-11-06 07:36:37]   Total Good (ZB MACID): 18,342
+[2026-11-06 07:36:37] Run Analysis Final Result: First Pass Result=FAIL | Total Good Result=FAIL | Check 1=FAIL | Check 2=FAIL | Check 4=PASS
+[2026-11-06 07:36:37] Run Analysis Remarks: There was an anomaly during lot processing. Please hold lot for review and assessment.
+[2026-11-06 07:36:41] Attach Excel to PPO: Excel ready - automatically attaching 'MMT-272100938.800_FTDC_20261106073632.xlsx' to '\\chip\PPOonline\SG406\MMT-272100938.800'.
+[2026-11-06 07:36:50] Attach Excel to PPO: SUCCESS - Attached 'MMT-272100938.800_FTDC_20261106073632.xlsx' to 2 PPO subfolder(s): \\chip\PPOonline\SG406\MMT-272100938.800\A261104-0050\MMT-272100938.800_FTDC_20261106073632.xlsx, \\chip\PPOonline\SG406\MMT-272100938.800\M261021-0045\MMT-272100938.800_FTDC_20261106073632.xlsx
+[2026-11-06 07:37:07] Download & Open Excel: Preparing Excel workbook…
+[2026-11-06 07:37:08] Download & Open Excel: Downloaded Excel to 'C:\FTDC\MMT-272100938.800\MMT-272100938.800_FTDC_20261106073632.xlsx'
+[2026-11-06 07:37:08] Download & Open Excel: Opening 'C:\FTDC\MMT-272100938.800\MMT-272100938.800_FTDC_20261106073632.xlsx'
+[2026-11-06 07:54:28] [Run Analysis] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 07:54:28] ================================================================================
+[2026-11-06 07:54:28] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-11-06 08:46:35] [Run Analysis] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 08:46:35] ================================================================================
+[2026-11-06 08:46:35] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-11-06 09:07:27] [Run Analysis] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 09:07:27] ================================================================================
+[2026-11-06 09:07:27] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-11-06 09:08:33] [Run Analysis] Lot Details: Lot ID='MMT-272100938.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='17238', Total Actual Good QTY='18,500'
+[2026-11-06 09:08:33] ================================================================================
+[2026-11-06 09:08:33] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-11-06 09:26:38] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261106_092638.log

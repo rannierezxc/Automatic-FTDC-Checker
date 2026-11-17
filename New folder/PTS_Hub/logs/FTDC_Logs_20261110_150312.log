@@ -1,0 +1,4 @@
+[2026-11-10 15:03:07] Check STDF [LOT_2ZERO.000_q_20261110120000.std]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-11-10 15:03:07] Check STDF [LOT_2ZERO.000_e_20261110100000.std]: Status=Completed, Total Parts=7, Tested Good=7, Mismatch/Discrepancy=None
+[2026-11-10 15:03:09] Help: Opening presentation 'FTDC_Guide.pptx' from C:\Users\A78133\AppData\Local\Temp\test_two_zeros_h1tla_xt\help_folder
+[2026-11-10 15:03:12] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261110_150312.log

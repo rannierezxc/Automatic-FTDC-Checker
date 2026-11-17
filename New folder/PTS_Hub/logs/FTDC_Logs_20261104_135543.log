@@ -1,0 +1,5 @@
+[2026-11-04 13:23:33] Lot Details Input: MPC = '58909QRTBC0X'
+[2026-11-04 13:28:13] Device Settings: Deleted MPC '58909QRTBC0X' from mpc_partnumber.json.
+[2026-11-04 13:28:25] Device Settings: Saved MPC '58919QRTBC01' (Mask '58919', Device=ATA5830*, Tester=['V93K', 'LTX'], WXY={'wafer': 448, 'x': 449, 'y': 450}).
+[2026-11-04 13:28:44] Device Settings: Deleted MPC '58919QRTBC01' from mpc_partnumber.json.
+[2026-11-04 13:55:43] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261104_135543.log

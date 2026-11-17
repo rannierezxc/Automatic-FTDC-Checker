@@ -960,143 +960,263 @@
       "tester": "V93K"
     },
     "SG4054MYXA00": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054MYXA02": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054MYXXA2": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054MYXXA3": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054MYXXA4": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054S8BA00": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4054S8BXA1": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXA00": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXA02": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXXA1": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXXA2": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXXA3": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057MYXXXX": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057S8BA00": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057S8BXA3": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG4057S8BXXX": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXA00": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXA02": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXXA1": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXXA2": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXXA3": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TMYXXXX": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TS8BA00": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TS8BXA2": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405TS8BXXX": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXA00": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXA02": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXA03": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXREL": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXXA2": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXXA3": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXXA5": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YMYXXXX": {
-      "device": "PIC32CX1012BZ25048",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YS8BA00": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
       "tester": "V93K"
     },
     "SG405YS8BXA1": {
-      "device": "PIC32CX1012BZ24032",
+      "device": "PIC32CX1012BZ*",
+      "tester": "V93K"
+    },
+    "SG406QRTBA02": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4064RTBA10": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4064ZWXA10": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG40699GWX00": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG40699GWX01": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG40699GWX02": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG40699GWX03": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069RTBA00": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069RTBA01": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069RTBA02": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069RTBA03": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069ZWXA00": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069ZWXA01": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069ZWXA02": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069ZWXA03": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG4069ZWXB00": {
+      "device": "PIC32CX2051BZ*",
+      "tester": "V93K"
+    },
+    "SG406QRTBA00": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QRTBA01": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QRTBA03": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QZWXA00": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QZWXA01": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QZWXA02": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406QZWXA03": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406YRTBA10": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG406YZWXA10": {
+      "device": "PIC32CX5109BZ*",
+      "tester": "V93K"
+    },
+    "SG40773WWCXC": {
+      "device": "PIC32MZ1025W*",
+      "tester": "V93K"
+    },
+    "SG40773WWDXD": {
+      "device": "PIC32MZ1025W*",
+      "tester": "V93K"
+    },
+    "SG4077NVXCXC": {
+      "device": "PIC32MZ1025W*",
+      "tester": "V93K"
+    },
+    "SG4077NVXDXD": {
+      "device": "PIC32MZ1025W*",
+      "tester": "V93K"
+    },
+    "SG4077NVXREL": {
+      "device": "PIC32MZ1025W*",
       "tester": "V93K"
     }
   }

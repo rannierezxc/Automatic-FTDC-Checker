@@ -2,7 +2,18 @@
 Excel output module for GUID checker results.
 Rewritten to use xlsxwriter for high-performance streaming Excel generation.
 """
-from typing import Dict, List
+import logging
+from typing import Callable, Dict, List, Optional
+
+from apps.ftdc_checker.guid_analysis import compute_remarks
+from apps.ftdc_checker.guid_analysis import _is_valid_wxy as _shared_is_valid_wxy
+
+
+def _is_valid_wxy(wxy: Optional[str]) -> bool:
+    """Check if WXY coordinate is valid and not a placeholder/dummy
+    (contains 'NaN', Wafer (first W_X_Y value) is 0 regardless of X/Y such as 0_1_2,
+    or two/more W/X/Y components are zero such as 0_0_0 or 24_0_0)."""
+    return _shared_is_valid_wxy(wxy)
 
 
 def _fmt(value):
@@ -13,8 +24,8 @@ def _fmt(value):
     try:
         if isinstance(value, float) and value.is_integer():
             return f"{int(value):,}"
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.warning("Failed to format numeric value %r: %s", value, exc)
     return str(value)
 
 
@@ -40,6 +51,26 @@ def _hard_bin_equals(row: Dict[str, object], bin_num: int) -> bool:
 
 def build_summary_and_details(result: Dict[str, object]):
     """Build summary_sections and detail_rows from a GUID analysis result."""
+    cache_sig = (
+        result.get("is_sg406"),
+        result.get("status"),
+        result.get("total_good_status"),
+        result.get("remarks"),
+        result.get("check1_result"),
+        result.get("check2_result"),
+        result.get("check4_result"),
+        result.get("first_pass_pass_count"),
+        result.get("total_pass_parts"),
+    )
+    cached_entry = result.get("_cached_summary_and_details")
+    if isinstance(cached_entry, tuple) and len(cached_entry) == 2 and cached_entry[0] == cache_sig:
+        return cached_entry[1]
+
+    if result.get("is_sg406"):
+        from apps.ftdc_checker.sg406_analysis import build_sg406_summary_and_details
+        out = build_sg406_summary_and_details(result, _hard_bin_equals, _soft_bin_equals)
+        result["_cached_summary_and_details"] = (cache_sig, out)
+        return out
 
     def panel_data(panel_key: str) -> Dict[str, object]:
         data = result.get(panel_key) or {}
@@ -51,7 +82,6 @@ def build_summary_and_details(result: Dict[str, object]):
 
     fp_rows = panel_rows("first_pass")
     retest_rows = panel_rows("retest")
-    qc_rows = panel_rows("qc")
 
     fp_hard_bin3_rejects = 0
     for r in fp_rows:
@@ -61,39 +91,42 @@ def build_summary_and_details(result: Dict[str, object]):
 
     fp_status = result.get("status", "")
     total_status = result.get("total_good_status") or "SKIPPED"
+    qc_info = panel_data("qc")
 
     summary_sections = [
         (
-            "FIRST PASS GOOD",
+            "FIRST PASS",
             [
                 ("First Pass STDF Good", result.get("first_pass_pass_count")),
                 ("Duplicate Good UID", result.get("duplicate_guid")),
                 ("First Pass Good w/o Duplicate UID", result.get("calculated_first_pass_qty")),
                 ("First Pass Actual Good", result.get("first_pass_actual_good_qty")),
                 ("Difference between Good w/o Duplicate vs FP Actual Good", result.get("delta_vs_fp_actual_good")),
-                ("Total QC Units Good At Prev. Operation", result.get("qc_sampling_good_in_prev_op") if result.get("qc") else "No QC files"),
+                ("Total QC Units Good At Prev. Operation", result.get("qc_sampling_good_in_prev_op")),
                 ("Result", fp_status),
             ],
         ),
         (
-            "TOTAL GOOD",
+            "TOTAL (FP + RETEST)",
             [
                 ("STDF Total Good", result.get("total_pass_parts")),
                 ("Duplicate Good UID", result.get("total_duplicate_guid")),
                 ("Total Good w/o Duplicate UID", result.get("total_good")),
                 ("Actual Total Good", result.get("total_actual_good_qty")),
                 ("Difference between Good w/o Duplicate vs Actual Total Good", result.get("delta_vs_total_actual_good")),
-                ("Total QC Tested Good units", result.get("qc", {}).get("pass_count") if result.get("qc") else "No QC files"),
+                ("Total QC Tested Good units", qc_info.get("pass_count")),
                 ("Result", total_status),
             ],
         ),
     ]
 
     wxy_tests = result.get("wxy_tests") or {}
+    remarks = str(result.get("remarks") or compute_remarks(result))
 
     detail_rows = [
         ("General", "Lot ID", result.get("lot_id")),
         ("General", "MPC", result.get("mpc")),
+        ("General", "Remarks", remarks),
         ("General", "Wafer Test Number", wxy_tests.get("wafer") if isinstance(wxy_tests, dict) else ""),
         ("General", "X Test Number", wxy_tests.get("x") if isinstance(wxy_tests, dict) else ""),
         ("General", "Y Test Number", wxy_tests.get("y") if isinstance(wxy_tests, dict) else ""),
@@ -108,12 +141,12 @@ def build_summary_and_details(result: Dict[str, object]):
         ("FT", "RETEST PASS parts", panel_data("retest").get("pass_count")),
         ("FT", "RETEST FAIL parts", panel_data("retest").get("fail_count")),
         ("FT", "RETEST Missing WXY", panel_data("retest").get("missing_wxy")),
-        ("QC", "Total parts", panel_data("qc").get("total_parts") if result.get("qc") else "No QC files selected"),
-        ("QC", "PASS parts", panel_data("qc").get("pass_count") if result.get("qc") else "No QC files selected"),
-        ("QC", "FAIL parts", panel_data("qc").get("fail_count") if result.get("qc") else "No QC files selected"),
-        ("QC", "Missing WXY", panel_data("qc").get("missing_wxy") if result.get("qc") else "No QC files selected"),
-        ("QC", "Duplicate GUID within QC", result.get("qc_duplicate_guid") if result.get("qc") else "No QC files selected"),
-        ("QC", "QC Sampling units good in previous operation", result.get("qc_sampling_good_in_prev_op") if result.get("qc") else "No QC files selected"),
+        ("QC", "Total parts", qc_info.get("total_parts")),
+        ("QC", "PASS parts", qc_info.get("pass_count")),
+        ("QC", "FAIL parts", qc_info.get("fail_count")),
+        ("QC", "Missing WXY", qc_info.get("missing_wxy")),
+        ("QC", "Duplicate GUID within QC", result.get("qc_duplicate_guid")),
+        ("QC", "QC Sampling units good in previous operation", result.get("qc_sampling_good_in_prev_op")),
         ("FT", "Calculated First Pass QTY", result.get("calculated_first_pass_qty")),
         ("FT", "Total PASS parts", result.get("total_pass_parts")),
         ("FT", "Total Good", result.get("total_good")),
@@ -130,16 +163,19 @@ def build_summary_and_details(result: Dict[str, object]):
         "check4": check4,
         "fp_status": fp_status,
         "total_status": total_status,
+        "remarks": remarks,
         "delta_vs_total_actual_good": result.get("delta_vs_total_actual_good"),
         "delta_vs_fp_actual_good": result.get("delta_vs_fp_actual_good"),
         "total_duplicate_guid": result.get("total_duplicate_guid"),
+        "fp_datalog_duplicate_count": result.get("fp_datalog_duplicate_count", 0),
         "qc_failed_or_missing_prev_op_qty": result.get("qc_failed_or_missing_prev_op_qty"),
-        "qc_failed_or_missing_prev_op_wxy": result.get("qc_failed_or_missing_prev_op_wxy")
-
+        "qc_failed_or_missing_prev_op_wxy": result.get("qc_failed_or_missing_prev_op_wxy"),
     }
 
     extra = {"fp_hard_bin3_rejects": fp_hard_bin3_rejects, "retest_bin90": retest_bin90}
-    return summary_sections, detail_rows, fp_status, total_status, extra, ftdc_criteria
+    out = (summary_sections, detail_rows, fp_status, total_status, extra, ftdc_criteria)
+    result["_cached_summary_and_details"] = (cache_sig, out)
+    return out
 
 
 def build_details_text(detail_rows, ftdc_criteria=None, fmt=_fmt) -> str:
@@ -167,6 +203,10 @@ def build_details_text(detail_rows, ftdc_criteria=None, fmt=_fmt) -> str:
 
 def _build_ftdc_criteria_text(ftdc_criteria: dict) -> list:
     """Build the [FTDC Criteria] section lines."""
+    if ftdc_criteria.get("is_sg406"):
+        from apps.ftdc_checker.sg406_analysis import build_sg406_ftdc_criteria_text
+        return build_sg406_ftdc_criteria_text(ftdc_criteria)
+
     check1 = ftdc_criteria.get("check1", "N/A")
     check2 = ftdc_criteria.get("check2", "N/A")
     check4 = ftdc_criteria.get("check4", "N/A")
@@ -175,27 +215,35 @@ def _build_ftdc_criteria_text(ftdc_criteria: dict) -> list:
     delta_vs_total_actual_good = ftdc_criteria.get("delta_vs_total_actual_good", "")
     delta_vs_fp_actual_good = ftdc_criteria.get("delta_vs_fp_actual_good", "")
     total_duplicate_guid = ftdc_criteria.get("total_duplicate_guid", "")
+    fp_datalog_duplicate_count = ftdc_criteria.get("fp_datalog_duplicate_count", 0)
     qc_failed_or_missing_prev_op_qty = ftdc_criteria.get("qc_failed_or_missing_prev_op_qty", "")
     qc_failed_or_missing_prev_op_wxy = ftdc_criteria.get("qc_failed_or_missing_prev_op_wxy", "")
-
-
-
-
+    remarks = ftdc_criteria.get("remarks", "")
 
     lines = ["[FTDC Criteria]"]
+    if remarks:
+        lines.append(f"Remarks: {remarks}")
+        lines.append("")
     lines.append("[Check 1] - If Total Actual Good QTY is greater than Total Tested Good w/o Duplicate UID, then result will be 'FAIL'. Otherwise, result will be 'PASS'.")
     if check1 == "FAIL":
-        lines.append(f"[Result: {check1}] - {delta_vs_fp_actual_good} excess units in FP actual compared to STDF | {delta_vs_total_actual_good} excess units in TOTAL actual compared to STDF")
+        if fp_datalog_duplicate_count and int(fp_datalog_duplicate_count) > 0:
+            lines.append(
+                f"[Result: {check1}] - {fp_datalog_duplicate_count} duplicate WXY unit(s) in FIRST PASS datalog | "
+                f"{delta_vs_fp_actual_good} excess units in FP actual compared to STDF | "
+                f"{delta_vs_total_actual_good} excess units in TOTAL actual compared to STDF"
+            )
+        else:
+            lines.append(f"[Result: {check1}] - {delta_vs_fp_actual_good} excess units in FP actual compared to STDF | {delta_vs_total_actual_good} excess units in TOTAL actual compared to STDF")
     else:
         lines.append(f"[Result: {check1}] - No negative variance was detected.")
-    
+
     lines.append("")
-    
+
     lines.append("[Check 2] - If there are too many good units that were retested, then result will be 'FAIL'.")
     if check2 == "FAIL":
         lines.append(f"[Result: {check2}] - There are total of {total_duplicate_guid} duplicate good units which exceeds the limit of 72 units.")
     else:
-        lines.append(f"[Result: {check2}] - Total duplicate good units are less than 72 units.")
+        lines.append(f"[Result: {check2}] - Total duplicate good units are less than or equal to 72 units.")
 
     lines.append("")
     lines.append("[Check 4] - If all QC samples are confirmed FT good parts, then result will be 'PASS'. Otherwise, it will be 'FAIL'.")
@@ -238,7 +286,7 @@ def _to_num(value):
 
 class _ColTracker:
     """Tracks max character width per column for autofit.
-    
+
     xlsxwriter is write-only, so we track widths during writes and apply at the end.
     """
     __slots__ = ('_widths',)
@@ -264,11 +312,31 @@ class _ColTracker:
             ws.set_column(col, col, min(width + padding, max_width))
 
 
-def write_result_excel(result: Dict[str, object], save_path: str):
+def write_result_excel(
+    result: Dict[str, object],
+    save_path: str,
+    progress_callback: Optional[Callable[[float, str], None]] = None,
+):
     """Write GUID analysis result to an Excel file using xlsxwriter."""
+    if result.get("is_sg406"):
+        from apps.ftdc_checker.sg406_analysis import write_sg406_result_excel
+        return write_sg406_result_excel(
+            result=result,
+            save_path=save_path,
+            fmt_fn=_fmt,
+            to_num_fn=_to_num,
+            col_tracker_cls=_ColTracker,
+            hard_bin_equals_fn=_hard_bin_equals,
+            soft_bin_equals_fn=_soft_bin_equals,
+            progress_callback=progress_callback,
+        )
+
     import xlsxwriter
 
-    wb = xlsxwriter.Workbook(save_path, {'constant_memory': False})
+    if progress_callback:
+        progress_callback(0.05, "Initializing Excel workbook…")
+
+    wb = xlsxwriter.Workbook(save_path, {'constant_memory': False, 'strings_to_urls': False})
 
     # ── Format definitions ────────────────────────────────────────────────
     hdr_fmt = wb.add_format({
@@ -276,16 +344,22 @@ def write_result_excel(result: Dict[str, object], save_path: str):
         'align': 'center', 'valign': 'vcenter',
         'border': 1,
     })
-    border_fmt = wb.add_format({'border': 1})
-    border_fmt_right = wb.add_format({'border': 1, 'align': 'right'})
-    green_border_fmt = wb.add_format({
-        'border': 1, 'bg_color': '#90EE90',
+    subhdr_fmt = wb.add_format({
+        'bold': True, 'bg_color': '#EDF2F7',
+        'align': 'center', 'valign': 'vcenter',
+        'border': 1,
     })
-    red_border_fmt = wb.add_format({
-        'border': 1, 'bg_color': '#FF5050',
+    border_fmt = wb.add_format({'border': 1, 'valign': 'vcenter'})
+    center_border_fmt = wb.add_format({'border': 1, 'align': 'center', 'valign': 'vcenter'})
+    green_center_fmt = wb.add_format({
+        'border': 1, 'bg_color': '#90EE90', 'bold': True,
+        'align': 'center', 'valign': 'vcenter',
+    })
+    red_center_fmt = wb.add_format({
+        'border': 1, 'bg_color': '#FF5050', 'bold': True,
+        'align': 'center', 'valign': 'vcenter',
     })
     center_fmt = wb.add_format({'align': 'center', 'valign': 'vcenter'})
-    default_fmt = wb.add_format()
     summary_sections, detail_rows, _, _, extra, _ = build_summary_and_details(result)
 
     # ══════════════════════════════════════════════════════════════════════
@@ -294,7 +368,9 @@ def write_result_excel(result: Dict[str, object], save_path: str):
     ws_sum = wb.add_worksheet("Summary")
     sum_tracker = _ColTracker()
 
-    general_rows = [(m, v) for s, m, v in detail_rows if s == "General"]
+    # The Remarks entry is intentionally excluded from the GENERAL table of the
+    # Summary worksheet (remarks are still shown in the row below the panels).
+    general_rows = [(m, v) for s, m, v in detail_rows if s == "General" and m != "Remarks"]
 
     # "GENERAL" merged title row (row 0 in xlsxwriter, 0-indexed)
     row = 0
@@ -313,45 +389,120 @@ def write_result_excel(result: Dict[str, object], save_path: str):
 
     # 2-row gap before panels
     start_row_for_panels = row + 2
-    col_offsets = [0, 5]  # 0-indexed: columns A and F
 
-    for idx, (section_title, rows) in enumerate(summary_sections):
-        col_offset = col_offsets[idx] if idx < len(col_offsets) else (idx * 5)
+    # Comparative matrix rows for First Pass and Total Good (aligned with FTDC App Pop-up Result Window)
+    fp_stdf = result.get("first_pass_pass_count")
+    fp_dup = result.get("duplicate_guid", 0)
+    if fp_dup is None:
+        fp_dup = 0
+    fp_good_wo_dup = result.get("calculated_first_pass_qty")
+    fp_actual = result.get("first_pass_actual_good_qty")
+    fp_diff = result.get("delta_vs_fp_actual_good")
+    if fp_diff is None and fp_good_wo_dup is not None and fp_actual is not None:
+        try:
+            fp_diff = int(fp_good_wo_dup) - int(fp_actual)
+        except (ValueError, TypeError):
+            pass
+    fp_qc = result.get("qc_sampling_good_in_prev_op")
+    fp_status = str(result.get("status", "") or "").strip().upper()
 
-        # Panel title — merged across 2 columns
-        ws_sum.merge_range(start_row_for_panels, col_offset,
-                           start_row_for_panels, col_offset + 1,
-                           section_title, hdr_fmt)
-        sum_tracker.track(col_offset, section_title)
+    tot_stdf = result.get("total_pass_parts")
+    tot_dup = result.get("total_duplicate_guid", 0)
+    if tot_dup is None:
+        tot_dup = 0
+    tot_good_wo_dup = result.get("total_good")
+    tot_actual = result.get("total_actual_good_qty")
+    tot_status = str(result.get("total_good_status") or "SKIPPED").strip().upper()
+    tot_diff = result.get("delta_vs_total_actual_good")
+    if tot_diff is None and tot_good_wo_dup is not None and tot_actual is not None and tot_status != "SKIPPED":
+        try:
+            tot_diff = int(tot_good_wo_dup) - int(tot_actual)
+        except (ValueError, TypeError):
+            pass
+    qc_pass = (result.get("qc") or {}).get("pass_count") if isinstance(result.get("qc"), dict) else None
 
-        row_offset = start_row_for_panels + 1
-        for metric, value in rows:
-            formatted = _fmt(value)
-            ws_sum.write(row_offset, col_offset, metric, border_fmt)
+    fp_matrix_rows = [
+        ("First Pass STDF Good", fp_stdf, "normal"),
+        ("Duplicate Good UID", fp_dup, "normal"),
+        ("First Pass Good w/o Duplicate UID", fp_good_wo_dup, "normal"),
+        ("First Pass Actual Good", fp_actual, "normal"),
+        ("Difference between Good w/o Duplicate vs FP Actual Good", fp_diff, "diff"),
+        ("Total QC Units Good At Prev. Operation", fp_qc, "normal"),
+        ("Result", fp_status, "result"),
+    ]
 
-            # Conditional formatting: determine fill color inline
-            cell_fmt = border_fmt
-            if "Difference between" in metric:
-                try:
-                    if value is not None and value != "":
-                        val_num = float(value)
-                        cell_fmt = green_border_fmt if val_num >= 0 else red_border_fmt
-                except (ValueError, TypeError):
-                    pass
-            elif "Result" in metric:
-                try:
-                    if value is not None and value != "":
-                        result_val = str(value)
-                        cell_fmt = green_border_fmt if result_val == "PASS" else red_border_fmt
-                except (ValueError, TypeError):
-                    pass
+    tot_matrix_rows = [
+        ("STDF Total Good", tot_stdf, "normal"),
+        ("Duplicate Good UID", tot_dup, "normal"),
+        ("Total Good w/o Duplicate UID", tot_good_wo_dup, "normal"),
+        ("Actual Total Good", tot_actual, "normal"),
+        ("Difference between Good w/o Duplicate vs Actual Total Good", tot_diff, "diff"),
+        ("Total QC Tested Good units", qc_pass, "normal"),
+        ("Result", tot_status, "result"),
+    ]
 
-            ws_sum.write(row_offset, col_offset + 1, formatted, cell_fmt)
-            sum_tracker.track(col_offset, metric)
-            sum_tracker.track(col_offset + 1, formatted)
-            row_offset += 1
+    # Side-by-side tables: (col_start, table_title, rows, overall_status, is_total)
+    tables = [
+        (0, "FIRST PASS", fp_matrix_rows, fp_status, False),
+        (3, "TOTAL (FP + RETEST)", tot_matrix_rows, tot_status, True),
+    ]
+
+    for c_start, tbl_title, rows_data, overall_st, is_tot in tables:
+        # Table Header (aligned with FTDC App Pop-up Result Window)
+        ws_sum.merge_range(start_row_for_panels, c_start, start_row_for_panels, c_start + 1, tbl_title, hdr_fmt)
+        sum_tracker.track(c_start, tbl_title)
+
+        # Table Data Rows
+        for r_offset, (m_label, val, r_type) in enumerate(rows_data, start=1):
+            curr_r = start_row_for_panels + r_offset
+            # Metric label cell: standard border, NO highlight
+            ws_sum.write(curr_r, c_start, m_label, border_fmt)
+            sum_tracker.track(c_start, m_label)
+
+            # Highlighting applies ONLY to Difference and Result
+            if r_type == "diff":
+                if val is None or str(val).strip().upper() in ("N/A", ""):
+                    v_str = "N/A"
+                    cell_fmt = center_border_fmt
+                else:
+                    try:
+                        num = float(str(val).replace(',', ''))
+                        v_str = f"{int(num):,}" if num.is_integer() else f"{num:,.2f}"
+                        cell_fmt = green_center_fmt if num >= 0 else red_center_fmt
+                    except (ValueError, TypeError):
+                        v_str = _fmt(val)
+                        cell_fmt = center_border_fmt
+            elif r_type == "result":
+                res_str = str(val or "").strip().upper()
+                v_str = res_str
+                if res_str == "PASS":
+                    cell_fmt = green_center_fmt
+                elif res_str == "FAIL":
+                    cell_fmt = red_center_fmt
+                else:
+                    cell_fmt = center_border_fmt
+            else:
+                # Normal rows (STDF Good, Duplicate Good UID, Good w/o Duplicate UID, Actual Good, QC Good): NO highlight!
+                v_str = _fmt(val)
+                cell_fmt = center_border_fmt
+
+            ws_sum.write(curr_r, c_start + 1, v_str, cell_fmt)
+            sum_tracker.track(c_start + 1, v_str)
+
+    # Spacer column between tables (Col C = index 2)
+    ws_sum.set_column(2, 2, 4)
+
+    # Remarks row spanning across summary panels (Cols B to E)
+    remarks_text = str(result.get("remarks") or compute_remarks(result))
+    remarks_row = start_row_for_panels + len(fp_matrix_rows) + 2
+    ws_sum.write(remarks_row, 0, "Remarks:", border_fmt)
+    ws_sum.merge_range(remarks_row, 1, remarks_row, 4, remarks_text, border_fmt)
+    sum_tracker.track(0, "Remarks:")
 
     sum_tracker.apply(ws_sum)
+
+    if progress_callback:
+        progress_callback(0.15, "Writing FT Total worksheet…")
 
     # ══════════════════════════════════════════════════════════════════════
     # FT Total worksheet
@@ -362,16 +513,38 @@ def write_result_excel(result: Dict[str, object], save_path: str):
     rt_rows_list = rt_panel.get("rows") or []
     ft_all_rows = list(fp_rows_list) + list(rt_rows_list)
 
-    # Build ft_lookup OUTSIDE the if block so QC always has access
+    qc_panel = result.get("qc") or {}
+    qc_rows_list = qc_panel.get("rows") or []
+    total_excel_rows = max(len(ft_all_rows) + len(qc_rows_list), 1)
+    written_rows = 0
+
+    # Build ft_lookup OUTSIDE the if block so QC always has access.
+    # If a WXY is seen with PASS in any FP or RETEST datalog, preserve that PASS entry
+    # so a later FAIL retest never masks a unit that passed in a previous FT step.
     ft_lookup = {}
     for part_num, row in enumerate(ft_all_rows, start=1):
         wxy = row.get("wxy")
-        if wxy:
-            ft_lookup[wxy] = {
-                "result": row.get("pass_fail", ""),
-                "part_num": part_num,
-                "datalog": row.get("panel", "")
-            }
+        if _is_valid_wxy(wxy):
+            pf_val = row.get("pass_fail", "")
+            existing = ft_lookup.get(wxy)
+            if existing is None or existing.get("result") != "PASS" or pf_val == "PASS":
+                ft_lookup[wxy] = {
+                    "result": pf_val,
+                    "part_num": part_num,
+                    "datalog": row.get("panel", ""),
+                }
+
+    ft_headers = [
+        "Total Parts", "Part ID", "Site", "Test Time (ms)", "Hard Bin", "Soft Bin",
+        "Pass/Fail", "Wafer (W)", "X", "Y", "WXY (W_X_Y)", "Datalog",
+        "Duplicate", "Reject In Retest",
+    ]
+    qc_headers = [
+        "Total Parts", "Part ID", "Site", "Test Time (ms)", "Hard Bin", "Soft Bin",
+        "Pass/Fail", "Wafer (W)", "X", "Y", "WXY (W_X_Y)",
+        "Datalog", "Result in previous FT step",
+        "Part Number in previous FT step", "Datalog in previous FT step",
+    ]
 
     if ft_all_rows:
         ws_ft = wb.add_worksheet("FT Total")
@@ -415,25 +588,19 @@ def write_result_excel(result: Dict[str, object], save_path: str):
         parts_start_row = 6  # 0-indexed row 6
 
         # ── Parts list headers ────────────────────────────────────────────
-        # ── Parts list headers ────────────────────────────────────────────
-        ft_headers = [
-            "Total Parts", "Part ID", "Site", "Test Time (ms)", "Hard Bin", "Soft Bin",
-            "Pass/Fail", "Wafer (W)", "X", "Y", "WXY (W_X_Y)", "Datalog",
-            "Duplicate", "Reject In Retest",
-        ]
-        for col_idx, label in enumerate(ft_headers):
-            ws_ft.write(parts_start_row, col_idx, label, hdr_fmt)
-            ft_tracker.track(col_idx, label)
+        ws_ft.write_row(parts_start_row, 0, ft_headers, hdr_fmt)
+        ft_tracker.track_row(0, ft_headers)
 
-        # ── Parts data ────────────────────────────────────────────────────
+        # ── Parts data (batch write_row for high speed) ───────────────────
         row_get = dict.get
+        write_ft_row = ws_ft.write_row
         for part_num, row in enumerate(ft_all_rows, start=1):
             r = parts_start_row + part_num
-            values = [
+            values = (
                 part_num,
                 row_get(row, "part_id", ""),
                 row_get(row, "site_num", ""),
-                row_get(row, "test_t", ""),          # <--- ADD THIS LINE
+                row_get(row, "test_t", ""),
                 row_get(row, "hard_bin", ""),
                 row_get(row, "soft_bin", ""),
                 row_get(row, "pass_fail", ""),
@@ -444,21 +611,23 @@ def write_result_excel(result: Dict[str, object], save_path: str):
                 row_get(row, "panel", ""),
                 row_get(row, "is_total_duplicate", "NO"),
                 row_get(row, "reject_in_retest", "N/A"),
-            ]
-            for col_idx, val in enumerate(values):
-                ws_ft.write(r, col_idx, val, center_fmt)
+            )
+            write_ft_row(r, 0, values, center_fmt)
             if part_num <= 100:
                 ft_tracker.track_row(0, values)
+            written_rows += 1
+            if progress_callback and (written_rows & 255) == 0:
+                frac = 0.15 + 0.60 * (written_rows / total_excel_rows)
+                progress_callback(frac, f"Writing FT Total rows ({part_num:,}/{len(ft_all_rows):,})…")
 
         ft_tracker.apply(ws_ft)
 
     # ══════════════════════════════════════════════════════════════════════
     # QC Total worksheet
     # ══════════════════════════════════════════════════════════════════════
-    qc_panel = result.get("qc") or {}
-    qc_rows_list = qc_panel.get("rows") or []
-
     if qc_rows_list:
+        if progress_callback:
+            progress_callback(0.75, "Writing QC Total worksheet…")
         ws_qc = wb.add_worksheet("QC Total")
         qc_tracker = _ColTracker()
 
@@ -480,30 +649,23 @@ def write_result_excel(result: Dict[str, object], save_path: str):
             qc_parts_start_row = 0
 
         # ── QC parts list headers ─────────────────────────────────────────
-        # ── QC parts list headers ─────────────────────────────────────────
-        qc_headers = [
-            "Total Parts", "Part ID", "Site", "Test Time (ms)", "Hard Bin", "Soft Bin",
-            "Pass/Fail", "Wafer (W)", "X", "Y", "WXY (W_X_Y)",
-            "Datalog", "Result in previous FT step",
-            "Part Number in previous FT step", "Datalog in previous FT step"
-        ]
-        for col_idx, label in enumerate(qc_headers):
-            ws_qc.write(qc_parts_start_row, col_idx, label, hdr_fmt)
-            qc_tracker.track(col_idx, label)
+        ws_qc.write_row(qc_parts_start_row, 0, qc_headers, hdr_fmt)
+        qc_tracker.track_row(0, qc_headers)
 
-        # ── QC parts data ─────────────────────────────────────────────────
+        # ── QC parts data (batch write_row for high speed) ────────────────
         ft_lookup_get = ft_lookup.get
         row_get = dict.get
+        write_qc_row = ws_qc.write_row
         for part_num, row in enumerate(qc_rows_list, start=1):
             r = qc_parts_start_row + part_num
             wxy = row_get(row, "wxy", "")
             ft_info = ft_lookup_get(wxy, {})
 
-            values = [
+            values = (
                 part_num,
                 row_get(row, "part_id", ""),
                 row_get(row, "site_num", ""),
-                row_get(row, "test_t", ""),          # <--- ADD THIS LINE
+                row_get(row, "test_t", ""),
                 row_get(row, "hard_bin", ""),
                 row_get(row, "soft_bin", ""),
                 row_get(row, "pass_fail", ""),
@@ -515,12 +677,126 @@ def write_result_excel(result: Dict[str, object], save_path: str):
                 ft_info.get("result", "N/A"),
                 ft_info.get("part_num", "N/A"),
                 ft_info.get("datalog", "N/A"),
-            ]
-            for col_idx, val in enumerate(values):
-                ws_qc.write(r, col_idx, val, center_fmt)
+            )
+            write_qc_row(r, 0, values, center_fmt)
             if part_num <= 100:
                 qc_tracker.track_row(0, values)
+            written_rows += 1
+            if progress_callback and (written_rows & 255) == 0:
+                frac = 0.15 + 0.65 * (written_rows / total_excel_rows)
+                progress_callback(frac, f"Writing QC Total rows ({part_num:,}/{len(qc_rows_list):,})…")
 
         qc_tracker.apply(ws_qc)
 
+    # ══════════════════════════════════════════════════════════════════════
+    # Duplicate GUID First Pass worksheet (FT Total format without summary metrics)
+    # ══════════════════════════════════════════════════════════════════════
+    if progress_callback:
+        progress_callback(0.84, "Writing Duplicate GUID First Pass worksheet…")
+    fp_wxy_counts: Dict[str, int] = {}
+    for r in fp_rows_list:
+        w = r.get("wxy")
+        if _is_valid_wxy(w):
+            fp_wxy_counts[w] = fp_wxy_counts.get(w, 0) + 1
+    fp_dup_wxy_set = {w for w, cnt in fp_wxy_counts.items() if cnt >= 2}
+    fp_dup_rows = [
+        r for r in fp_rows_list
+        if r.get("is_fp_datalog_duplicate") or (r.get("wxy") in fp_dup_wxy_set)
+    ]
+
+    ws_fp_dup = wb.add_worksheet("Duplicate GUID First Pass")
+    fp_dup_tracker = _ColTracker()
+    ws_fp_dup.write_row(0, 0, ft_headers, hdr_fmt)
+    fp_dup_tracker.track_row(0, ft_headers)
+
+    row_get = dict.get
+    write_fp_dup_row = ws_fp_dup.write_row
+    seen_fp_dup_wxy = set()
+    for part_num, row in enumerate(fp_dup_rows, start=1):
+        wxy_val = row_get(row, "wxy", "")
+        dup_label = row_get(row, "is_total_duplicate", "")
+        if dup_label not in ("FP Original", "FP Duplicate"):
+            if wxy_val in seen_fp_dup_wxy:
+                dup_label = "FP Duplicate"
+            else:
+                dup_label = "FP Original"
+        if wxy_val:
+            seen_fp_dup_wxy.add(wxy_val)
+        values = (
+            part_num,
+            row_get(row, "part_id", ""),
+            row_get(row, "site_num", ""),
+            row_get(row, "test_t", ""),
+            row_get(row, "hard_bin", ""),
+            row_get(row, "soft_bin", ""),
+            row_get(row, "pass_fail", ""),
+            row_get(row, "wafer", ""),
+            row_get(row, "x", ""),
+            row_get(row, "y", ""),
+            wxy_val,
+            row_get(row, "panel", ""),
+            dup_label,
+            row_get(row, "reject_in_retest", "N/A"),
+        )
+        write_fp_dup_row(part_num, 0, values, center_fmt)
+        if part_num <= 100:
+            fp_dup_tracker.track_row(0, values)
+    fp_dup_tracker.apply(ws_fp_dup)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # QC units FAIL in prev FT Step worksheet (QC Total format without summary metrics)
+    # Strictly based on Check 4 business rule (qc_failed_or_missing_prev_op_wxy / is_qc_fail_prev_step)
+    # ══════════════════════════════════════════════════════════════════════
+    ft_lookup_get = ft_lookup.get
+    check4_fail_wxy = set(result.get("qc_failed_or_missing_prev_op_wxy") or [])
+
+    if check4_fail_wxy or "qc_failed_or_missing_prev_op_wxy" in result:
+        qc_fail_prev_rows = [
+            r for r in qc_rows_list
+            if r.get("is_qc_fail_prev_step") or (r.get("wxy") in check4_fail_wxy)
+        ]
+    else:
+        # Fallback applying the identical Check 4 business rule:
+        # QC units with valid WXY not seen with PASS in previous FT steps (total good)
+        qc_fail_prev_rows = [
+            r for r in qc_rows_list
+            if _is_valid_wxy(r.get("wxy"))
+            and ft_lookup_get(r.get("wxy", ""), {}).get("result") != "PASS"
+        ]
+
+    ws_qc_fail = wb.add_worksheet("QC units FAIL in prev FT Step")
+    qc_fail_tracker = _ColTracker()
+    ws_qc_fail.write_row(0, 0, qc_headers, hdr_fmt)
+    qc_fail_tracker.track_row(0, qc_headers)
+
+    write_qc_fail_row = ws_qc_fail.write_row
+    for part_num, row in enumerate(qc_fail_prev_rows, start=1):
+        wxy = row_get(row, "wxy", "")
+        ft_info = ft_lookup_get(wxy, {})
+        values = (
+            part_num,
+            row_get(row, "part_id", ""),
+            row_get(row, "site_num", ""),
+            row_get(row, "test_t", ""),
+            row_get(row, "hard_bin", ""),
+            row_get(row, "soft_bin", ""),
+            row_get(row, "pass_fail", ""),
+            row_get(row, "wafer", ""),
+            row_get(row, "x", ""),
+            row_get(row, "y", ""),
+            wxy,
+            row_get(row, "panel", ""),
+            ft_info.get("result", "N/A"),
+            ft_info.get("part_num", "N/A"),
+            ft_info.get("datalog", "N/A"),
+        )
+        write_qc_fail_row(part_num, 0, values, center_fmt)
+        if part_num <= 100:
+            qc_fail_tracker.track_row(0, values)
+    qc_fail_tracker.apply(ws_qc_fail)
+
+    if progress_callback:
+        progress_callback(0.85, "Finalizing Excel workbook…")
     wb.close()
+    if progress_callback:
+        progress_callback(1.0, "Excel workbook generated")

@@ -6,6 +6,7 @@ Launches the unified multi-application hub featuring:
   - STDF2SUM Converter
   - Data Analysis Hub
 """
+import logging
 import os
 import sys
 import multiprocessing
@@ -22,8 +23,8 @@ if FTDC_DIR not in sys.path:
 try:
     import ctypes
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PTS_Hub")
-except Exception:
-    pass
+except Exception as exc:
+    logging.warning("Failed to set Windows AppUserModelID: %s", exc)
 
 from core.config import APP_NAME, APP_VERSION, ICON_PATH
 from core.theme import setup_theme
@@ -46,8 +47,8 @@ def launch_hub():
     try:
         if os.path.isfile(ICON_PATH):
             root.iconbitmap(default=ICON_PATH)
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.warning("Failed to set window icon '%s': %s", ICON_PATH, exc)
 
     root.geometry("1260x820")
     root.minsize(1060, 680)
@@ -60,11 +61,23 @@ def launch_hub():
     stdf2sum_frame = STDF2SumFrame(hub.content_area, hub=hub)
     data_analysis_frame = DataAnalysisFrame(hub.content_area, hub=hub)
 
-    # Register tabs in the Hub
-    hub.register_app("FTDC Checker", ftdc_frame, is_default=True)
+    # Register tabs in the Hub ("Home" is registered first by HubWindow and is the default screen)
+    hub.register_app("FTDC Checker", ftdc_frame)
     hub.register_app("STDF2SUM", stdf2sum_frame)
     hub.register_app("Data Analysis", data_analysis_frame)
+    hub.switch_tab("Home")
 
+    def _on_close():
+        try:
+            ftdc_frame.save_session_log_on_close()
+        except Exception as exc:
+            logging.warning("Failed to save FTDC session log on close: %s", exc)
+        try:
+            root.destroy()
+        except Exception as exc:
+            logging.warning("Failed to destroy root window on close: %s", exc)
+
+    root.protocol("WM_DELETE_WINDOW", _on_close)
     root.mainloop()
 
 
@@ -126,7 +139,7 @@ def main():
         total_actual_good_qty=args.total_actual_good_qty,
         manual_filter_tests=manual_filter_tests, logger=cli_log,
     )
-    print(f"\\nDone. FP Result: {result['status']} | Total Good: {result.get('total_good_status')}")
+    print(f"\nDone. FP Result: {result['status']} | Total Good: {result.get('total_good_status')}")
 
 
 if __name__ == "__main__":

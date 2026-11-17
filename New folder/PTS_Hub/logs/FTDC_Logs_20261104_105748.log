@@ -1,0 +1,243 @@
+[2026-11-04 09:58:08] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-11-04 09:58:09] Lot Details Input: MPC = '58974QRTBV60'
+[2026-11-04 09:58:09] [Get FTDC Fail] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 09:58:09] Get FTDC Fail: Successfully connected using primary link: http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php
+[2026-11-04 09:58:10] Get FTDC Fail: SUCCESS for Lot ID 'MMT-271500654.900' via http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php — found 1 FAIL row(s).
+[2026-11-04 09:58:10]   FTDC Fail #1: Reply Message='Failed Validation Check3 value: 6 Check1 Failed' | Comment='FT1 totalparts=11935 totalgood=9038 GUID=9038 total reject=2897 RUID=2582 BIN11=298 bin90=19 ; RET totalparts=5502 totalgood=2387 GUID=2352 total reject=3115 RUID=634 BIN11=199 bin90=33 ; QC qc_total=251 totalgood=240 total reject=7 qc_bin11=0 qc_bin90=0 other=0 ; Y=36; Z=6; Q=0; X=-1; Trackinqty=11355' | Tester='LTXFUSMXRF-026'
+[2026-11-04 09:58:11] ================================================================================
+[2026-11-04 09:58:11] [Get STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 09:58:11] Get STDF: Lot ID 'MMT-271500654.900', MPC '58974QRTBV60'
+[2026-11-04 09:58:11]   Tester: LTX
+[2026-11-04 09:58:11]   Device folder(s): ATA5833*
+[2026-11-04 09:58:11]   Network base(s):
+[2026-11-04 09:58:11]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-11-04 09:58:11]     - \\acpnetapp02\tsti\backend\data
+[2026-11-04 09:58:11]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 09:58:11]   Valid STDF filename conventions (mask '58974', LTX):
+[2026-11-04 09:58:11]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-04 09:58:11]     - RETEST: {lot}.rj{N}_w_{timestamp}
+[2026-11-04 09:58:11]     - QC: {lot}_q_{timestamp}
+[2026-11-04 09:58:11]     - QC RETEST: {lot}.rj{N}_q_{timestamp}
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP (server-side filter '*MMT-271500654.900*', 8 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1 (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-271500654.900*', 0 entries returned)
+[2026-11-04 09:58:11]   Directory search took 0.18s (13/13 folder(s) server-side filtered).
+[2026-11-04 09:58:11] Search complete — 8 matching file(s) found.
+[2026-11-04 09:58:11] Get STDF Summary: Tester Used='LTX', Files Found=8, Source Device Folder(s)=ATA5833G-8M33HDP
+[2026-11-04 09:58:11] Get STDF: Found 8 matching STDF file(s) for Lot ID 'MMT-271500654.900' in device folder(s) ATA5833* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900_e_20260908221546_6140_2609091611.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11]   • mmt-271500654.900_q_20260910074509_6141_2609100806.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 09:58:11] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271500654.900…
+[2026-11-04 09:58:11] Get STDF: Copying 8 file(s)…
+[2026-11-04 09:58:11] Copying 8 file(s) to: C:\FTDC\MMT-271500654.900
+[2026-11-04 09:58:12]   Copied: mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old
+[2026-11-04 09:58:12]   Copied: mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-11-04 09:58:15]   Copied: mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old
+[2026-11-04 09:58:16]   Copied: mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old
+[2026-11-04 09:58:17]   Copied: mmt-271500654.900_q_20260910074509_6141_2609100806.std.old
+[2026-11-04 09:58:19]   Copied: mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old
+[2026-11-04 09:58:19]   Copied: mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old
+[2026-11-04 09:58:30]   Copied: mmt-271500654.900_e_20260908221546_6140_2609091611.std.old
+[2026-11-04 09:58:30] Done - 8/8 file(s) copied to C:\FTDC\MMT-271500654.900
+[2026-11-04 09:58:30] Check STDF pre-warm: Checking 8 file(s) in background for 'MMT-271500654.900'.
+[2026-11-04 09:58:32] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old]: Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-11-04 09:58:32] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old]: Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-11-04 09:58:33] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old]: Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-11-04 09:58:34] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old]: Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-11-04 09:58:34] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old]: Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-11-04 09:58:34] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-11-04 09:58:36] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old]: Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-11-04 09:58:37] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old]: Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-11-04 09:58:43] Lot Details Input: Lot ID = 'MMT-270800927.000'
+[2026-11-04 09:58:44] ================================================================================
+[2026-11-04 09:58:44] Lot Details Input: MPC = '77A0FYSLBVA1'
+[2026-11-04 09:58:44] [Get STDF] Lot Details: Lot ID='MMT-270800927.000', MPC='77A0FYSLBVA1', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 09:58:44] Get STDF: Lot ID 'MMT-270800927.000', MPC '77A0FYSLBVA1'
+[2026-11-04 09:58:44]   Tester: LTX
+[2026-11-04 09:58:44]   Device folder(s): ATA5296*
+[2026-11-04 09:58:44]   Network base(s):
+[2026-11-04 09:58:44]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-11-04 09:58:44]     - \\acpnetapp02\tsti\backend\data
+[2026-11-04 09:58:44]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 09:58:44]   Valid STDF filename conventions (mask '77A0F', LTX):
+[2026-11-04 09:58:44]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-04 09:58:44]     - RETEST: {lot}.rj{N}_w_{timestamp}
+[2026-11-04 09:58:44]     - QC: {lot}_q_{timestamp}
+[2026-11-04 09:58:44]     - QC RETEST: {lot}.rj{N}_q_{timestamp}
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296-M (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296-M33NJP (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296GV1P1-M33NJP (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-270800927.000*', 0 entries returned)
+[2026-11-04 09:58:45] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP (server-side filter '*MMT-270800927.000*', 7 entries returned)
+[2026-11-04 09:58:45]   Skipped (not a valid STDF filename convention): mmt-270800927.000_qcfver_q_20260611165822_6151_2606111704.std.old
+[2026-11-04 09:58:45]   Directory search took 0.10s (7/7 folder(s) server-side filtered).
+[2026-11-04 09:58:45] Search complete — 6 matching file(s) found.
+[2026-11-04 09:58:45] Get STDF Summary: Tester Used='LTX', Files Found=6, Source Device Folder(s)=ATA5296V1P1-M33NJP
+[2026-11-04 09:58:45] Get STDF: Found 6 matching STDF file(s) for Lot ID 'MMT-270800927.000' in device folder(s) ATA5296* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-04 09:58:45]   • mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45]   • mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45]   • mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45]   • mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45]   • mmt-270800927.000_e_20260610093139_6150_2606110546.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45]   • mmt-270800927.000_q_20260611153846_6151_2606111608.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-11-04 09:58:45] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-270800927.000…
+[2026-11-04 09:58:45] Get STDF: Copying 6 file(s)…
+[2026-11-04 09:58:45] Copying 6 file(s) to: C:\FTDC\MMT-270800927.000
+[2026-11-04 09:58:46]   Copied: mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old
+[2026-11-04 09:58:47]   Copied: mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old
+[2026-11-04 09:58:50]   Copied: mmt-270800927.000_q_20260611153846_6151_2606111608.std.old
+[2026-11-04 09:58:53]   Copied: mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old
+[2026-11-04 09:58:58]   Copied: mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old
+[2026-11-04 09:59:32]   Copied: mmt-270800927.000_e_20260610093139_6150_2606110546.std.old
+[2026-11-04 09:59:32] Done - 6/6 file(s) copied to C:\FTDC\MMT-270800927.000
+[2026-11-04 09:59:32] Check STDF pre-warm: Checking 6 file(s) in background for 'MMT-270800927.000'.
+[2026-11-04 09:59:34] Check STDF [mmt-270800927.000_q_20260611153846_6151_2606111608.std.old]: Status=Completed, Total Parts=270, Tested Good=190, Mismatch/Discrepancy=None
+[2026-11-04 09:59:34] Check STDF [mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old]: Status=Completed, Total Parts=1256, Tested Good=477, Mismatch/Discrepancy=None
+[2026-11-04 09:59:35] Check STDF [mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old]: Status=Completed, Total Parts=80, Tested Good=76, Mismatch/Discrepancy=None
+[2026-11-04 09:59:35] Check STDF [mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old]: Status=Completed, Total Parts=4, Tested Good=2, Mismatch/Discrepancy=None
+[2026-11-04 09:59:35] Check STDF [mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old]: Status=Completed, Total Parts=2589, Tested Good=1330, Mismatch/Discrepancy=None
+[2026-11-04 09:59:41] Check STDF [mmt-270800927.000_e_20260610093139_6150_2606110546.std.old]: Status=Completed, Total Parts=15463, Tested Good=12873, Mismatch/Discrepancy=None
+[2026-11-04 10:00:05] Lot Details Input: Lot ID = 'MMT-270700551.800'
+[2026-11-04 10:00:07] Lot Details Input: MPC = '58974QRTBV60'
+[2026-11-04 10:00:08] ================================================================================
+[2026-11-04 10:00:08] [Get STDF] Lot Details: Lot ID='MMT-270700551.800', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 10:00:08] Get STDF: Lot ID 'MMT-270700551.800', MPC '58974QRTBV60'
+[2026-11-04 10:00:08]   Tester: LTX
+[2026-11-04 10:00:08]   Device folder(s): ATA5833*
+[2026-11-04 10:00:08]   Network base(s):
+[2026-11-04 10:00:08]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-11-04 10:00:08]     - \\acpnetapp02\tsti\backend\data
+[2026-11-04 10:00:08]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 10:00:08]   Valid STDF filename conventions (mask '58974', LTX):
+[2026-11-04 10:00:08]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-04 10:00:08]     - RETEST: {lot}.rj{N}_w_{timestamp}
+[2026-11-04 10:00:08]     - QC: {lot}_q_{timestamp}
+[2026-11-04 10:00:08]     - QC RETEST: {lot}.rj{N}_q_{timestamp}
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1 (server-side filter '*MMT-270700551.800*', 0 entries returned)
+[2026-11-04 10:00:08] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP (server-side filter '*MMT-270700551.800*', 8 entries returned)
+[2026-11-04 10:00:08]   Skipped (not a valid STDF filename convention): mmt-270700551.800_qcfver_q_20260607104903_6141_2606071100.std.old
+[2026-11-04 10:00:08]   Skipped (not a valid STDF filename convention): mmt-270700551.800_qcfver_q_20260607111130_6141_2606071130.std.old
+[2026-11-04 10:00:08]   Directory search took 0.11s (13/13 folder(s) server-side filtered).
+[2026-11-04 10:00:08] Search complete — 6 matching file(s) found.
+[2026-11-04 10:00:08] Get STDF Summary: Tester Used='LTX', Files Found=6, Source Device Folder(s)=ATA5833G-8M33HDP
+[2026-11-04 10:00:08] Get STDF: Found 6 matching STDF file(s) for Lot ID 'MMT-270700551.800' in device folder(s) ATA5833* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-04 10:00:08]   • mmt-270700551.800.rj1_q_20260607100351_6141_2606071007.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08]   • mmt-270700551.800.rj1_w_20260607073635_6140_2606070854.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08]   • mmt-270700551.800.rj2_q_20260607101555_6141_2606071022.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08]   • mmt-270700551.800_e_20260606054354_6140_2606070644.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08]   • mmt-270700551.800_q_20260607091258_6141_2606070951.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08]   • mmt-270700551.800_q_20260607142310_6141_2606071445.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-11-04 10:00:08] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-270700551.800…
+[2026-11-04 10:00:08] Get STDF: Copying 6 file(s)…
+[2026-11-04 10:00:08] Copying 6 file(s) to: C:\FTDC\MMT-270700551.800
+[2026-11-04 10:00:08]   Copied: mmt-270700551.800.rj2_q_20260607101555_6141_2606071022.std.old
+[2026-11-04 10:00:08]   Copied: mmt-270700551.800.rj1_q_20260607100351_6141_2606071007.std.old
+[2026-11-04 10:00:10]   Copied: mmt-270700551.800.rj1_w_20260607073635_6140_2606070854.std.old
+[2026-11-04 10:00:11]   Copied: mmt-270700551.800_q_20260607142310_6141_2606071445.std.old
+[2026-11-04 10:00:11]   Copied: mmt-270700551.800_q_20260607091258_6141_2606070951.std.old
+[2026-11-04 10:00:33]   Copied: mmt-270700551.800_e_20260606054354_6140_2606070644.std.old
+[2026-11-04 10:00:33] Done - 6/6 file(s) copied to C:\FTDC\MMT-270700551.800
+[2026-11-04 10:00:33] Check STDF pre-warm: Checking 6 file(s) in background for 'MMT-270700551.800'.
+[2026-11-04 10:00:34] Check STDF [mmt-270700551.800.rj1_q_20260607100351_6141_2606071007.std.old]: Status=Completed, Total Parts=29, Tested Good=23, Mismatch/Discrepancy=None
+[2026-11-04 10:00:34] Check STDF [mmt-270700551.800_q_20260607091258_6141_2606070951.std.old]: Status=Completed, Total Parts=240, Tested Good=211, Mismatch/Discrepancy=None
+[2026-11-04 10:00:35] Check STDF [mmt-270700551.800.rj1_w_20260607073635_6140_2606070854.std.old]: Status=Completed, Total Parts=790, Tested Good=622, Mismatch/Discrepancy=None
+[2026-11-04 10:00:35] Check STDF [mmt-270700551.800.rj2_q_20260607101555_6141_2606071022.std.old]: Status=Completed, Total Parts=6, Tested Good=0, Mismatch/Discrepancy=None
+[2026-11-04 10:00:36] Check STDF [mmt-270700551.800_q_20260607142310_6141_2606071445.std.old]: Status=Completed, Total Parts=240, Tested Good=240, Mismatch/Discrepancy=None
+[2026-11-04 10:00:40] Check STDF [mmt-270700551.800_e_20260606054354_6140_2606070644.std.old]: Status=Completed, Total Parts=18247, Tested Good=17321, Mismatch/Discrepancy=None
+[2026-11-04 10:00:44] Lot Details Input: Lot ID = 'MMT-271901180.000'
+[2026-11-04 10:00:46] ================================================================================
+[2026-11-04 10:00:46] Lot Details Input: MPC = '58973QRTBV04'
+[2026-11-04 10:00:46] [Get STDF] Lot Details: Lot ID='MMT-271901180.000', MPC='58973QRTBV04', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 10:00:46] Get STDF: Lot ID 'MMT-271901180.000', MPC '58973QRTBV04'
+[2026-11-04 10:00:46]   Tester: LTX
+[2026-11-04 10:00:46]   Device folder(s): ATA5831*
+[2026-11-04 10:00:46]   Network base(s):
+[2026-11-04 10:00:46]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-11-04 10:00:46]     - \\acpnetapp02\tsti\backend\data
+[2026-11-04 10:00:46]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 10:00:46]   Valid STDF filename conventions (mask '58973', LTX):
+[2026-11-04 10:00:46]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-04 10:00:46]     - RETEST: {lot}.rj{N}_w_{timestamp}
+[2026-11-04 10:00:46]     - QC: {lot}_q_{timestamp}
+[2026-11-04 10:00:46]     - QC RETEST: {lot}.rj{N}_q_{timestamp}
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-WNQW (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-M33HDP (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-EDR_READ (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-8M33HDP (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-M33HDP (server-side filter '*MMT-271901180.000*', 0 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\tsti\backend\data (server-side filter '*MMT-271901180.000*', 2 entries returned)
+[2026-11-04 10:00:46] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP (server-side filter '*MMT-271901180.000*', 11 entries returned)
+[2026-11-04 10:00:46]   Skipped (not a valid STDF filename convention): ATA5831_MMT-271901180.000_1__20260822054242.std
+[2026-11-04 10:00:46]   Skipped (not a valid STDF filename convention): mmt-271901180.000_correlation_e_20260822050842_6140_2608220525.std.old
+[2026-11-04 10:00:46]   Skipped (not a valid STDF filename convention): mmt-271901180.000_qver_q_20260823100415_6141_2608231015.std.old
+[2026-11-04 10:00:46]   Skipped (not a valid STDF filename convention): ATA5831_MMT-271901180.000_1__20260823040101.std
+[2026-11-04 10:00:46]   Directory search took 0.16s (8/8 folder(s) server-side filtered).
+[2026-11-04 10:00:46] Search complete — 9 matching file(s) found.
+[2026-11-04 10:00:46] Get STDF Summary: Tester Used='LTX', Files Found=9, Source Device Folder(s)=ATA5831X-8M33HDP
+[2026-11-04 10:00:46] Get STDF: Found 9 matching STDF file(s) for Lot ID 'MMT-271901180.000' in device folder(s) ATA5831* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-04 10:00:46]   • mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_e_20260821113050_6140_2608212135.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_e_20260822054242_6140_2608221344.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_e_20260822140947_6140_2608221412.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_e_20260822142816_6140_2608222203.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_q_20260823013827_6141_2608230208.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46]   • mmt-271901180.000_q_20260824092616_6141_2608240928.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-11-04 10:00:46] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271901180.000…
+[2026-11-04 10:00:46] Get STDF: Copying 9 file(s)…
+[2026-11-04 10:00:46] Copying 9 file(s) to: C:\FTDC\MMT-271901180.000
+[2026-11-04 10:00:47]   Copied: mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old
+[2026-11-04 10:00:47]   Copied: mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old
+[2026-11-04 10:00:49]   Copied: mmt-271901180.000_e_20260822140947_6140_2608221412.std.old
+[2026-11-04 10:00:51]   Copied: mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old
+[2026-11-04 10:00:55]   Copied: mmt-271901180.000_q_20260823013827_6141_2608230208.std.old
+[2026-11-04 10:00:55]   Copied: mmt-271901180.000_e_20260822054242_6140_2608221344.std.old
+[2026-11-04 10:00:57]   Copied: mmt-271901180.000_q_20260824092616_6141_2608240928.std.old
+[2026-11-04 10:01:01]   Copied: mmt-271901180.000_e_20260821113050_6140_2608212135.std.old
+[2026-11-04 10:01:03]   Copied: mmt-271901180.000_e_20260822142816_6140_2608222203.std.old
+[2026-11-04 10:01:03] Done - 9/9 file(s) copied to C:\FTDC\MMT-271901180.000
+[2026-11-04 10:01:03] Check STDF pre-warm: Checking 9 file(s) in background for 'MMT-271901180.000'.
+[2026-11-04 10:01:03] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old @ offset 86864 (0x15350) [parse 5-10 (PIR)]: 4 orphan PIR record(s) without matching PRR at EOF.
+[2026-11-04 10:01:03] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old [Count Reconciliation]: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-11-04 10:01:03] Check STDF [mmt-271901180.000_e_20260822140947_6140_2608221412.std.old]: Status=Corrupted, Total Parts=0, Tested Good=0, Mismatch/Discrepancy=PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-11-04 10:01:08] [WARNING] mmt-271901180.000_e_20260822054242_6140_2608221344.std.old [Count Reconciliation]: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-11-04 10:01:08] Check STDF [mmt-271901180.000_e_20260822054242_6140_2608221344.std.old]: Status=Mismatch, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-11-04 10:01:10] Check STDF [mmt-271901180.000_q_20260823013827_6141_2608230208.std.old]: Status=Completed, Total Parts=240, Tested Good=224, Mismatch/Discrepancy=None
+[2026-11-04 10:01:10] Check STDF [mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old]: Status=Completed, Total Parts=1447, Tested Good=1149, Mismatch/Discrepancy=None
+[2026-11-04 10:01:10] Check STDF [mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old]: Status=Completed, Total Parts=18, Tested Good=3, Mismatch/Discrepancy=None
+[2026-11-04 10:01:10] Check STDF [mmt-271901180.000_e_20260822142816_6140_2608222203.std.old]: Status=Completed, Total Parts=5969, Tested Good=5470, Mismatch/Discrepancy=None
+[2026-11-04 10:01:11] Check STDF [mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old]: Status=Completed, Total Parts=15, Tested Good=0, Mismatch/Discrepancy=None
+[2026-11-04 10:01:11] Check STDF [mmt-271901180.000_q_20260824092616_6141_2608240928.std.old]: Status=Completed, Total Parts=15, Tested Good=15, Mismatch/Discrepancy=None
+[2026-11-04 10:01:11] Check STDF [mmt-271901180.000_e_20260821113050_6140_2608212135.std.old]: Status=Completed, Total Parts=5718, Tested Good=5288, Mismatch/Discrepancy=None
+[2026-11-04 10:57:48] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261104_105748.log

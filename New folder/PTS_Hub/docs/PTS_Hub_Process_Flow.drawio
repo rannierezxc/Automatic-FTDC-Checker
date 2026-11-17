@@ -1,0 +1,544 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-17T07:05:00.000Z" agent="PTS_Hub" version="24.0.0" type="device">
+  <diagram id="slide_1" name="1. UI, MES &amp; STDF Acquisition">
+    <mxGraphModel dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="slide_1_title" value="&lt;b&gt;PTS Hub — Detailed Process Flow (1/4): Startup, MES Lookup, Get STDF &amp;amp; Check STDF&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E3A5F;fontColor=#FFFFFF;strokeColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="28" y="14" width="1224" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_lane_1" value="1A. Startup &amp;amp; User Inputs" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#1D4ED8;strokeColor=#93C5FD;swimlaneFillColor=#EFF6FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="28" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_lane_2" value="1B. MES, Device Config &amp;amp; Fails" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#4338CA;strokeColor=#A5B4FC;swimlaneFillColor=#EEF2FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_lane_3" value="1C. Get STDF (Network Fetch)" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#0F766E;strokeColor=#5EEAD4;swimlaneFillColor=#F0FDFA;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="652" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_lane_4" value="1D. Check STDF Integrity Scan" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#15803D;strokeColor=#86EFAC;swimlaneFillColor=#F0FDF4;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="964" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_1" value="&lt;b&gt;Launch PTS_Hub.exe / main.py&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Run freeze_support(), set AppUserModelID, resolve external assets/ via get_app_root(), pre-warm HTTP &amp;amp; Device caches.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="144" width="247" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_2" value="&lt;b&gt;Open FTDC Checker Tab&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Load settings.json URLs/paths; user enters Lot ID, FP Actual Good QTY &amp;amp; Total Actual Good QTY (+ optional Manual Test Filter).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="278" width="247" height="113" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_3" value="&lt;b&gt;Panel File Acquisition Path&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Select FIRST PASS, RETEST &amp;amp; QC files: either auto-fetch via Get STDF or manually browse/drop local STDF files.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="418" width="247" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_4" value="&lt;b&gt;Optional: Manual Filter Setup&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Choose PTR tests by number/range or scan_test_list() if mask is not in mask_wxy_map.json (requires 3 WXY tests).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="556" width="247" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_5" value="&lt;b&gt;Complete Lot ID?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(auto MES lookup)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="358" y="142" width="251" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_6" value="&lt;b&gt;MES SOAP Lookup (Background)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;POST GetLotByLotId to mes_url; auto-fill 12-char MPC code &amp;amp; trigger background FTDC Fail prefetch.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4338CA;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="261" width="247" height="113" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_7" value="&lt;b&gt;Device Settings Manager (Config)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;View/Add/Edit/Delete MPCs, tester paths, filename conventions &amp;amp; WXY/Multi-ID tests; updates JSONs in assets/ &amp;amp; reloads caches.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="401" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_8" value="&lt;b&gt;Get FTDC Fail (Optional)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Query ftdc/filter.php (primary URL -&amp;gt; backup fallback); parse HTML fail table &amp;amp; display Reply/Comment/Tester popup.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4338CA;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="547" width="247" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_9" value="&lt;b&gt;Start Get STDF: Resolve MPC &amp;amp; Mask&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Lookup 12-char MPC in mpc_partnumber.json &amp;amp; 5-char mask convention in stdf_filename_conventions.json.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="144" width="247" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_10" value="&lt;b&gt;SMB Pushdown Directory Scan&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Scan tester_paths + common_paths via FindFirstFileExW pushdown; prompt user if multiple testers/folders match.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="272" width="247" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_11" value="&lt;b&gt;Copy to C:\FTDC\&amp;lt;Lot&amp;gt; + Stream Cache&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;CopyFileExW via .part -&amp;gt; atomic rename (live bar, MB/s, ETA); 2-worker pool pre-warms Check Cache after each file finishes.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="410" width="247" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_12" value="&lt;b&gt;Finish Pre-Warm &amp;amp; Open Folder&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;4-worker pool completes remaining files, flushes cache/check_stdf_cache.json once &amp;amp; opens C:\FTDC\&amp;lt;Lot&amp;gt;.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="558" width="247" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_13" value="&lt;b&gt;Start Check STDF: Discover Files&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Scan C:\FTDC\&amp;lt;Lot&amp;gt; (or selected files); build signature (abs_path, size, mtime_ns) for each STDF.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="144" width="247" height="99" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_14" value="&lt;b&gt;Check Cache Hit?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(memory / disk JSON)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="986" y="270" width="241" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_15" value="&lt;b&gt;C-Fast PRR Tail / Full Scan&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Validate FAR/MIR/MRR, count PRR PASS/FAIL, check MIR.LOT_ID mismatch, extra trailing bytes &amp;amp; Test Time == 0 via ThreadPoolExecutor.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="994" y="387" width="226" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_16" value="&lt;b&gt;Check Table -&amp;gt; Click Run Analysis&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Show PASS/FAIL &amp;amp; Discrepancy status; 1-click Load to Panel or Delete STDF -&amp;gt; Next: Slide 2 (Run Analysis Gate).&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="983" y="543" width="249" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_1" target="s1_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_2" target="s1_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_3" target="s1_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_2" target="s1_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_5" target="s1_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e6" value="Mask?" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_6" target="s1_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_7" target="s1_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e8" value="Ready" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_5" target="s1_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e9" value="MPC OK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_6" target="s1_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="642" y="318" />
+              <mxPoint x="642" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_1_e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_9" target="s1_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_10" target="s1_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_11" target="s1_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_11" target="s1_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_13" target="s1_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e15" value="Miss" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_14" target="s1_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_1_e16" value="Hit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_14" target="s1_16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1238" y="316" />
+              <mxPoint x="1238" y="602" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_1_e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1_15" target="s1_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="slide_2" name="2. Parsing, Validation &amp; Filter">
+    <mxGraphModel dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="slide_2_title" value="&lt;b&gt;PTS Hub — Detailed Process Flow (2/4): Run Gate, Parallel STDF Parsing &amp;amp; Coordinate Filtering&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E3A5F;fontColor=#FFFFFF;strokeColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="28" y="14" width="1224" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_lane_1" value="2A. Run Gate &amp;amp; Cache Check" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#1D4ED8;strokeColor=#93C5FD;swimlaneFillColor=#EFF6FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="28" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_lane_2" value="2B. Parallel Parse Strategy" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#0F766E;strokeColor=#5EEAD4;swimlaneFillColor=#F0FDFA;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_lane_3" value="2C. Binary STDF V4 Scanner" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#4338CA;strokeColor=#A5B4FC;swimlaneFillColor=#EEF2FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="652" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_lane_4" value="2D. WXY &amp;amp; Multi-ID Filtering" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#B45309;strokeColor=#FCD34D;swimlaneFillColor=#FFFBEB;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="964" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_1" value="&lt;b&gt;Click Run Analysis (start_get_data)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Uppercase Lot ID &amp;amp; MPC; snapshot current lot details to Activity Log.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="144" width="247" height="97" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_2" value="&lt;b&gt;Inputs Valid?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Panels, Int QTYs, 12-char MPC&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="49" y="266" width="243" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_3" value="&lt;b&gt;Show Validation Error &amp;amp; Abort&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Block missing panels, non-integer QTY, bad MPC, or unmapped mask without 3 Manual Filter tests.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#DC2626;strokeWidth=1.5;fontColor=#991B1B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="59" y="385" width="224" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_4" value="&lt;b&gt;Session Cache Hit?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(_analysis_cache: inputs + file mtime)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="46" y="493" width="251" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_5" value="&lt;b&gt;Cache Hit -&amp;gt; Skip Parsing&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Jump directly to Slide 4 (_deliver_analysis_result).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="606" width="247" height="69" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_6" value="&lt;b&gt;Resolve Test Numbers &amp;amp; Sort&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Lookup 5-char mask in mask_wxy_map.json (or 3 Manual Filter tests); sort files in each panel by first YYYYMMDDHHMMSS.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="144" width="247" height="109" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_7" value="&lt;b&gt;Cross-Panel Unique File Pool&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Pool unique paths from FP + RETEST + QC; select largest file for main thread &amp;amp; remaining smaller files for ProcessPoolExecutor.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="282" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_8" value="&lt;b&gt;Open Binary STDF Reader&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Local uncompressed file -&amp;gt; zero-copy mmap.ACCESS_READ; .gz or remote UNC file -&amp;gt; transparent stream/stage copy.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="430" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_9" value="&lt;b&gt;Collect Parsed Panel Dictionaries&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Update live progress bar (15% -&amp;gt; 92% bytes); assemble row records sequentially by sorted timestamp order.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="577" width="247" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_10" value="&lt;b&gt;1. FAR (0,10) &amp;amp; MIR (1,10)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Verify FAR at offset 0 (STDF_VER=4, REC_LEN=2, endian &amp;lt; or &amp;gt;); verify MIR.LOT_ID matches input Lot ID (strip .RJ&amp;lt;N&amp;gt;).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4338CA;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="144" width="247" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_11" value="&lt;b&gt;2. PIR -&amp;gt; PTR (Fast) -&amp;gt; PRR Loop&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Track site slot (HEAD&amp;lt;&amp;lt;8)|SITE; PTR peeks 4B TEST_NUM (skips non-filter PTRs); PRR checks PART_FLG&amp;amp;0x08 PASS/FAIL &amp;amp; bins.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4338CA;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="274" width="247" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_12" value="&lt;b&gt;3. PCR/HBR/SBR &amp;amp; MRR (1,20)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Reconcile PCR/HBR/SBR vs PRR counts; drop orphan PIRs without PRR; require MRR end == file_size (no trailing bytes).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4338CA;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="418" width="247" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_13" value="&lt;b&gt;Strict Validation OK?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;FAR, MIR, EOF, &amp;gt;0 PRRs&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="543" width="247" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_14" value="&lt;b&gt;Block Analysis (Log File &amp;amp; Byte Offset)&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#DC2626;strokeWidth=1.5;fontColor=#991B1B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="645" width="247" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_15" value="&lt;b&gt;Normalize Unset &amp;amp; Format WXY&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Normalize 65535 bins &amp;amp; TEST_T==0; format Wafer/X/Y floats (round to int or NaN); join &amp;quot;{Wafer}_{X}_{Y}&amp;quot;.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="144" width="247" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_16" value="&lt;b&gt;WXY Validity Rule (_is_valid_wxy)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;INVALID if empty, &amp;#x27;NaN&amp;#x27; in val, Wafer == 0 regardless of X &amp;amp; Y (0_1_2, 0_137_136), or &amp;gt;=2 zero parts (0_0_0, 24_0_0). Valid: W!=0 &amp;amp; &amp;lt;=1 zero.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="272" width="247" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_17" value="&lt;b&gt;Multi-ID Mask?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(e.g. SG406 / UID+MACID)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="982" y="432" width="251" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_18" value="&lt;b&gt;Multi-ID Extract -&amp;gt; Slide 3&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Yes: also extract UID (!=NaN) &amp;amp; BT/ZB MACIDs (prefix-checked: 64_132 / 40:84). Both Yes &amp;amp; No proceed to Slide 3.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="552" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_1" target="s2_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e2" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_2" target="s2_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e3" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_2" target="s2_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="314" y="312" />
+              <mxPoint x="314" y="538" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_2_e4" value="Hit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_4" target="s2_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e5" value="Miss" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_4" target="s2_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="328" y="538" />
+              <mxPoint x="328" y="198" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_2_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_6" target="s2_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_7" target="s2_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_8" target="s2_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_8" target="s2_10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="642" y="488" />
+              <mxPoint x="642" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_2_e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_10" target="s2_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_11" target="s2_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_12" target="s2_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e13" value="Fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_13" target="s2_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e14" value="Pass" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_13" target="s2_15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="588" />
+              <mxPoint x="950" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_2_e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_15" target="s2_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_16" target="s2_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_2_e17" value="Yes/No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2_17" target="s2_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="slide_3" name="3. Duplicate, QC &amp; FTDC Criteria">
+    <mxGraphModel dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="slide_3_title" value="&lt;b&gt;PTS Hub — Detailed Process Flow (3/4): Duplicate Detection Engines, QC Check 4 &amp;amp; FTDC Criteria&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E3A5F;fontColor=#FFFFFF;strokeColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="28" y="14" width="1224" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_lane_1" value="3A. Interning &amp;amp; FIRST PASS Scan" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#1D4ED8;strokeColor=#93C5FD;swimlaneFillColor=#EFF6FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="28" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_lane_2" value="3B. RETEST State &amp;amp; Multi-ID Engine" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#0F766E;strokeColor=#5EEAD4;swimlaneFillColor=#F0FDFA;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_lane_3" value="3C. QC Check 4 &amp;amp; Quantities" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#B45309;strokeColor=#FCD34D;swimlaneFillColor=#FFFBEB;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="652" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_lane_4" value="3D. Criteria Checks &amp;amp; Remarks" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#15803D;strokeColor=#86EFAC;swimlaneFillColor=#F0FDF4;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="964" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_1" value="&lt;b&gt;Intern Valid Identifiers -&amp;gt; C-Arrays&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Valid WXYs mapped to integer ID _wid &amp;gt;= 1; invalid WXYs (NaN, 0_1_2, 0_0_0, 24_0_0) assigned 0 (excluded).&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="144" width="247" height="99" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_2" value="&lt;b&gt;Scan FIRST PASS Rows (_wid &amp;gt;= 1)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;1) Seen in FP (PASS or FAIL)? -&amp;gt; +1 fp_datalog_duplicate_count.&#10;2) Active FP PASS? -&amp;gt; +1 duplicate_guid.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="270" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_3" value="&lt;b&gt;FP Row == PASS?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(PART_FLG &amp;amp; 0x08 == 0)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="46" y="416" width="251" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_4" value="&lt;b&gt;Update State &amp;amp; FP Reject Check&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;PASS: add to fp_pass_ids &amp;amp; wxy_head_pass_ids.&#10;FAIL: discard head pass; if HARD_BIN != 3 &amp;amp; _wid not in retest_all_ids -&amp;gt; +1 fp_rejects_not_in_retest (NO).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="531" width="247" height="134" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_5" value="&lt;b&gt;Scan RETEST Rows (_wid &amp;gt;= 1)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Priority 1 (retest_pass_seen_ids): prior RETEST was PASS -&amp;gt; +1 retest_duplicate_guid (RETEST Duplicate; promote source).&#10;Priority 2: active FP PASS -&amp;gt; +1 duplicate_guid.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="144" width="247" height="113" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_6" value="&lt;b&gt;Update RETEST Active Sets&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;PASS -&amp;gt; add to wxy_head_pass_ids &amp;amp; retest_pass_seen_ids.&#10;FAIL -&amp;gt; discard from both (allows recovery retest without false duplicate).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="282" width="247" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_7" value="&lt;b&gt;Multi-ID Mode?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(SG406 / UID+BT+ZB)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="358" y="416" width="251" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_8" value="&lt;b&gt;Multi-ID MACID &amp;amp; Unique Checks&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Map valid BT/ZB MACIDs -&amp;gt; UIDs across ALL panels (PASS &amp;amp; FAIL); flag &amp;gt;1 UID.&#10;Run Good Unique Cross-Check (WXY vs UID vs BT vs ZB) for diffs &amp;amp; &amp;gt;1 maps.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="528" width="247" height="142" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_9" value="&lt;b&gt;Build Total Good Set &amp;amp; QC Scan&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;total_good_ids = fp_pass_ids | retest_pass_ids.&#10;Extract valid QC _wid (&amp;gt;0); count duplicates within QC as qc_duplicate_guid.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="144" width="247" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_10" value="&lt;b&gt;QC Check 4 Set Comparison&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Good in prev op = |qc_unique &amp;amp; total_good_ids|.&#10;Failed/Missing prev op = |qc_unique - total_good_ids| (tagged for RED Excel highlighting).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="272" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_11" value="&lt;b&gt;Compute FP &amp;amp; Total Good Deltas&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Calc_FP_Good = FP_PASS - duplicate_guid&#10;Delta_FP = Calc_FP_Good - FP_Actual_Good&#10;Calc_Total = (FP_PASS + RT_PASS) - Total_Dup_GUID&#10;Delta_Total = Calc_Total - Total_Actual&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="418" width="247" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_12" value="&lt;b&gt;Apply Diff Highlight Metadata&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Diff == 0 -&amp;gt; Bold Green; Diff &amp;gt; 0 (surplus) -&amp;gt; Pass w/ Red attention highlight; Diff &amp;lt; 0 -&amp;gt; FAIL (Red).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="566" width="247" height="99" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_13" value="&lt;b&gt;Evaluate Check 1, Check 2 &amp;amp; Check 4&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Check 1: Delta_Total &amp;gt;= 0 &amp;amp; FP Datalog Dup == 0 (+ Multi-ID dups/discrepancies == 0).&#10;Check 2: Total_Dup_GUID &amp;lt;= 72.&#10;Check 4: qc_failed_prev_op == 0.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="144" width="247" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_14" value="&lt;b&gt;First Pass &amp;amp; Total Good Status&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;PASS iff Delta &amp;gt;= 0 &amp;amp; Check 4 == PASS &amp;amp; FP_Dup == 0 (+ 0 MACID/Unique fails).&#10;If Multi-ID &amp;amp; Total_Actual == 0 (0 MACID dups) -&amp;gt; SKIPPED.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="295" width="247" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_15" value="&lt;b&gt;Multi-Violation Remarks Engine&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Concatenate ALL active violations: QC Check 4 fails, FP Dup WXY, Dup BT/ZB MACID, Good Unique mismatch; else status fallback.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="439" width="247" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_16" value="&lt;b&gt;Build Result Dict -&amp;gt; Slide 4&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Bundle panel rows, counts, labels, criteria &amp;amp; remarks -&amp;gt; _deliver_analysis_result.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="587" width="247" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_1" target="s3_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_2" target="s3_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e3" value="Y/N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_3" target="s3_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_4" target="s3_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_5" target="s3_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_6" target="s3_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e7" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_7" target="s3_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e8" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_7" target="s3_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_8" target="s3_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="642" y="598" />
+              <mxPoint x="642" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_3_e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_9" target="s3_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_10" target="s3_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_11" target="s3_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_12" target="s3_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_13" target="s3_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_14" target="s3_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_3_e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3_15" target="s3_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="slide_4" name="4. UI, Stage 1/2 &amp; Cleanup">
+    <mxGraphModel dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="slide_4_title" value="&lt;b&gt;PTS Hub — Detailed Process Flow (4/4): Result Popup, Stage 1 Excel/PNG, Stage 2 PPO &amp;amp; Cleanup&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E3A5F;fontColor=#FFFFFF;strokeColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="28" y="14" width="1224" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_lane_1" value="4A. Result Popup &amp;amp; Download" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#1D4ED8;strokeColor=#93C5FD;swimlaneFillColor=#EFF6FF;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="28" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_lane_2" value="4B. Stage 1: Excel &amp;amp; PNG (ETA)" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#0F766E;strokeColor=#5EEAD4;swimlaneFillColor=#F0FDFA;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_lane_3" value="4C. Stage 2: PPO Auto-Attach" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#B45309;strokeColor=#FCD34D;swimlaneFillColor=#FFFBEB;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="652" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_lane_4" value="4D. Fallback, Tools &amp;amp; Cleanup" style="swimlane;startSize=34;rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#15803D;strokeColor=#86EFAC;swimlaneFillColor=#F0FDF4;fontColor=#FFFFFF;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="964" y="82" width="286" height="614" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_1" value="&lt;b&gt;Deliver Analysis Result&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Store in _analysis_cache, cache build_summary_and_details(result), log Detailed Report &amp;amp; FTDC Server Fails.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="144" width="247" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_2" value="&lt;b&gt;Open FTDC Result Popup Window&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Display Lot Info, PASS/FAIL badges, FP vs Total tables, Multi-ID counts, Remarks, Show Details &amp;amp; Download Excel button.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="276" width="247" height="113" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_3" value="&lt;b&gt;Click Download Excel?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(Stage 1 Done?)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="46" y="416" width="251" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_4" value="&lt;b&gt;Race-Safe Excel Open Behavior&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Stage 1 ongoing -&amp;gt; Show &amp;#x27;Excel generation still ongoing&amp;#x27; popup.&#10;Stage 1 ready -&amp;gt; Save &amp;amp; open .xlsx immediately (even during Stage 2!).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="48" y="533" width="247" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_5" value="&lt;b&gt;Trigger Stage 1 Background Thread&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Reset progress bar 0-&amp;gt;100%, set status &amp;#x27;Auto-attach to PPO: On-going (generating Excel)...&amp;#x27; &amp;amp; live ETA.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="144" width="247" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_6" value="&lt;b&gt;Write Multi-Sheet .xlsx (xlsxwriter)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Disable URL regex scan (strings_to_urls=False); write Summary, FT Total, QC Total, Dup GUID FP, QC FAIL (+ Multi-ID sheets).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="272" width="247" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_7" value="&lt;b&gt;Pre-Stage Result Snapshot (.png)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Render crisp table/badge PNG (result_image.py) into temp staging alongside .xlsx.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="428" width="247" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_8" value="&lt;b&gt;Mark Stage 1 READY&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Set _excel_ready_event &amp;amp; _excel_state=&amp;#x27;READY&amp;#x27;; unlock instant Download &amp;amp; Open Excel.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="562" width="247" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_9" value="&lt;b&gt;Already Attached?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(Cache-Hit Check)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="142" width="251" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_10" value="&lt;b&gt;Scan PPO Subfolders (~15ms)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Scan \\chip\PPOonline\&amp;lt;Lot&amp;gt; using _pushdown_scandir; lock exact target count N = 2 x subfolders (Done 0/N).&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="259" width="247" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_11" value="&lt;b&gt;Parallel Atomic Copy to PPO&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;CopyFileExW .xlsx &amp;amp; .png via .part -&amp;gt; rename to every subfolder; show live Done X/N | MB/s | ETA.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="672" y="391" width="247" height="119" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_12" value="&lt;b&gt;Attach Succeeded?&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;(&amp;lt;= 3 Attempts; 3s, 8s)&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D97706;strokeWidth=2;fontColor=#9A3412;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="539" width="251" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_13" value="&lt;b&gt;Attach Done + Success Popup&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Record _ppo_attached_paths, unlock UI, show &amp;#x27;Auto-attach to PPO: Done (N subfolder(s))&amp;#x27; &amp;amp; completion popup.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="986" y="144" width="241" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_14" value="&lt;b&gt;PPO Fail/Partial Fallback&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;After 3 retries failed: copy .xlsx &amp;amp; .png to C:\FTDC\&amp;lt;Lot&amp;gt; fallback &amp;amp; notify user w/ Open Local Folder option.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="995" y="274" width="224" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_15" value="&lt;b&gt;Utilities: Help &amp;amp; Clear All&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Help button opens PPT from settings[&amp;#x27;help_dir&amp;#x27;]; Clear All increments generation IDs, cancels pending Stage 1/2 &amp;amp; resets UI.&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=1.5;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="983" y="418" width="249" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_16" value="&lt;b&gt;Exit: Save Logs &amp;amp; Purge Cache&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:9.5px'&gt;Save session Activity Log to logs\FTDC_Logs_&amp;lt;YYYYMMDD_HHMMSS&amp;gt;.log on close &amp;amp; delete temporary disk caches.&lt;/font&gt;" style="rounded=1;arcSize=26;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#15803D;strokeWidth=2;fontColor=#1E293B;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="984" y="552" width="247" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_1" target="s4_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_2" target="s4_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e3" value="Click" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_3" target="s4_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e4" value="Start BG" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_1" target="s4_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_5" target="s4_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_6" target="s4_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_7" target="s4_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e8" value="Stage 2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_8" target="s4_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e9" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_9" target="s4_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_10" target="s4_11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_11" target="s4_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e12" value="Skip" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_9" target="s4_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e13" value="OK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_12" target="s4_13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="945" y="588" />
+              <mxPoint x="945" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_4_e14" value="Fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_12" target="s4_14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="955" y="588" />
+              <mxPoint x="955" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_4_e15" value="Done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_13" target="s4_15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1239" y="195" />
+              <mxPoint x="1239" y="472" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="slide_4_e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_14" target="s4_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="slide_4_e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.35;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4_15" target="s4_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,590 @@
+[2026-10-30 13:19:51] Lot Details Input: Lot ID = 'MMT-271901180.000'
+[2026-10-30 13:19:53] Lot Details Input: MPC = '58973QRTBV04'
+[2026-10-30 13:19:57] Lot Details Input: Lot ID = 'MMT-272201128.000'
+[2026-10-30 13:19:58] Get FTDC Fail: Background fetch triggered for Lot ID 'MMT-272201128.000' (MPC '58975TSJBVM6' has 2 tester types: V93K, LTX)…
+[2026-10-30 13:19:58] Get FTDC Fail: Successfully connected using primary link: http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php
+[2026-10-30 13:19:58] Get FTDC Fail: SUCCESS for Lot ID 'MMT-272201128.000' via http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php — found 1 FAIL row(s).
+[2026-10-30 13:19:58]   FTDC Fail #1: Reply Message='Failed Validation Check4 Failed  Check1 Failed' | Comment='FT1 totalparts=0 totalgood=0 GUID=0 total reject=0 RUID=0 BIN11=0 bin90=0 ; RET totalparts=1247 totalgood=758 GUID=758 total reject=489 RUID=460 BIN11=6 bin90=1 ; QC qc_total=283 totalgood=270 total reject=8 qc_bin11=0 qc_bin90=0 other=0 ; Y=0; Z=0; Q=225; X=-17690; Trackinqty=18448' | Tester='ADVV93K-RF-005'
+[2026-10-30 13:19:58] Get FTDC Fail: Cached 1 FAIL row(s) for 'MMT-272201128.000' (detected tester(s): ADVV93K-RF-005).
+[2026-10-30 13:19:59] Lot Details Input: MPC = '58975TSJBVM6'
+[2026-10-30 13:20:17] Lot Details Input: Lot ID = 'MMT-270700551.800'
+[2026-10-30 13:20:19] Lot Details Input: MPC = '58974QRTBV60'
+[2026-10-30 13:20:26] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-10-30 13:20:34] Lot Details Input: Lot ID = 'MMT-270800927.000'
+[2026-10-30 13:20:36] Lot Details Input: MPC = '77A0FYSLBVA1'
+[2026-10-30 13:20:37] [Check STDF] Lot Details: Lot ID='MMT-270800927.000', MPC='77A0FYSLBVA1', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:20:40] [Get FTDC Fail] Lot Details: Lot ID='MMT-270800927.000', MPC='77A0FYSLBVA1', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:20:40] Get FTDC Fail: Successfully connected using primary link: http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php
+[2026-10-30 13:20:40] Get FTDC Fail: SUCCESS for Lot ID 'MMT-270800927.000' via http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php — found 1 FAIL row(s).
+[2026-10-30 13:20:40]   FTDC Fail #1: Reply Message='PlanName and BRMS data mismatch [PlanName: FQ_MP; BRMS: DATALOGFT1 is blank]' | Comment='[PlanName: FQ_MP; BRMS: DATALOGFT1 is blank]' | Tester='LTXFUSMXHV-001'
+[2026-10-30 13:20:44] ================================================================================
+[2026-10-30 13:20:44] [Get STDF] Lot Details: Lot ID='MMT-270800927.000', MPC='77A0FYSLBVA1', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:20:44] Get STDF: Lot ID 'MMT-270800927.000', MPC '77A0FYSLBVA1'
+[2026-10-30 13:20:44]   Tester: LTX
+[2026-10-30 13:20:44]   Device folder(s): ATA5296*
+[2026-10-30 13:20:44]   Network base(s):
+[2026-10-30 13:20:44]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 13:20:44]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:20:44]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296-M
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296-M33NJP
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296GV1P1-M33NJP
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:20:44] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:20:44]   Skipped (excluded pattern): mmt-270800927.000_qcfver_q_20260611165822_6151_2606111704.std.old
+[2026-10-30 13:20:44] Search complete — 6 matching file(s) found.
+[2026-10-30 13:20:44] Get STDF Summary: Tester Used='LTX', Files Found=6, Source Device Folder(s)=ATA5296V1P1-M33NJP
+[2026-10-30 13:20:44] Get STDF: Found 6 matching STDF file(s) for Lot ID 'MMT-270800927.000' in device folder(s) ATA5296* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 13:20:44]   • mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44]   • mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44]   • mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44]   • mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44]   • mmt-270800927.000_e_20260610093139_6150_2606110546.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44]   • mmt-270800927.000_q_20260611153846_6151_2606111608.std.old  [from folder: ATA5296V1P1-M33NJP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5296V1P1-M33NJP)]
+[2026-10-30 13:20:44] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-270800927.000…
+[2026-10-30 13:20:44] Get STDF: Copying 6 file(s)…
+[2026-10-30 13:20:44] Copying 6 file(s) to: C:\FTDC\MMT-270800927.000
+[2026-10-30 13:20:45]   Copied: mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old
+[2026-10-30 13:20:51]   Copied: mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old
+[2026-10-30 13:20:51]   Copied: mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old
+[2026-10-30 13:20:53]   Copied: mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old
+[2026-10-30 13:21:38]   Copied: mmt-270800927.000_e_20260610093139_6150_2606110546.std.old
+[2026-10-30 13:21:39]   Copied: mmt-270800927.000_q_20260611153846_6151_2606111608.std.old
+[2026-10-30 13:21:39] Done - 6/6 file(s) copied to C:\FTDC\MMT-270800927.000
+[2026-10-30 13:21:39] Check STDF pre-warm: Checking 6 file(s) in background for 'MMT-270800927.000'.
+[2026-10-30 13:21:40] Check STDF [mmt-270800927.000_q_20260611153846_6151_2606111608.std.old]: Status=Completed, Total Parts=270, Tested Good=190, Mismatch/Discrepancy=None
+[2026-10-30 13:21:41] Check STDF [mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old]: Status=Completed, Total Parts=80, Tested Good=76, Mismatch/Discrepancy=None
+[2026-10-30 13:21:41] Check STDF [mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old]: Status=Completed, Total Parts=1256, Tested Good=477, Mismatch/Discrepancy=None
+[2026-10-30 13:21:41] Check STDF [mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old]: Status=Completed, Total Parts=4, Tested Good=2, Mismatch/Discrepancy=None
+[2026-10-30 13:21:42] Check STDF [mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old]: Status=Completed, Total Parts=2589, Tested Good=1330, Mismatch/Discrepancy=None
+[2026-10-30 13:21:48] Check STDF [mmt-270800927.000_e_20260610093139_6150_2606110546.std.old]: Status=Completed, Total Parts=15463, Tested Good=12873, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] [Check STDF] Lot Details: Lot ID='MMT-270800927.000', MPC='77A0FYSLBVA1', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000_e_20260610093139_6150_2606110546.std.old] (cached): Status=Completed, Total Parts=15463, Tested Good=12873, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000.rj1_w_20260611055822_6150_2606111041.std.old] (cached): Status=Completed, Total Parts=2589, Tested Good=1330, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000.rj2_w_20260611114640_6150_2606111513.std.old] (cached): Status=Completed, Total Parts=1256, Tested Good=477, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000_q_20260611153846_6151_2606111608.std.old] (cached): Status=Completed, Total Parts=270, Tested Good=190, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000.rj1_q_20260611162045_6151_2606111638.std.old] (cached): Status=Completed, Total Parts=80, Tested Good=76, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF [mmt-270800927.000.rj2_q_20260611164642_6151_2606111647.std.old] (cached): Status=Completed, Total Parts=4, Tested Good=2, Mismatch/Discrepancy=None
+[2026-10-30 13:22:26] Check STDF: 6 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-10-30 13:22:26] Check STDF: All 6 file(s) loaded from cache.
+[2026-10-30 13:22:26] Check STDF Lot Summary [MMT-270800927.000]: Files=6, Quantity Total Parts=19,662, Quantity Tested Good=14,948, Mismatches=None
+[2026-10-30 13:23:04] Lot Details Input: Lot ID = 'MMT-272201128.000'
+[2026-10-30 13:23:04] Lot Details Input: MPC = '58975TSJBVM6'
+[2026-10-30 13:23:04] ================================================================================
+[2026-10-30 13:23:04] [Get STDF] Lot Details: Lot ID='MMT-272201128.000', MPC='58975TSJBVM6', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:23:04] Get STDF: Lot ID 'MMT-272201128.000', MPC '58975TSJBVM6'
+[2026-10-30 13:23:04] Get STDF: Automatically selected tester 'V93K' matching FTDC tester 'ADVV93K-RF-005'.
+[2026-10-30 13:23:04]   Tester: V93K
+[2026-10-30 13:23:04]   Device folder(s): ATA5700*
+[2026-10-30 13:23:04]   Network base(s):
+[2026-10-30 13:23:04]     - \\acpnetapp02\ftdirectory\backend\data\stdf\v93k
+[2026-10-30 13:23:04]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:23:04]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:23:04]   Cache: 1 file(s) already in C:\FTDC\MMT-272201128.000 will be skipped.
+[2026-10-30 13:23:04]   Get STDF cache: 1 file(s) already in target folder will be skipped if unchanged (name + size + modified time).
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-P33HEP
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-R33HEP
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-T33HEP
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1002-U33HEP
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700G1000-T33HEP
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:23:04] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:23:05]   Skipped (already in target folder, unchanged): mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old
+[2026-10-30 13:23:05] Search complete — 4 matching file(s) found.
+[2026-10-30 13:23:05] Get STDF Summary: Tester Used='V93K', Files Found=4, Source Device Folder(s)=ATA5700F1000-T33HEP
+[2026-10-30 13:23:05] Get STDF: Found 4 matching STDF file(s) for Lot ID 'MMT-272201128.000' in device folder(s) ATA5700* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 13:23:05]   • mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old  [from folder: ATA5700F1000-T33HEP (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-T33HEP)]
+[2026-10-30 13:23:05]   • mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old  [from folder: ATA5700F1000-T33HEP (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-T33HEP)]
+[2026-10-30 13:23:05]   • mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old  [from folder: ATA5700F1000-T33HEP (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-T33HEP)]
+[2026-10-30 13:23:05]   • mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old  [from folder: ATA5700F1000-T33HEP (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\ATA5700F1000-T33HEP)]
+[2026-10-30 13:23:05] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-272201128.000…
+[2026-10-30 13:23:05] Get STDF: Copying 4 file(s)…
+[2026-10-30 13:23:05] Copying 4 file(s) to: C:\FTDC\MMT-272201128.000
+[2026-10-30 13:23:33]   Copied: mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old
+[2026-10-30 13:23:33]   Copied: mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old
+[2026-10-30 13:23:33]   Copied: mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old
+[2026-10-30 13:23:35]   Copied: mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old
+[2026-10-30 13:23:35] Done - 4/4 file(s) copied to C:\FTDC\MMT-272201128.000
+[2026-10-30 13:23:35] Check STDF pre-warm: Checking 5 file(s) in background for 'MMT-272201128.000'.
+[2026-10-30 13:23:35] Check STDF [mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old]: Status=Completed, Total Parts=270, Tested Good=257, Mismatch/Discrepancy=None
+[2026-10-30 13:23:35] Check STDF [mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old]: Status=Completed, Total Parts=1247, Tested Good=758, Mismatch/Discrepancy=None
+[2026-10-30 13:23:37] Check STDF [mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old]: Status=Completed, Total Parts=13, Tested Good=13, Mismatch/Discrepancy=None
+[2026-10-30 13:23:49] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old]: Status=Completed, Total Parts=18946, Tested Good=17699, Mismatch/Discrepancy=None
+[2026-10-30 13:23:49] [WARNING] mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old [Count Reconciliation]: PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:23:49] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old]: Status=Mismatch, Total Parts=18939, Tested Good=17692, Mismatch/Discrepancy=PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:26:03] [Check STDF] Lot Details: Lot ID='MMT-272201128.000', MPC='58975TSJBVM6', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:26:04] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old] (cached): Status=Completed, Total Parts=18946, Tested Good=17699, Mismatch/Discrepancy=None
+[2026-10-30 13:26:04] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old] (cached): Status=Mismatch, Total Parts=18939, Tested Good=17692, Mismatch/Discrepancy=PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:26:04] Check STDF [mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old] (cached): Status=Completed, Total Parts=1247, Tested Good=758, Mismatch/Discrepancy=None
+[2026-10-30 13:26:04] Check STDF [mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old] (cached): Status=Completed, Total Parts=270, Tested Good=257, Mismatch/Discrepancy=None
+[2026-10-30 13:26:04] Check STDF [mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old] (cached): Status=Completed, Total Parts=13, Tested Good=13, Mismatch/Discrepancy=None
+[2026-10-30 13:26:04] Check STDF: 5 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-10-30 13:26:04] Check STDF: All 5 file(s) loaded from cache.
+[2026-10-30 13:26:04] Check STDF Lot Summary [MMT-272201128.000]: Files=5, Quantity Total Parts=39,415, Quantity Tested Good=36,419, Mismatches=mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old: PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:26:24] ================================================================================
+[2026-10-30 13:26:24] Lot Details Input: Lot ID = 'MMT-271901180.000'
+[2026-10-30 13:26:24] Lot Details Input: MPC = '58973QRTBV04'
+[2026-10-30 13:26:24] [Get STDF] Lot Details: Lot ID='MMT-271901180.000', MPC='58973QRTBV04', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:26:24] Get STDF: Lot ID 'MMT-271901180.000', MPC '58973QRTBV04'
+[2026-10-30 13:26:24]   Tester: LTX
+[2026-10-30 13:26:24]   Device folder(s): ATA5831*
+[2026-10-30 13:26:24]   Network base(s):
+[2026-10-30 13:26:24]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 13:26:24]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:26:24]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-8M33HDP
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-M33HDP
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831V-WNQW
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-EDR_READ
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-M33HDP
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:26:24] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:26:24]   Skipped (excluded pattern): mmt-271901180.000_correlation_e_20260822050842_6140_2608220525.std.old
+[2026-10-30 13:26:24]   Skipped (excluded pattern): mmt-271901180.000_qver_q_20260823100415_6141_2608231015.std.old
+[2026-10-30 13:26:24] Search complete — 11 matching file(s) found.
+[2026-10-30 13:26:24] Get STDF Summary: Tester Used='LTX', Files Found=11, Source Device Folder(s)=data, ATA5831X-8M33HDP
+[2026-10-30 13:26:24] Get STDF: Found 11 matching STDF file(s) for Lot ID 'MMT-271901180.000' in device folder(s) ATA5831* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 13:26:24]   • ATA5831_MMT-271901180.000_1__20260822054242.std  [from folder: data (\\acpnetapp02\tsti\backend\data)]
+[2026-10-30 13:26:24]   • ATA5831_MMT-271901180.000_1__20260823040101.std  [from folder: data (\\acpnetapp02\tsti\backend\data)]
+[2026-10-30 13:26:24]   • mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_e_20260821113050_6140_2608212135.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_e_20260822054242_6140_2608221344.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_e_20260822140947_6140_2608221412.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_e_20260822142816_6140_2608222203.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_q_20260823013827_6141_2608230208.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24]   • mmt-271901180.000_q_20260824092616_6141_2608240928.std.old  [from folder: ATA5831X-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5831X-8M33HDP)]
+[2026-10-30 13:26:24] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271901180.000…
+[2026-10-30 13:26:24] Get STDF: Copying 11 file(s)…
+[2026-10-30 13:26:24] Copying 11 file(s) to: C:\FTDC\MMT-271901180.000
+[2026-10-30 13:26:27]   Copied: ATA5831_MMT-271901180.000_1__20260822054242.std
+[2026-10-30 13:26:27]   Copied: ATA5831_MMT-271901180.000_1__20260823040101.std
+[2026-10-30 13:26:27]   Copied: mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old
+[2026-10-30 13:26:29]   Copied: mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old
+[2026-10-30 13:26:29]   Copied: mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old
+[2026-10-30 13:26:36]   Copied: mmt-271901180.000_e_20260821113050_6140_2608212135.std.old
+[2026-10-30 13:26:39]   Copied: mmt-271901180.000_e_20260822054242_6140_2608221344.std.old
+[2026-10-30 13:26:39]   Copied: mmt-271901180.000_e_20260822140947_6140_2608221412.std.old
+[2026-10-30 13:26:45]   Copied: mmt-271901180.000_e_20260822142816_6140_2608222203.std.old
+[2026-10-30 13:26:46]   Copied: mmt-271901180.000_q_20260823013827_6141_2608230208.std.old
+[2026-10-30 13:26:46]   Copied: mmt-271901180.000_q_20260824092616_6141_2608240928.std.old
+[2026-10-30 13:26:46] Done - 11/11 file(s) copied to C:\FTDC\MMT-271901180.000
+[2026-10-30 13:26:46] Check STDF pre-warm: Checking 11 file(s) in background for 'MMT-271901180.000'.
+[2026-10-30 13:26:46] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old @ offset 86864 (0x15350) [parse 5-10 (PIR)]: 4 orphan PIR record(s) without matching PRR at EOF.
+[2026-10-30 13:26:46] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old [Count Reconciliation]: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:26:46] Check STDF [mmt-271901180.000_e_20260822140947_6140_2608221412.std.old]: Status=Corrupted, Total Parts=0, Tested Good=0, Mismatch/Discrepancy=PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:26:48] [WARNING] mmt-271901180.000_e_20260822054242_6140_2608221344.std.old [Count Reconciliation]: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:26:48] Check STDF [mmt-271901180.000_e_20260822054242_6140_2608221344.std.old]: Status=Mismatch, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:26:48] Check STDF [ATA5831_MMT-271901180.000_1__20260822054242.std]: Status=Completed, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=None
+[2026-10-30 13:26:48] Check STDF [mmt-271901180.000_q_20260823013827_6141_2608230208.std.old]: Status=Completed, Total Parts=240, Tested Good=224, Mismatch/Discrepancy=None
+[2026-10-30 13:26:49] Check STDF [mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old]: Status=Completed, Total Parts=1447, Tested Good=1149, Mismatch/Discrepancy=None
+[2026-10-30 13:26:49] Check STDF [mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old]: Status=Completed, Total Parts=18, Tested Good=3, Mismatch/Discrepancy=None
+[2026-10-30 13:26:50] Check STDF [mmt-271901180.000_e_20260821113050_6140_2608212135.std.old]: Status=Completed, Total Parts=5718, Tested Good=5288, Mismatch/Discrepancy=None
+[2026-10-30 13:26:50] Check STDF [ATA5831_MMT-271901180.000_1__20260823040101.std]: Status=Completed, Total Parts=31, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:26:50] Check STDF [mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old]: Status=Completed, Total Parts=15, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:26:50] Check STDF [mmt-271901180.000_q_20260824092616_6141_2608240928.std.old]: Status=Completed, Total Parts=15, Tested Good=15, Mismatch/Discrepancy=None
+[2026-10-30 13:26:50] Check STDF [mmt-271901180.000_e_20260822142816_6140_2608222203.std.old]: Status=Completed, Total Parts=5969, Tested Good=5470, Mismatch/Discrepancy=None
+[2026-10-30 13:26:51] [Check STDF] Lot Details: Lot ID='MMT-271901180.000', MPC='58973QRTBV04', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_e_20260821113050_6140_2608212135.std.old] (cached): Status=Completed, Total Parts=5718, Tested Good=5288, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [ATA5831_MMT-271901180.000_1__20260822054242.std] (cached): Status=Completed, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_e_20260822054242_6140_2608221344.std.old] (cached): Status=Mismatch, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_e_20260822140947_6140_2608221412.std.old] (cached): Status=Corrupted, Total Parts=0, Tested Good=0, Mismatch/Discrepancy=PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_e_20260822142816_6140_2608222203.std.old] (cached): Status=Completed, Total Parts=5969, Tested Good=5470, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old] (cached): Status=Completed, Total Parts=1447, Tested Good=1149, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_q_20260823013827_6141_2608230208.std.old] (cached): Status=Completed, Total Parts=240, Tested Good=224, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old] (cached): Status=Completed, Total Parts=18, Tested Good=3, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old] (cached): Status=Completed, Total Parts=15, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [ATA5831_MMT-271901180.000_1__20260823040101.std] (cached): Status=Completed, Total Parts=31, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF [mmt-271901180.000_q_20260824092616_6141_2608240928.std.old] (cached): Status=Completed, Total Parts=15, Tested Good=15, Mismatch/Discrepancy=None
+[2026-10-30 13:26:52] Check STDF: 11 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-10-30 13:26:52] Check STDF: All 11 file(s) loaded from cache.
+[2026-10-30 13:26:52] Check STDF Lot Summary [MMT-271901180.000]: Files=11, Quantity Total Parts=17,565, Quantity Tested Good=15,947, Mismatches=mmt-271901180.000_e_20260822054242_6140_2608221344.std.old: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899); mmt-271901180.000_e_20260822140947_6140_2608221412.std.old: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:28] Lot Details Input: Lot ID = 'MMT-271901180.000'
+[2026-10-30 13:27:30] Lot Details Input: MPC = '58973QRTBV04'
+[2026-10-30 13:27:30] [Check STDF] Lot Details: Lot ID='MMT-271901180.000', MPC='58973QRTBV04', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:27:31] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old @ offset 86864 (0x15350) [parse 5-10 (PIR)]: 4 orphan PIR record(s) without matching PRR at EOF.
+[2026-10-30 13:27:31] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old [Count Reconciliation]: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:31] Check STDF [mmt-271901180.000_e_20260822140947_6140_2608221412.std.old]: Status=Corrupted, Total Parts=0, Tested Good=0, Mismatch/Discrepancy=PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:31] [WARNING] mmt-271901180.000_e_20260822054242_6140_2608221344.std.old [Count Reconciliation]: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:27:31] Check STDF [mmt-271901180.000_e_20260822054242_6140_2608221344.std.old]: Status=Mismatch, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:27:31] Check STDF [ATA5831_MMT-271901180.000_1__20260822054242.std]: Status=Completed, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=None
+[2026-10-30 13:27:31] Check STDF [mmt-271901180.000_e_20260821113050_6140_2608212135.std.old]: Status=Completed, Total Parts=5718, Tested Good=5288, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old]: Status=Completed, Total Parts=1447, Tested Good=1149, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000_q_20260823013827_6141_2608230208.std.old]: Status=Completed, Total Parts=240, Tested Good=224, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old]: Status=Completed, Total Parts=18, Tested Good=3, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old]: Status=Completed, Total Parts=15, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [ATA5831_MMT-271901180.000_1__20260823040101.std]: Status=Completed, Total Parts=31, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000_q_20260824092616_6141_2608240928.std.old]: Status=Completed, Total Parts=15, Tested Good=15, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF [mmt-271901180.000_e_20260822142816_6140_2608222203.std.old]: Status=Completed, Total Parts=5969, Tested Good=5470, Mismatch/Discrepancy=None
+[2026-10-30 13:27:32] Check STDF Lot Summary [MMT-271901180.000]: Files=11, Quantity Total Parts=17,565, Quantity Tested Good=15,947, Mismatches=mmt-271901180.000_e_20260822054242_6140_2608221344.std.old: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899); mmt-271901180.000_e_20260822140947_6140_2608221412.std.old: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:53] Lot Details Input: Lot ID = 'MMT-271901180.000'
+[2026-10-30 13:27:55] Lot Details Input: MPC = '58973QRTBV04'
+[2026-10-30 13:27:55] [Check STDF] Lot Details: Lot ID='MMT-271901180.000', MPC='58973QRTBV04', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:27:56] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old @ offset 86864 (0x15350) [parse 5-10 (PIR)]: 4 orphan PIR record(s) without matching PRR at EOF.
+[2026-10-30 13:27:56] [WARNING] mmt-271901180.000_e_20260822140947_6140_2608221412.std.old [Count Reconciliation]: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:56] Check STDF [mmt-271901180.000_e_20260822140947_6140_2608221412.std.old]: Status=Corrupted, Total Parts=0, Tested Good=0, Mismatch/Discrepancy=PCR Part(1) != PRR(0); SBR Part(1) != PRR(0)
+[2026-10-30 13:27:56] Check STDF [ATA5831_MMT-271901180.000_1__20260822054242.std]: Status=Completed, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=None
+[2026-10-30 13:27:56] [WARNING] mmt-271901180.000_e_20260822054242_6140_2608221344.std.old [Count Reconciliation]: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:27:56] Check STDF [mmt-271901180.000_e_20260822054242_6140_2608221344.std.old]: Status=Mismatch, Total Parts=2056, Tested Good=1899, Mismatch/Discrepancy=PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:27:56] Check STDF [mmt-271901180.000_e_20260821113050_6140_2608212135.std.old]: Status=Completed, Total Parts=5718, Tested Good=5288, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000.rj1_w_20260822222002_6140_2608230101.std.old]: Status=Completed, Total Parts=1447, Tested Good=1149, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000_q_20260823013827_6141_2608230208.std.old]: Status=Completed, Total Parts=240, Tested Good=224, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000.rj1_q_20260823024019_6141_2608230247.std.old]: Status=Completed, Total Parts=18, Tested Good=3, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000.rj2_q_20260823030325_6141_2608230309.std.old]: Status=Completed, Total Parts=15, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [ATA5831_MMT-271901180.000_1__20260823040101.std]: Status=Completed, Total Parts=31, Tested Good=0, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000_q_20260824092616_6141_2608240928.std.old]: Status=Completed, Total Parts=15, Tested Good=15, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF [mmt-271901180.000_e_20260822142816_6140_2608222203.std.old]: Status=Completed, Total Parts=5969, Tested Good=5470, Mismatch/Discrepancy=None
+[2026-10-30 13:27:57] Check STDF Lot Summary [MMT-271901180.000]: Files=11, Quantity Total Parts=17,565, Quantity Tested Good=15,947, Mismatches=mmt-271901180.000_e_20260822140947_6140_2608221412.std.old: PCR Part(1) != PRR(0); SBR Part(1) != PRR(0); mmt-271901180.000_e_20260822054242_6140_2608221344.std.old: PCR Part(0) != PRR(2056); PCR Good(0) != PRR Good(1899); SBR Part(0) != PRR(2056); SBR Good(0) != PRR Good(1899)
+[2026-10-30 13:28:09] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-10-30 13:28:11] Lot Details Input: MPC = '58974QRTBV60'
+[2026-10-30 13:28:15] [Check STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:28:17] ================================================================================
+[2026-10-30 13:28:17] [Get STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:28:17] Get STDF: Lot ID 'MMT-271500654.900', MPC '58974QRTBV60'
+[2026-10-30 13:28:17]   Tester: LTX
+[2026-10-30 13:28:17]   Device folder(s): ATA5833*
+[2026-10-30 13:28:17]   Network base(s):
+[2026-10-30 13:28:17]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 13:28:17]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:28:17]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:28:17] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:28:17] Search complete — 8 matching file(s) found.
+[2026-10-30 13:28:17] Get STDF Summary: Tester Used='LTX', Files Found=8, Source Device Folder(s)=ATA5833G-8M33HDP
+[2026-10-30 13:28:17] Get STDF: Found 8 matching STDF file(s) for Lot ID 'MMT-271500654.900' in device folder(s) ATA5833* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900_e_20260908221546_6140_2609091611.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17]   • mmt-271500654.900_q_20260910074509_6141_2609100806.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:28:17] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271500654.900…
+[2026-10-30 13:28:17] Get STDF: Copying 8 file(s)…
+[2026-10-30 13:28:17] Copying 8 file(s) to: C:\FTDC\MMT-271500654.900
+[2026-10-30 13:28:17]   Copied: mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-10-30 13:28:21]   Copied: mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old
+[2026-10-30 13:28:21]   Copied: mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old
+[2026-10-30 13:28:23]   Copied: mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old
+[2026-10-30 13:28:24]   Copied: mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old
+[2026-10-30 13:28:28]   Copied: mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old
+[2026-10-30 13:28:43]   Copied: mmt-271500654.900_e_20260908221546_6140_2609091611.std.old
+[2026-10-30 13:28:44]   Copied: mmt-271500654.900_q_20260910074509_6141_2609100806.std.old
+[2026-10-30 13:28:44] Done - 8/8 file(s) copied to C:\FTDC\MMT-271500654.900
+[2026-10-30 13:28:44] Check STDF pre-warm: Checking 8 file(s) in background for 'MMT-271500654.900'.
+[2026-10-30 13:28:48] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old]: Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-10-30 13:28:48] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old]: Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-10-30 13:28:48] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old]: Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-10-30 13:28:48] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old]: Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-10-30 13:28:49] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-10-30 13:28:49] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old]: Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-10-30 13:28:51] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old]: Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-10-30 13:28:52] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old]: Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-10-30 13:30:56] [Check STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old] (cached): Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old] (cached): Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old] (cached): Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old] (cached): Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old] (cached): Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old] (cached): Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old] (cached): Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old] (cached): Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-10-30 13:30:57] Check STDF: 8 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-10-30 13:30:57] Check STDF: All 8 file(s) loaded from cache.
+[2026-10-30 13:30:57] Check STDF Lot Summary [MMT-271500654.900]: Files=8, Quantity Total Parts=20,045, Quantity Tested Good=13,812, Mismatches=None
+[2026-10-30 13:31:07] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-10-30 13:31:09] Lot Details Input: MPC = '58974QRTBV60'
+[2026-10-30 13:31:09] [Check STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:31:11] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old]: Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-10-30 13:31:11] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old]: Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-10-30 13:31:11] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old]: Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-10-30 13:31:12] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old]: Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-10-30 13:31:12] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old]: Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-10-30 13:31:13] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-10-30 13:31:13] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old]: Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-10-30 13:31:13] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old]: Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-10-30 13:31:13] Check STDF Lot Summary [MMT-271500654.900]: Files=8, Quantity Total Parts=20,045, Quantity Tested Good=13,812, Mismatches=None
+[2026-10-30 13:31:21] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-10-30 13:31:22] ================================================================================
+[2026-10-30 13:31:22] Lot Details Input: MPC = '58974QRTBV60'
+[2026-10-30 13:31:22] [Get STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:31:22] Get STDF: Lot ID 'MMT-271500654.900', MPC '58974QRTBV60'
+[2026-10-30 13:31:22]   Tester: LTX
+[2026-10-30 13:31:22]   Device folder(s): ATA5833*
+[2026-10-30 13:31:22]   Network base(s):
+[2026-10-30 13:31:22]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 13:31:22]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:31:22]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:31:22]   Cache: 8 file(s) already in C:\FTDC\MMT-271500654.900 will be skipped.
+[2026-10-30 13:31:22]   Get STDF cache: 8 file(s) already in target folder will be skipped if unchanged (name + size + modified time).
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:31:22] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900_e_20260908221546_6140_2609091611.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900_q_20260910074509_6141_2609100806.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old
+[2026-10-30 13:31:23]   Skipped (already in target folder, unchanged): mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old
+[2026-10-30 13:31:23] Search complete — 0 matching file(s) found.
+[2026-10-30 13:38:54] [Check STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:38:56] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old]: Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-10-30 13:38:56] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old]: Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-10-30 13:38:56] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old]: Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-10-30 13:38:57] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old]: Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-10-30 13:38:57] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-10-30 13:38:57] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old]: Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-10-30 13:38:58] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old]: Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-10-30 13:38:58] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old]: Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-10-30 13:38:58] Check STDF Lot Summary [MMT-271500654.900]: Files=8, Quantity Total Parts=20,045, Quantity Tested Good=13,812, Mismatches=None
+[2026-10-30 13:39:12] Lot Details Input: Lot ID = 'MMT-272201128.000'
+[2026-10-30 13:39:13] Get FTDC Fail: Background fetch triggered for Lot ID 'MMT-272201128.000' (MPC '58975TSJBVM6' has 2 tester types: V93K, LTX)…
+[2026-10-30 13:39:13] Get FTDC Fail: Successfully connected using primary link: http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php
+[2026-10-30 13:39:13] Get FTDC Fail: SUCCESS for Lot ID 'MMT-272201128.000' via http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php — found 1 FAIL row(s).
+[2026-10-30 13:39:13]   FTDC Fail #1: Reply Message='Failed Validation Check4 Failed  Check1 Failed' | Comment='FT1 totalparts=0 totalgood=0 GUID=0 total reject=0 RUID=0 BIN11=0 bin90=0 ; RET totalparts=1247 totalgood=758 GUID=758 total reject=489 RUID=460 BIN11=6 bin90=1 ; QC qc_total=283 totalgood=270 total reject=8 qc_bin11=0 qc_bin90=0 other=0 ; Y=0; Z=0; Q=225; X=-17690; Trackinqty=18448' | Tester='ADVV93K-RF-005'
+[2026-10-30 13:39:13] Get FTDC Fail: Cached 1 FAIL row(s) for 'MMT-272201128.000' (detected tester(s): ADVV93K-RF-005).
+[2026-10-30 13:39:13] Lot Details Input: MPC = '58975TSJBVM6'
+[2026-10-30 13:39:13] [Check STDF] Lot Details: Lot ID='MMT-272201128.000', MPC='58975TSJBVM6', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:39:14] Check STDF [mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old]: Status=Completed, Total Parts=270, Tested Good=257, Mismatch/Discrepancy=None
+[2026-10-30 13:39:15] Check STDF [mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old]: Status=Completed, Total Parts=1247, Tested Good=758, Mismatch/Discrepancy=None
+[2026-10-30 13:39:15] Check STDF [mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old]: Status=Completed, Total Parts=13, Tested Good=13, Mismatch/Discrepancy=None
+[2026-10-30 13:39:24] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old]: Status=Completed, Total Parts=18946, Tested Good=17699, Mismatch/Discrepancy=None
+[2026-10-30 13:39:24] [WARNING] mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old [Count Reconciliation]: PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:39:24] Check STDF [mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old]: Status=Mismatch, Total Parts=18939, Tested Good=17692, Mismatch/Discrepancy=PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:39:24] Check STDF Lot Summary [MMT-272201128.000]: Files=5, Quantity Total Parts=39,415, Quantity Tested Good=36,419, Mismatches=mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old: PCR Part(18946) != PRR(18939); PCR Good(17699) != PRR Good(17692); SBR Part(18946) != PRR(18939); SBR Good(17699) != PRR Good(17692)
+[2026-10-30 13:39:25] Check STDF [Load All]: Skipped 'mmt-272201128.000_e_20260915055905_6150_2609160855.stdf.old' (status: Mismatch; only 'Completed' files are loaded).
+[2026-10-30 13:39:25] Check STDF [Load All]: Loaded 'mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old' into FIRST PASS panel.
+[2026-10-30 13:39:25] Check STDF [Load All]: Loaded 'mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old' into RETEST panel.
+[2026-10-30 13:39:25] Check STDF [Load All]: Loaded 'mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old' into QC panel.
+[2026-10-30 13:39:25] Check STDF [Load All]: Loaded 'mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old' into QC panel.
+[2026-10-30 13:39:26] Check STDF [Load All]: Loaded 4 new file(s) (FIRST PASS: 1, RETEST: 1, QC: 2).
+[2026-10-30 13:39:43] Lot Details Input: First Pass Actual Good QTY = '123123'
+[2026-10-30 13:39:45] Lot Details Input: Total Actual Good QTY = '18448'
+[2026-10-30 13:39:45] [Run Analysis] Lot Details: Lot ID='MMT-272201128.000', MPC='58975TSJBVM6', First Pass Actual Good QTY='123123', Total Actual Good QTY='18448'
+[2026-10-30 13:39:45] ================================================================================
+[2026-10-30 13:39:45] Starting Get Data...
+[2026-10-30 13:39:45] FIRST PASS files: 1
+[2026-10-30 13:39:45] RETEST files: 1
+[2026-10-30 13:39:45] QC files: 2
+[2026-10-30 13:39:45] Manual filter: Disabled / not used
+[2026-10-30 13:39:45] File parsing order: Timestamp ascending within each panel (first valid YYYYMMDDHHMMSS in filename; filename fallback).
+[2026-10-30 13:39:45] ================================================================================
+[2026-10-30 13:39:45] Starting STDF WXY / Duplicate GUID analysis
+[2026-10-30 13:39:45] Lot ID: MMT-272201128.000
+[2026-10-30 13:39:45] MPC: 58975TSJBVM6
+[2026-10-30 13:39:45] First Pass Actual Good QTY: 123,123
+[2026-10-30 13:39:45] Total Actual Good QTY: 18,448
+[2026-10-30 13:39:45] WXY tests resolved from MPC prefix 58975: Wafer=342, X=343, Y=344
+[2026-10-30 13:39:45] Parsing 4 file(s) across ALL panels (FIRST PASS + RETEST + QC): 3 smaller file(s) in 3 worker process(es) + the largest datalog ('mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old') in the main process with live progress.
+[2026-10-30 13:40:11] 
+[2026-10-30 13:40:11] [FIRST PASS] [1/1] Processing C:/FTDC/MMT-272201128.000/mmt-272201128.000_e_20260915055905_6150_2609160853.stdf.old
+[2026-10-30 13:40:11] FIRST PASS parts accumulated: 18,946
+[2026-10-30 13:40:11] FIRST PASS summary: total=18,946, PASS=17,699, FAIL=1,247, missing WXY=297
+[2026-10-30 13:40:11] 
+[2026-10-30 13:40:11] [RETEST] [1/1] Processing C:/FTDC/MMT-272201128.000/mmt-272201128.000_w_rj1_20260916085740_6150_2609161155.stdf.old
+[2026-10-30 13:40:11] RETEST parts accumulated: 1,247
+[2026-10-30 13:40:11] RETEST summary: total=1,247, PASS=758, FAIL=489, missing WXY=30
+[2026-10-30 13:40:11] 
+[2026-10-30 13:40:11] [QC] [1/2] Processing C:/FTDC/MMT-272201128.000/mmt-272201128.000_q_20260916124524_6155_2609161315.stdf.old
+[2026-10-30 13:40:11] QC parts accumulated: 270
+[2026-10-30 13:40:11] 
+[2026-10-30 13:40:11] [QC] [2/2] Processing C:/FTDC/MMT-272201128.000/mmt-272201128.000_q_rj1_20260916131649_6155_2609161325.stdf.old
+[2026-10-30 13:40:11] QC parts accumulated: 283
+[2026-10-30 13:40:11] QC summary: total=283, PASS=270, FAIL=13, missing WXY=5
+[2026-10-30 13:40:11] --------------------------------------------------------------------------------
+[2026-10-30 13:40:11] Duplicate WXY in FIRST PASS datalog (any test result): 0
+[2026-10-30 13:40:11] Duplicate GUID - FIRST PASS original duplicate: 3
+[2026-10-30 13:40:11] Duplicate GUID rule: the first duplicate against an established FIRST PASS PASS original is counted here.
+[2026-10-30 13:40:11] Duplicate GUID - RETEST duplicate UID: 0
+[2026-10-30 13:40:11] RETEST duplicate UID rule: once a WXY has already passed in RETEST, any later RETEST row with the same WXY is counted here regardless of the current row PASS/FAIL result.
+[2026-10-30 13:40:11] Total Duplicate GUID: 3
+[2026-10-30 13:40:11] FP rejects not in RETEST: 23
+[2026-10-30 13:40:11] FP rejects not in RETEST rule: FIRST PASS FAIL WXY missing from RETEST WXY, excluding FIRST PASS HARD_BIN 3 rejects.
+[2026-10-30 13:40:11] QC Sampling units good in previous operation: 270
+[2026-10-30 13:40:11] QC Sampling units failed/missing in previous operation: 0
+[2026-10-30 13:40:11] QC Duplicate GUID (within QC): 8
+[2026-10-30 13:40:11] Calculated First Pass QTY = FIRST PASS PASS parts - Duplicate GUID = 17,696
+[2026-10-30 13:40:11] Comparison = Calculated First Pass QTY (17,696) - First Pass Actual Good QTY (123,123) = -105,427
+[2026-10-30 13:40:11] First Pass Result: FAIL
+[2026-10-30 13:40:11] Total PASS parts = FIRST PASS PASS (17,699) + RETEST PASS (758) = 18,457
+[2026-10-30 13:40:11] Total Good = Total PASS parts - Total Duplicate GUID = 18,454
+[2026-10-30 13:40:11] Total Good Comparison = Total Good (18,454) - Total Actual Good QTY (18,448) = 6
+[2026-10-30 13:40:11] Total Good Result: PASS
+[2026-10-30 13:40:11] FTDC Check 1: PASS  |  Check 2: PASS  |  Check 4: PASS
+[2026-10-30 13:40:11] Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-10-30 13:40:11] FTDC Server Fails for Lot 'MMT-272201128.000' (1 fail row(s)):
+[2026-10-30 13:40:11]   FTDC Server Fail #1: Reply Message='Failed Validation Check4 Failed  Check1 Failed' | Comment='FT1 totalparts=0 totalgood=0 GUID=0 total reject=0 RUID=0 BIN11=0 bin90=0 ; RET totalparts=1247 totalgood=758 GUID=758 total reject=489 RUID=460 BIN11=6 bin90=1 ; QC qc_total=283 totalgood=270 total reject=8 qc_bin11=0 qc_bin90=0 other=0 ; Y=0; Z=0; Q=225; X=-17690; Trackinqty=18448' | Tester='ADVV93K-RF-005'
+[2026-10-30 13:40:11] --------------------------------------------------------------------------------
+[2026-10-30 13:40:11] Run Analysis Detailed Report (WXY, Counts, FTDC Criteria & Result):
+[2026-10-30 13:40:11]   [General]
+[2026-10-30 13:40:11]   Lot ID: MMT-272201128.000
+[2026-10-30 13:40:11]   MPC: 58975TSJBVM6
+[2026-10-30 13:40:11]   Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-10-30 13:40:11]   Wafer Test Number: 342
+[2026-10-30 13:40:11]   X Test Number: 343
+[2026-10-30 13:40:11]   Y Test Number: 344
+[2026-10-30 13:40:11]   [FTDC Criteria]
+[2026-10-30 13:40:11]   Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-10-30 13:40:11]   [Check 1] - If Total Actual Good QTY is greater than Total Tested Good w/o Duplicate UID, then result will be 'FAIL'. Otherwise, result will be 'PASS'.
+[2026-10-30 13:40:11]   [Result: PASS] - No negative variance was detected.
+[2026-10-30 13:40:11]   [Check 2] - If there are too many good units that were retested, then result will be 'FAIL'.
+[2026-10-30 13:40:11]   [Result: PASS] - Total duplicate good units are less than or equal to 72 units.
+[2026-10-30 13:40:11]   [Check 4] - If all QC samples are confirmed FT good parts, then result will be 'PASS'. Otherwise, it will be 'FAIL'.
+[2026-10-30 13:40:11]   [Result: PASS] - All QC units are confirmed PASS in previous operation.
+[2026-10-30 13:40:11]   These are the possible reasons for Check 1 and/or Check 4 Fail:
+[2026-10-30 13:40:11]   1) Corrupted STDF - Please double check each STDF, retrieve all corrupted datalog.
+[2026-10-30 13:40:11]   2) Wrong/Incomplete STDF files attached - Kindly make sure you attached the previous FT step stdf and all RETESTs stdf. Also, if the datalog/summary was cut off, then attach the continuation of that STDF/datalog.
+[2026-10-30 13:40:11]   3) Duplicate WXY in FIRST PASS - Please verify and confirm if there are duplicate WXYs in the FIRST PASS stdf.
+[2026-10-30 13:40:11]   4) Incorrect Actual Good QTY input - Kindly double check the ACTUAL GOOD QUANTITY, perform recount if possible.
+[2026-10-30 13:40:11]   [FT]
+[2026-10-30 13:40:11]   Duplicate Good UID: 3
+[2026-10-30 13:40:11]   FP rejects not in RETEST: 23
+[2026-10-30 13:40:11]   BIN3 NO RETEST: 2
+[2026-10-30 13:40:11]   FIRST PASS Total parts: 18,946
+[2026-10-30 13:40:11]   FIRST PASS PASS parts: 17,699
+[2026-10-30 13:40:11]   FIRST PASS FAIL parts: 1,247
+[2026-10-30 13:40:11]   FIRST PASS Missing WXY: 297
+[2026-10-30 13:40:11]   RETEST Total parts: 1,247
+[2026-10-30 13:40:11]   RETEST PASS parts: 758
+[2026-10-30 13:40:11]   RETEST FAIL parts: 489
+[2026-10-30 13:40:11]   RETEST Missing WXY: 30
+[2026-10-30 13:40:11]   [QC]
+[2026-10-30 13:40:11]   Total parts: 283
+[2026-10-30 13:40:11]   PASS parts: 270
+[2026-10-30 13:40:11]   FAIL parts: 13
+[2026-10-30 13:40:11]   Missing WXY: 5
+[2026-10-30 13:40:11]   Duplicate GUID within QC: 8
+[2026-10-30 13:40:11]   QC Sampling units good in previous operation: 270
+[2026-10-30 13:40:11]   [FT]
+[2026-10-30 13:40:11]   Calculated First Pass QTY: 17,696
+[2026-10-30 13:40:11]   Total PASS parts: 18,457
+[2026-10-30 13:40:11]   Total Good: 18,454
+[2026-10-30 13:40:11] Run Analysis Final Result: First Pass Result=FAIL | Total Good Result=PASS | Check 1=PASS | Check 2=PASS | Check 4=PASS
+[2026-10-30 13:40:11] Run Analysis Remarks: There is abnormality or discrepancy observed in FIRST PASS process. Please check.
+[2026-10-30 13:40:14] Attach Excel to PPO: Excel ready - automatically attaching 'MMT-272201128.000_FTDC_20261030134011.xlsx' to '\\chip\PPOonline\58975\MMT-272201128.000'.
+[2026-10-30 13:40:20] Attach Excel to PPO: SUCCESS - Attached 'MMT-272201128.000_FTDC_20261030134011.xlsx' to 1 PPO subfolder(s): \\chip\PPOonline\58975\MMT-272201128.000\A260916-0146\MMT-272201128.000_FTDC_20261030134011.xlsx
+[2026-10-30 13:40:49] [Run Analysis] Lot Details: Lot ID='MMT-272201128.000', MPC='58975TSJBVM6', First Pass Actual Good QTY='123123', Total Actual Good QTY='18448'
+[2026-10-30 13:40:49] ================================================================================
+[2026-10-30 13:40:49] Using cached result for the current session. No STDF reprocessing was needed.
+[2026-10-30 13:58:10] Lot Details Input: Lot ID = 'MMT-271500654.900'
+[2026-10-30 13:58:11] ================================================================================
+[2026-10-30 13:58:11] Lot Details Input: MPC = '58974QRTBV60'
+[2026-10-30 13:58:11] [Get STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 13:58:11] Get STDF: Lot ID 'MMT-271500654.900', MPC '58974QRTBV60'
+[2026-10-30 13:58:11]   Tester: LTX
+[2026-10-30 13:58:11]   Device folder(s): ATA5833*
+[2026-10-30 13:58:11]   Network base(s):
+[2026-10-30 13:58:11]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 13:58:11]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:58:11]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M
+[2026-10-30 13:58:11] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP
+[2026-10-30 13:58:12] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1
+[2026-10-30 13:58:12] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL
+[2026-10-30 13:58:12] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP
+[2026-10-30 13:58:12] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 13:58:12] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 13:58:12] Search complete — 8 matching file(s) found.
+[2026-10-30 13:58:12] Get STDF Summary: Tester Used='LTX', Files Found=8, Source Device Folder(s)=ATA5833G-8M33HDP
+[2026-10-30 13:58:12] Get STDF: Found 8 matching STDF file(s) for Lot ID 'MMT-271500654.900' in device folder(s) ATA5833* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900_e_20260908221546_6140_2609091611.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12]   • mmt-271500654.900_q_20260910074509_6141_2609100806.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 13:58:12] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271500654.900…
+[2026-10-30 13:58:12] Get STDF: Copying 8 file(s)…
+[2026-10-30 13:58:12] Copying 8 file(s) to: C:\FTDC\MMT-271500654.900
+[2026-10-30 13:58:12]   Copied: mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-10-30 13:58:18]   Copied: mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old
+[2026-10-30 13:58:18]   Copied: mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old
+[2026-10-30 13:58:20]   Copied: mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old
+[2026-10-30 13:58:21]   Copied: mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old
+[2026-10-30 13:58:25]   Copied: mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old
+[2026-10-30 13:58:48]   Copied: mmt-271500654.900_e_20260908221546_6140_2609091611.std.old
+[2026-10-30 13:58:49]   Copied: mmt-271500654.900_q_20260910074509_6141_2609100806.std.old
+[2026-10-30 13:58:49] Done - 8/8 file(s) copied to C:\FTDC\MMT-271500654.900
+[2026-10-30 13:58:49] Check STDF pre-warm: Checking 8 file(s) in background for 'MMT-271500654.900'.
+[2026-10-30 13:58:52] Check STDF [mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old]: Status=Completed, Total Parts=960, Tested Good=366, Mismatch/Discrepancy=None
+[2026-10-30 13:58:53] Check STDF [mmt-271500654.900_q_20260910074509_6141_2609100806.std.old]: Status=Completed, Total Parts=240, Tested Good=230, Mismatch/Discrepancy=None
+[2026-10-30 13:58:53] Check STDF [mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old]: Status=Completed, Total Parts=10, Tested Good=9, Mismatch/Discrepancy=None
+[2026-10-30 13:58:53] Check STDF [mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old]: Status=Completed, Total Parts=1, Tested Good=1, Mismatch/Discrepancy=None
+[2026-10-30 13:58:57] Check STDF [mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old]: Status=Completed, Total Parts=1560, Tested Good=606, Mismatch/Discrepancy=None
+[2026-10-30 13:58:57] Check STDF [mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old]: Status=Completed, Total Parts=2361, Tested Good=2147, Mismatch/Discrepancy=None
+[2026-10-30 13:58:57] Check STDF [mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old]: Status=Completed, Total Parts=2978, Tested Good=1415, Mismatch/Discrepancy=None
+[2026-10-30 13:58:58] Check STDF [mmt-271500654.900_e_20260908221546_6140_2609091611.std.old]: Status=Completed, Total Parts=11935, Tested Good=9038, Mismatch/Discrepancy=None
+[2026-10-30 14:40:43] ================================================================================
+[2026-10-30 14:40:43] [Get STDF] Lot Details: Lot ID='MMT-271500654.900', MPC='58974QRTBV60', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-10-30 14:40:43] Get STDF: Lot ID 'MMT-271500654.900', MPC '58974QRTBV60'
+[2026-10-30 14:40:43]   Tester: LTX
+[2026-10-30 14:40:43]   Device folder(s): ATA5833*
+[2026-10-30 14:40:43]   Network base(s):
+[2026-10-30 14:40:43]     - \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2
+[2026-10-30 14:40:43]     - \\acpnetapp02\tsti\backend\data
+[2026-10-30 14:40:43]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_HTOL
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-EDR_READ
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833H-8M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833V-M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-8M33HDP1
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-EDR_HTOL
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833X-M33HDP
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\tsti\backend\data
+[2026-10-30 14:40:44] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-10-30 14:40:44] Search complete — 8 matching file(s) found.
+[2026-10-30 14:40:44] Get STDF Summary: Tester Used='LTX', Files Found=8, Source Device Folder(s)=ATA5833G-8M33HDP
+[2026-10-30 14:40:44] Get STDF: Found 8 matching STDF file(s) for Lot ID 'MMT-271500654.900' in device folder(s) ATA5833* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj1_w_20260909164157_6140_2609092134.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj2_q_20260910082202_6141_2609100823.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj2_w_20260909223641_6140_2609100138.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj3_w_20260910030215_6140_2609100539.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900.rj4_w_20260910203134_6140_2609110401.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900_e_20260908221546_6140_2609091611.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44]   • mmt-271500654.900_q_20260910074509_6141_2609100806.std.old  [from folder: ATA5833G-8M33HDP (\\acpnetapp02\ftdirectory\backend\data\stdf\ltx2\ATA5833G-8M33HDP)]
+[2026-10-30 14:40:44] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-271500654.900…
+[2026-10-30 14:40:44] Get STDF: Copying 8 file(s)…
+[2026-10-30 14:40:44] Copying 8 file(s) to: C:\FTDC\MMT-271500654.900
+[2026-10-30 14:40:44]   Copied: mmt-271500654.900.rj1_q_20260910081346_6141_2609100815.std.old
+[2026-10-30 14:40:46] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261030_144046.log

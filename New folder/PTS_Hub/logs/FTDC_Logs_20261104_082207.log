@@ -1,0 +1,77 @@
+[2026-11-04 07:46:57] Lot Details Input: Lot ID = 'MMT-272500536.800'
+[2026-11-04 07:46:59] ================================================================================
+[2026-11-04 07:46:59] Lot Details Input: MPC = 'SG406QRTBA02'
+[2026-11-04 07:46:59] [Get STDF] Lot Details: Lot ID='MMT-272500536.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 07:46:59] Get STDF: Lot ID 'MMT-272500536.800', MPC 'SG406QRTBA02'
+[2026-11-04 07:46:59]   Tester: V93K
+[2026-11-04 07:46:59]   Device folder(s): PIC32CX5109BZ*
+[2026-11-04 07:46:59]   Network base(s):
+[2026-11-04 07:46:59]     - \\acpnetapp02\ftdirectory\backend\data\stdf\v93k
+[2026-11-04 07:46:59]     - \\acpnetapp02\tsti\backend\data
+[2026-11-04 07:46:59]     - \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 07:46:59]   Valid STDF filename conventions (mask 'SG406', V93K):
+[2026-11-04 07:46:59]     - FIRST PASS: {lot}_e_{timestamp}
+[2026-11-04 07:46:59]     - RETEST: {lot}_w_rj{N}_{timestamp}
+[2026-11-04 07:46:59]     - QC: {lot}_q_{timestamp}
+[2026-11-04 07:46:59]     - QC RETEST: {lot}_q_rj{N}_{timestamp}
+[2026-11-04 07:46:59]   Cache: 1 file(s) already in C:\FTDC\MMT-272500536.800 will be skipped.
+[2026-11-04 07:46:59]   Get STDF cache: 1 file(s) already in target folder will be skipped if unchanged (name + size + modified time).
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ3-Engg
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31048T
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36032T
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ36048T
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\tsti\backend\data
+[2026-11-04 07:46:59] Searching: \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\RETRIEVED_DATALOG
+[2026-11-04 07:47:00]   Skipped (not a valid STDF filename convention): mmt-272500536.800_correl_e_20261029175316_ft1_2610291935.stdf.old
+[2026-11-04 07:47:00]   Skipped (not a valid STDF filename convention): mmt-272500536.800_correl_e_20261029194005_ft1_2610292009.stdf.old
+[2026-11-04 07:47:00]   Skipped (already in target folder, unchanged): mmt-272500536.800_w_rj1_20261103094349_ft2_2611031313.stdf.old
+[2026-11-04 07:47:00] Search complete — 5 matching file(s) found.
+[2026-11-04 07:47:00] Get STDF Summary: Tester Used='V93K', Files Found=5, Source Device Folder(s)=PIC32CX5109BZ31032T
+[2026-11-04 07:47:00] Get STDF: Found 5 matching STDF file(s) for Lot ID 'MMT-272500536.800' in device folder(s) PIC32CX5109BZ* and common folder(s): ...\backend\data, ...\Shared_Engineering_Directory\RETRIEVED_DATALOG.
+[2026-11-04 07:47:00]   • mmt-272500536.800_e_20261029201620_ft1_2610302255.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-04 07:47:00]   • mmt-272500536.800_e_20261102163224_ft2_2611030619.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-04 07:47:00]   • mmt-272500536.800_q_20261103151704_qc1_2611031614.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-04 07:47:00]   • mmt-272500536.800_q_rj1_20261103161639_qc1_2611031624.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-04 07:47:00]   • mmt-272500536.800_w_rj1_20261030225712_ft1_2610310237.stdf.old  [from folder: PIC32CX5109BZ31032T (\\acpnetapp02\ftdirectory\backend\data\stdf\v93k\PIC32CX5109BZ31032T)]
+[2026-11-04 07:47:00] Get STDF: Automatically proceeding to copy all files to C:\FTDC\MMT-272500536.800…
+[2026-11-04 07:47:00] Get STDF: Copying 5 file(s)…
+[2026-11-04 07:47:00] Copying 5 file(s) to: C:\FTDC\MMT-272500536.800
+[2026-11-04 07:47:01]   Copied: mmt-272500536.800_q_rj1_20261103161639_qc1_2611031624.stdf.old
+[2026-11-04 07:47:01]   Copied: mmt-272500536.800_q_20261103151704_qc1_2611031614.stdf.old
+[2026-11-04 07:47:05]   Copied: mmt-272500536.800_w_rj1_20261030225712_ft1_2610310237.stdf.old
+[2026-11-04 07:47:22]   Copied: mmt-272500536.800_e_20261102163224_ft2_2611030619.stdf.old
+[2026-11-04 07:47:25]   Copied: mmt-272500536.800_e_20261029201620_ft1_2610302255.stdf.old
+[2026-11-04 07:47:25] Done - 5/5 file(s) copied to C:\FTDC\MMT-272500536.800
+[2026-11-04 07:47:25] Check STDF pre-warm: Checking 6 file(s) in background for 'MMT-272500536.800'.
+[2026-11-04 07:47:26] Check STDF [mmt-272500536.800_w_rj1_20261103094349_ft2_2611031313.stdf.old]: Status=Completed, Total Parts=1690, Tested Good=1362, Mismatch/Discrepancy=None
+[2026-11-04 07:47:26] Check STDF [mmt-272500536.800_w_rj1_20261030225712_ft1_2610310237.stdf.old]: Status=Completed, Total Parts=1716, Tested Good=1189, Mismatch/Discrepancy=None
+[2026-11-04 07:47:27] Check STDF [mmt-272500536.800_q_rj1_20261103161639_qc1_2611031624.stdf.old]: Status=Completed, Total Parts=10, Tested Good=10, Mismatch/Discrepancy=None
+[2026-11-04 07:47:27] Check STDF [mmt-272500536.800_q_20261103151704_qc1_2611031614.stdf.old]: Status=Completed, Total Parts=489, Tested Good=479, Mismatch/Discrepancy=None
+[2026-11-04 07:47:31] Check STDF [mmt-272500536.800_e_20261102163224_ft2_2611030619.stdf.old]: Status=Completed, Total Parts=14161, Tested Good=12434, Mismatch/Discrepancy=None
+[2026-11-04 07:47:32] Check STDF [mmt-272500536.800_e_20261029201620_ft1_2610302255.stdf.old]: Status=Completed, Total Parts=14552, Tested Good=13069, Mismatch/Discrepancy=None
+[2026-11-04 07:48:29] [Check STDF] Lot Details: Lot ID='MMT-272500536.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_e_20261029201620_ft1_2610302255.stdf.old] (cached): Status=Completed, Total Parts=14552, Tested Good=13069, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_w_rj1_20261030225712_ft1_2610310237.stdf.old] (cached): Status=Completed, Total Parts=1716, Tested Good=1189, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_e_20261102163224_ft2_2611030619.stdf.old] (cached): Status=Completed, Total Parts=14161, Tested Good=12434, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_w_rj1_20261103094349_ft2_2611031313.stdf.old] (cached): Status=Completed, Total Parts=1690, Tested Good=1362, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_q_20261103151704_qc1_2611031614.stdf.old] (cached): Status=Completed, Total Parts=489, Tested Good=479, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF [mmt-272500536.800_q_rj1_20261103161639_qc1_2611031624.stdf.old] (cached): Status=Completed, Total Parts=10, Tested Good=10, Mismatch/Discrepancy=None
+[2026-11-04 07:48:30] Check STDF: 6 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-11-04 07:48:30] Check STDF: All 6 file(s) loaded from cache.
+[2026-11-04 07:48:30] Check STDF Lot Summary [MMT-272500536.800]: Files=6, Quantity Total Parts=32,618, Quantity Tested Good=28,543, Mismatches=None
+[2026-11-04 07:48:36] [Check STDF] Lot Details: Lot ID='MMT-272500536.800', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_e_20261029201620_ft1_2610302255.stdf.old] (cached): Status=Completed, Total Parts=14552, Tested Good=13069, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_w_rj1_20261030225712_ft1_2610310237.stdf.old] (cached): Status=Completed, Total Parts=1716, Tested Good=1189, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_e_20261102163224_ft2_2611030619.stdf.old] (cached): Status=Completed, Total Parts=14161, Tested Good=12434, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_w_rj1_20261103094349_ft2_2611031313.stdf.old] (cached): Status=Completed, Total Parts=1690, Tested Good=1362, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_q_20261103151704_qc1_2611031614.stdf.old] (cached): Status=Completed, Total Parts=489, Tested Good=479, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF [mmt-272500536.800_q_rj1_20261103161639_qc1_2611031624.stdf.old] (cached): Status=Completed, Total Parts=10, Tested Good=10, Mismatch/Discrepancy=None
+[2026-11-04 07:48:36] Check STDF: 6 file(s) loaded from cache instantly; 0 new/changed file(s) to process.
+[2026-11-04 07:48:36] Check STDF: All 6 file(s) loaded from cache.
+[2026-11-04 07:48:36] Check STDF Lot Summary [MMT-272500536.800]: Files=6, Quantity Total Parts=32,618, Quantity Tested Good=28,543, Mismatches=None
+[2026-11-04 08:22:07] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261104_082207.log

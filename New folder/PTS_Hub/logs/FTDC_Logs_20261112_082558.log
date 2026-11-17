@@ -1,0 +1,25 @@
+[2026-11-12 08:20:08] Help: Opening presentation 'Automatic_FTDC_Checker_Process_Flow.pptx' from \\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\Automatic_FTDC_Checker
+[2026-11-12 08:23:43] Lot Details Input: Lot ID = 'ASCL262600068.400'
+[2026-11-12 08:23:46] Lot Details Input: MPC = 'SG406QRTBA00'
+[2026-11-12 08:23:51] [Check STDF] Lot Details: Lot ID='ASCL262600068.400', MPC='SG406QRTBA00', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-12 08:23:54] Check STDF [ascl262600068.400_e_20251031073528_ft1_2510310817.stdf.old.gz]: Status=Completed, Total Parts=490, Tested Good=457, Mismatch/Discrepancy=None
+[2026-11-12 08:23:55] Check STDF [ascl262600068.400_w_rj2_20251108165907_ft1_2511082005.stdf.old.gz]: Status=Completed, Total Parts=1257, Tested Good=86, Mismatch/Discrepancy=None
+[2026-11-12 08:23:56] Check STDF [ascl262600068.400_w_rj1_20251108104529_ft1_2511081632.stdf.old.gz]: Status=Completed, Total Parts=3104, Tested Good=1847, Mismatch/Discrepancy=None
+[2026-11-12 08:23:57] Check STDF [ascl262600068.400_e_20251107001135_ft1_2511070632.stdf.old.gz]: Status=Completed, Total Parts=3858, Tested Good=2424, Mismatch/Discrepancy=None
+[2026-11-12 08:23:57] Check STDF [ascl262600068.400_e_20251110124614_ft2_2511101536.stdf.old.gz]: Status=Completed, Total Parts=715, Tested Good=525, Mismatch/Discrepancy=None
+[2026-11-12 08:23:57] Check STDF [ascl262600068.400_e_20251109090233_ft2_2511091658.stdf.old.gz]: Status=Completed, Total Parts=2056, Tested Good=1597, Mismatch/Discrepancy=None
+[2026-11-12 08:23:58] Check STDF [ascl262600068.400_e_20251110192601_ft2_2511102221.stdf.old.gz]: Status=Completed, Total Parts=490, Tested Good=256, Mismatch/Discrepancy=None
+[2026-11-12 08:23:58] Check STDF [ascl262600068.400_e_20251111112409_ft2_2511111344.stdf.old.gz]: Status=Completed, Total Parts=78, Tested Good=45, Mismatch/Discrepancy=None
+[2026-11-12 08:23:59] Check STDF [ascl262600068.400_e_20251108205944_ft2_2511090849.stdf.old.gz]: Status=Completed, Total Parts=5775, Tested Good=4374, Mismatch/Discrepancy=None
+[2026-11-12 08:24:00] Check STDF [ascl262600068.400_e_20251111150100_ft2_2511111843.stdf.old.gz]: Status=Completed, Total Parts=2801, Tested Good=2269, Mismatch/Discrepancy=None
+[2026-11-12 08:24:00] Check STDF [ascl262600068.400_w_rj1_20251112051214_ft2_2511120615.stdf.old.gz]: Status=Completed, Total Parts=694, Tested Good=408, Mismatch/Discrepancy=None
+[2026-11-12 08:24:00] Check STDF [ascl262600068.400_w_rj1_20251112061804_ft2_2511120651.stdf.old.gz]: Status=Completed, Total Parts=268, Tested Good=174, Mismatch/Discrepancy=None
+[2026-11-12 08:24:02] Check STDF [ascl262600068.400_w_rj2_20251112101043_ft2_2511121524.stdf.old.gz]: Status=Completed, Total Parts=2139, Tested Good=1199, Mismatch/Discrepancy=None
+[2026-11-12 08:24:02] Check STDF [ascl262600068.400_w_rj1_20251111194349_ft2_2511120504.stdf.old.gz]: Status=Completed, Total Parts=4138, Tested Good=2379, Mismatch/Discrepancy=None
+[2026-11-12 08:24:02] Check STDF [ascl262600068.400_q_rj1_20251112173732_qc1_2511121818.stdf.old.gz]: Status=Completed, Total Parts=74, Tested Good=61, Mismatch/Discrepancy=None
+[2026-11-12 08:24:02] Check STDF [ascl262600068.400_q_rj2_20251112182042_qc1_2511121829.stdf.old.gz]: Status=Completed, Total Parts=13, Tested Good=10, Mismatch/Discrepancy=None
+[2026-11-12 08:24:02] Check STDF [ascl262600068.400_q_20251112162349_qc1_2511121736.stdf.old.gz]: Status=Completed, Total Parts=490, Tested Good=416, Mismatch/Discrepancy=None
+[2026-11-12 08:24:03] Check STDF [ascl262600068.400_e_20251110222259_ft2_2511110728.stdf.old.gz]: Status=Completed, Total Parts=7473, Tested Good=6471, Mismatch/Discrepancy=None
+[2026-11-12 08:24:07] Check STDF [ascl262600068.400_e_20251107120241_ft1_2511081040.stdf.old.gz]: Status=Completed, Total Parts=16609, Tested Good=14938, Mismatch/Discrepancy=None
+[2026-11-12 08:24:07] Check STDF Lot Summary [ASCL262600068.400]: Files=19, Quantity Total Parts=52,522, Quantity Tested Good=39,936, Mismatches=None
+[2026-11-12 08:25:58] Application closed. Log saved to C:\Users\A78133\Automatic-FTDC-Checker\New folder\PTS_Hub\logs\FTDC_Logs_20261112_082558.log

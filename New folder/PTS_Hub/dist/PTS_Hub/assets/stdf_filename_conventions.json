@@ -1,0 +1,110 @@
+{
+  "_comment": [
+    "Valid STDF filename conventions used by 'Get STDF' when extracting STDF files from the server.",
+    "A server file is fetched ONLY if its name matches one of the conventions configured for the",
+    "lot's MASK (first 5 characters of the MPC) and the selected TESTER platform. Everything else is ignored.",
+    "",
+    "Placeholders (matching is case-insensitive):",
+    "  {lot}       = the Lot ID exactly as entered (e.g. MMT-272500536.800)",
+    "  {N}         = retest number, one or more digits (e.g. rj1, rj2, rj12)",
+    "  {timestamp} = one or more digits (e.g. 20261030225712)",
+    "  {time}      = one or more digits (alias of {timestamp})",
+    "",
+    "A convention may appear anywhere in the filename (at the start, or in the middle preceded by a device prefix",
+    "like 'ATA5293_'). Anything after the convention must begin with '_' or '.' (e.g. '_ft1.stdf.old' or '.std.bak'),",
+    "and the file must have a valid STDF extension.",
+    "",
+    "To add a new FTDC device: add its 5-character mask under 'masks', and either reference a",
+    "shared platform template by name (e.g. \"V93K\": \"V93K\") or write its own conventions",
+    "object. Each category value may be a single string or a list of strings.",
+    "Restart the app after editing this file."
+  ],
+  "_tokens": {
+    "N": "\\d+",
+    "RJN": "RJ\\d+",
+    "rjn": "rj\\d+",
+    "timestamp": "\\d+",
+    "time": "\\d+"
+  },
+  "templates": {
+    "V93K": {
+      "FIRST PASS": [
+        "{lot}_e_{timestamp}"
+      ],
+      "RETEST": [
+        "{lot}_w_rj{N}_{timestamp}"
+      ],
+      "QC": [
+        "{lot}_q_{timestamp}"
+      ],
+      "QC RETEST": [
+        "{lot}_q_rj{N}_{timestamp}"
+      ]
+    },
+    "LTX": {
+      "FIRST PASS": [
+        "{lot}_e_{timestamp}",
+        "{lot}_1__{timestamp}"
+      ],
+      "RETEST": [
+        "{lot}.rj{N}_w_{timestamp}",
+        "{lot}.rj{N}_1__{timestamp}"
+      ],
+      "QC": [
+        "{lot}_q_{timestamp}",
+        "{lot}_1__{timestamp}"
+      ],
+      "QC RETEST": [
+        "{lot}.rj{N}_q_{timestamp}",
+        "{lot}.rj{N}_1__{timestamp}"
+      ]
+    }
+  },
+  "masks": {
+    "58975": {
+      "V93K": "V93K",
+      "LTX": "LTX"
+    },
+    "77A11": {
+      "V93K": "V93K"
+    },
+    "77A21": {
+      "V93K": "V93K"
+    },
+    "SG405": {
+      "V93K": "V93K"
+    },
+    "SG406": {
+      "V93K": "V93K"
+    },
+    "SG407": {
+      "V93K": "V93K"
+    },
+    "58909": {
+      "LTX": "LTX",
+      "V93K": "V93K"
+    },
+    "58973": {
+      "LTX": "LTX"
+    },
+    "58974": {
+      "LTX": "LTX"
+    },
+    "58976": {
+      "LTX": "LTX"
+    },
+    "77A0C": {
+      "LTX": "LTX"
+    },
+    "77A0E": {
+      "LTX": "LTX"
+    },
+    "77A0F": {
+      "LTX": "LTX"
+    },
+    "58919": {
+      "V93K": "V93K",
+      "LTX": "LTX"
+    }
+  }
+}
