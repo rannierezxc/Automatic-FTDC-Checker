@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import tkinter.font as tkfont
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait as _futures_wait
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -31,7 +31,8 @@ from core.widgets import (
 )
 from core.config import (
     get_asset_path, get_app_root, APP_VERSION,
-    get_mes_url, get_ftdc_fail_urls, get_local_dest_base, get_ppo_base_path, get_help_dir,
+    get_mes_url, get_ftdc_fail_urls, get_local_dest_base, get_ppo_base_path,
+    get_ppo_attach_timeout_sec, get_help_dir, is_developer_mode,
     FTDC_FAIL_PRIMARY_URL, FTDC_FAIL_BACKUP_URL, FTDC_FAIL_URLS,
     LOCAL_DEST_BASE, PPO_BASE_PATH, MES_URL,
 )
@@ -101,9 +102,9 @@ TOOLTIP_TOTAL_DUPLICATE_GOOD_UID = (
     "RETEST (2nd/3rd/nth RETEST) datalog. Possible affected of Handler Errors."
 )
 TOOLTIP_DUPLICATE_MACID = (
-    "Duplicate MACID means For every 1 BT MACID or 1 ZB MACID, it has multiple unique assigned UIDs. "
-    "Ex: 1 BT MACID (40:84:32:04:95:52) has 2 UID (1274021 & 1274023). "
-    "One MACID should only be assigned to one UID."
+    "Duplicate MACID means for every 1 BT MACID or 1 ZB MACID among PASS units, it has multiple unique assigned UIDs. "
+    "Ex: 1 BT MACID (40:84:32:04:95:52) has 2 PASS UIDs (1274021 & 1274023). "
+    "One MACID should only be assigned to one UID. FAIL units are not counted as duplicate MACIDs."
 )
 TOOLTIP_UNIQUE_VALID_GOOD = (
     "Should be 1 UNIT =  1 WXY = 1 UID = 1 BT MACID = 1 ZB MACID. Any discrepancy is not allowed."
@@ -401,6 +402,7 @@ def _merge_test_rows(rows):
 
 class FTDCCheckerFrame(ttk.Frame):
     PANELS = ("FIRST PASS", "RETEST", "QC")
+    ENABLE_TARGETED_PPO_ATTACH = False
 
     def __init__(self, parent, hub=None):
         import tkinter as tk
@@ -413,7 +415,10 @@ class FTDCCheckerFrame(ttk.Frame):
         self.tk_mod = tk
         self.ttk = ttk
         try:
-            self.style = setup_theme(self.root)
+            if not getattr(self.root, "_pts_theme_initialized", False):
+                self.style = setup_theme(self.root)
+            else:
+                self.style = ttk.Style(master=self.root)
         except Exception:
             self.style = ttk.Style()
 
@@ -438,6 +443,8 @@ class FTDCCheckerFrame(ttk.Frame):
         self.mpc_var = tk.StringVar()
         self.mpc_status_var = tk.StringVar(value="")
         self.mpc_status_label = None
+        self.ppo_var = tk.StringVar()
+        self._last_ppo_value = ""
         self.fp_actual_good_qty_var = tk.StringVar()
         self.total_actual_good_qty_var = tk.StringVar()
         self._session_log_lines: List[str] = []
@@ -534,6 +541,8 @@ class FTDCCheckerFrame(ttk.Frame):
         # Attach MPC auto-lookup: fires after the user stops typing in Lot ID
         self.lot_id_var.trace_add("write", self._on_lot_id_changed)
         self.mpc_var.trace_add("write", self._on_mpc_changed)
+        if self.ENABLE_TARGETED_PPO_ATTACH:
+            self.ppo_var.trace_add("write", self._on_ppo_changed)
         self.fp_actual_good_qty_var.trace_add("write", self._on_fp_qty_changed)
         self.total_actual_good_qty_var.trace_add("write", self._on_tot_qty_changed)
         atexit.register(self._atexit_save_session_log)
@@ -564,7 +573,8 @@ class FTDCCheckerFrame(ttk.Frame):
         # ── 1. Lot & Production Configuration Card (No hint text, compact & clean) ──
         input_card = ModernCard(workspace, text="Lot Details", padx=10, pady=4)
         input_card.grid(row=0, column=0, sticky="ew", padx=2, pady=(0, 6))
-        for c in range(4):
+        num_input_cols = 5 if self.ENABLE_TARGETED_PPO_ATTACH else 4
+        for c in range(num_input_cols):
             input_card.columnconfigure(c, weight=1, uniform="input_cols")
 
         # Col 0: Lot ID
@@ -614,18 +624,30 @@ class FTDCCheckerFrame(ttk.Frame):
         mpc_entry.grid(row=1, column=1, sticky="ew", padx=6, pady=(1, 4))
         mpc_entry.bind("<FocusOut>", lambda _e: self._log_lot_detail_if_changed("MPC", self.mpc_var.get()))
 
-        # Col 2: First Pass Actual Good QTY
+        qty_col_offset = 1 if self.ENABLE_TARGETED_PPO_ATTACH else 0
+        if self.ENABLE_TARGETED_PPO_ATTACH:
+            # Col 2: PPO# (hidden while targeted PPO attachment is disabled)
+            tk.Label(input_card, text="PPO#", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).grid(
+                row=0, column=2, sticky="w", padx=6, pady=(2, 1)
+            )
+            ppo_entry = ModernEntry(input_card, textvariable=self.ppo_var)
+            ppo_entry.grid(row=1, column=2, sticky="ew", padx=6, pady=(1, 4))
+            ppo_entry.bind("<FocusOut>", self._on_ppo_focus_out)
+
+        # Col 2/3: First Pass Actual Good QTY
+        fp_col = 2 + qty_col_offset
         fp_lbl_frame = tk.Frame(input_card, bg=CARD_BG)
-        fp_lbl_frame.grid(row=0, column=2, sticky="w", padx=6, pady=(2, 1))
+        fp_lbl_frame.grid(row=0, column=fp_col, sticky="w", padx=6, pady=(2, 1))
         tk.Label(fp_lbl_frame, text="First Pass Actual Good QTY", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).pack(side="left")
         InfoTooltipButton(fp_lbl_frame, text=TOOLTIP_FP_ACTUAL_GOOD, bg=CARD_BG).pack(side="left", padx=(4, 0))
         fp_qty_entry = ModernEntry(input_card, textvariable=self.fp_actual_good_qty_var)
-        fp_qty_entry.grid(row=1, column=2, sticky="ew", padx=6, pady=(1, 4))
+        fp_qty_entry.grid(row=1, column=fp_col, sticky="ew", padx=6, pady=(1, 4))
         fp_qty_entry.bind("<FocusOut>", lambda _e: self._log_lot_detail_if_changed("First Pass Actual Good QTY", self.fp_actual_good_qty_var.get()))
 
-        # Col 3: Total Actual Good QTY (+ Help button on the right of the label row)
+        # Col 3/4: Total Actual Good QTY (+ Help button on the right of the label row)
+        tot_col = 3 + qty_col_offset
         tot_lbl_frame = tk.Frame(input_card, bg=CARD_BG)
-        tot_lbl_frame.grid(row=0, column=3, sticky="ew", padx=6, pady=(2, 1))
+        tot_lbl_frame.grid(row=0, column=tot_col, sticky="ew", padx=6, pady=(2, 1))
         tk.Label(tot_lbl_frame, text="Total Actual Good QTY", font=FONT_LABEL, bg=CARD_BG, fg=TEXT_FG).pack(side="left")
         InfoTooltipButton(tot_lbl_frame, text=TOOLTIP_TOTAL_ACTUAL_GOOD, bg=CARD_BG).pack(side="left", padx=(4, 0))
         self.help_button = ModernHoverButton(
@@ -639,7 +661,7 @@ class FTDCCheckerFrame(ttk.Frame):
         self.help_button.pack(side="right")
         attach_tooltip(self.help_button, TOOLTIP_HELP_BUTTON)
         tot_qty_entry = ModernEntry(input_card, textvariable=self.total_actual_good_qty_var)
-        tot_qty_entry.grid(row=1, column=3, sticky="ew", padx=6, pady=(1, 4))
+        tot_qty_entry.grid(row=1, column=tot_col, sticky="ew", padx=6, pady=(1, 4))
         tot_qty_entry.bind("<FocusOut>", lambda _e: self._log_lot_detail_if_changed("Total Actual Good QTY", self.total_actual_good_qty_var.get()))
 
         # ── 2. Central Split: File Management (Left) vs Controls & Filter (Right) ─
@@ -1284,6 +1306,10 @@ class FTDCCheckerFrame(ttk.Frame):
             val = self.mpc_var.get().strip()
             if val:
                 self._log_lot_detail_if_changed("MPC", val)
+        elif field_name == "PPO#" and self.ENABLE_TARGETED_PPO_ATTACH:
+            val = self.ppo_var.get().strip().upper()
+            if val:
+                self._log_lot_detail_if_changed("PPO#", val)
         elif field_name == "First Pass Actual Good QTY":
             val = self.fp_actual_good_qty_var.get().strip()
             if val and val.isdigit():
@@ -1295,12 +1321,16 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def _log_lot_detail_if_changed(self, field_name: str, raw_val: str):
         self._cancel_detail_log_timer(field_name)
+        if field_name == "PPO#" and not self.ENABLE_TARGETED_PPO_ATTACH:
+            return
         val = str(raw_val or "").strip()
         if not val:
             return
         if field_name == "Lot ID":
             val = val.upper()
             self._last_logged_lot_id = val
+        elif field_name == "PPO#":
+            val = val.upper()
         prev = self._last_logged_details.get(field_name)
         if prev != val:
             self._last_logged_details[field_name] = val
@@ -1310,24 +1340,60 @@ class FTDCCheckerFrame(ttk.Frame):
         self._cancel_detail_log_timer()
         lot_val = self.lot_id_var.get().strip().upper()
         mpc_val = self.mpc_var.get().strip()
+        ppo_val = self.ppo_var.get().strip().upper() if self.ENABLE_TARGETED_PPO_ATTACH else ""
         fp_qty = self.fp_actual_good_qty_var.get().strip()
         tot_qty = self.total_actual_good_qty_var.get().strip()
         if lot_val:
             self._last_logged_lot_id = lot_val
-        for k, v in (
+        detail_pairs = [
             ("Lot ID", lot_val),
             ("MPC", mpc_val),
+        ]
+        if self.ENABLE_TARGETED_PPO_ATTACH:
+            detail_pairs.append(("PPO#", ppo_val))
+        detail_pairs.extend([
             ("First Pass Actual Good QTY", fp_qty),
             ("Total Actual Good QTY", tot_qty),
-        ):
+        ])
+        for k, v in detail_pairs:
             if v and self._last_logged_details.get(k) != v:
                 self._last_logged_details[k] = v
                 self.log(f"Lot Details Input: {k} = '{v}'")
         prefix = f"[{context}] " if context else ""
+        ppo_snap = f"PPO#='{ppo_val or 'N/A'}', " if self.ENABLE_TARGETED_PPO_ATTACH else ""
         self.log(
             f"{prefix}Lot Details: Lot ID='{lot_val or 'N/A'}', MPC='{mpc_val or 'N/A'}', "
+            f"{ppo_snap}"
             f"First Pass Actual Good QTY='{fp_qty or 'N/A'}', Total Actual Good QTY='{tot_qty or 'N/A'}'"
         )
+
+    def _normalize_ppo_var(self) -> str:
+        """Strip whitespace and capitalize the PPO# input field (no-op when disabled)."""
+        if not self.ENABLE_TARGETED_PPO_ATTACH:
+            self._last_ppo_value = ""
+            return ""
+        raw = self.ppo_var.get()
+        norm = raw.strip().upper()
+        self._last_ppo_value = norm
+        if raw != norm:
+            self.ppo_var.set(norm)
+        return norm
+
+    def _on_ppo_focus_out(self, _event=None):
+        if not self.ENABLE_TARGETED_PPO_ATTACH:
+            return
+        norm = self._normalize_ppo_var()
+        self._log_lot_detail_if_changed("PPO#", norm)
+
+    def _on_ppo_changed(self, *_args):
+        if not self.ENABLE_TARGETED_PPO_ATTACH:
+            return
+        ppo_v = self.ppo_var.get().strip().upper()
+        self._last_ppo_value = ppo_v
+        if ppo_v:
+            self._schedule_log_lot_detail("PPO#")
+        else:
+            self._cancel_detail_log_timer("PPO#")
 
     def _on_fp_qty_changed(self, *args):
         fp_v = self.fp_actual_good_qty_var.get().strip()
@@ -2141,6 +2207,8 @@ class FTDCCheckerFrame(ttk.Frame):
         
         self.lot_id_var.set("")
         self.mpc_var.set("")
+        self.ppo_var.set("")
+        self._last_ppo_value = ""
         self.fp_actual_good_qty_var.set("")
         self.total_actual_good_qty_var.set("")
         
@@ -2435,25 +2503,154 @@ class FTDCCheckerFrame(ttk.Frame):
         if self._pending_ppo_notices:
             self.root.after(400, self._flush_ppo_notices)
 
+    def _get_effective_ppo_num(self, result: Optional[Dict[str, object]] = None) -> str:
+        """Return stripped & capitalized PPO# when targeted PPO attach is enabled, else ''."""
+        if not self.ENABLE_TARGETED_PPO_ATTACH:
+            return ""
+        if result is not None and "ppo_num" in result:
+            raw = result.get("ppo_num")
+        else:
+            try:
+                raw = self.ppo_var.get()
+                self._last_ppo_value = str(raw or "").strip().upper()
+            except Exception:
+                raw = getattr(self, "_last_ppo_value", "")
+        return str(raw or "").strip().upper()
+
+    def _resolve_ppo_target_subfolders(
+        self,
+        base_path: str,
+        ppo_num: str = "",
+        pre_discovered: Optional[List[str]] = None,
+        create_if_missing: bool = True,
+    ) -> List[str]:
+        """Resolve target PPO subfolder(s) inside ``base_path`` for attachment.
+
+        When targeted PPO# attachment is enabled and ``ppo_num`` is provided,
+        searches for or creates only that matching subfolder. Otherwise (default
+        when disabled), returns all existing subfolders inside ``base_path``.
+        """
+        ppo_target = str(ppo_num or "").strip().upper() if self.ENABLE_TARGETED_PPO_ATTACH else ""
+        base_exists: Optional[bool] = None
+
+        def _base_isdir() -> bool:
+            nonlocal base_exists
+            if base_exists is None:
+                base_exists = os.path.isdir(base_path)
+            return base_exists
+
+        if pre_discovered is not None:
+            subfolders = [p for p in pre_discovered if os.path.isdir(p)]
+        else:
+            subfolders = []
+
+        if not subfolders and _base_isdir():
+            try:
+                push_entries = _pushdown_scandir(base_path, "*", dirs_only=True)
+                subfolders = [e.path for e in push_entries] if push_entries else []
+            except Exception:
+                subfolders = []
+            if not subfolders:
+                with os.scandir(base_path) as entries:
+                    subfolders = [e.path for e in entries if e.is_dir()]
+
+        if ppo_target:
+            matched = [
+                p for p in subfolders
+                if os.path.basename(os.path.normpath(p)).strip().upper() == ppo_target
+            ]
+            if matched:
+                return matched
+
+            # If pre_discovered was provided and missed ppo_target, check disk directly
+            if pre_discovered is not None and _base_isdir():
+                try:
+                    push_entries = _pushdown_scandir(base_path, "*", dirs_only=True)
+                    disk_subs = [e.path for e in push_entries] if push_entries else []
+                except Exception:
+                    disk_subs = []
+                if not disk_subs:
+                    with os.scandir(base_path) as entries:
+                        disk_subs = [e.path for e in entries if e.is_dir()]
+                matched = [
+                    p for p in disk_subs
+                    if os.path.basename(os.path.normpath(p)).strip().upper() == ppo_target
+                ]
+                if matched:
+                    return matched
+
+            if not create_if_missing:
+                raise FileNotFoundError(
+                    f"PPO# subfolder '{ppo_target}' does not exist in: {base_path}"
+                )
+
+            if not _base_isdir() and not os.path.isdir(get_ppo_base_path()):
+                raise FileNotFoundError(f"PPO target folder does not exist: {base_path}")
+
+            target_ppo_dir = os.path.join(base_path, ppo_target)
+            os.makedirs(target_ppo_dir, exist_ok=True)
+            self.log(
+                f"Attach to PPO: PPO# '{ppo_target}' not found in '{base_path}' — "
+                f"created folder '{target_ppo_dir}'."
+            )
+            return [target_ppo_dir]
+
+        if not subfolders and not _base_isdir():
+            raise FileNotFoundError(f"PPO target folder does not exist: {base_path}")
+        if not subfolders:
+            raise FileNotFoundError(f"PPO target folder has no subfolders: {base_path}")
+        return subfolders
+
+    @staticmethod
+    def _is_auto_ppo_attach_enabled() -> bool:
+        """Return True unless Developer Mode is active (which disables auto-attach to PPO)."""
+        return not is_developer_mode()
+
+    def on_app_mode_changed(self, mode: str) -> None:
+        """Log operating mode changes triggered from the PTS Hub Settings dialog."""
+        if str(mode or "").strip().lower() == "developer":
+            self.log("Settings: Switched to Developer Mode — automatic attachment to PPO is disabled.")
+        else:
+            self.log("Settings: Switched to Production Mode — automatic attachment to PPO is enabled.")
+
     def _start_background_excel_generation(self, result: Dict[str, object], auto_attach: bool = True):
         """Build the Excel workbook in advance in a background thread as soon as analysis finishes.
 
-        When ``auto_attach`` is True, the finished workbook and result image are automatically
-        attached to the PPO network folder (with retries, main progress bar, and Done X/N | MB/s | ETA
-        telemetry) while keeping ``is_running`` active until auto-attachment completes.
+        When ``auto_attach`` is True (and Production Mode is active), the finished workbook and
+        result image are automatically attached to the PPO network folder (with retries, main
+        progress bar, and Done X/N | MB/s | ETA telemetry) while keeping ``is_running`` active
+        until auto-attachment completes. In Developer Mode, auto-attachment to PPO is skipped.
         """
         import tempfile
+        dev_mode_blocked = bool(auto_attach) and not self._is_auto_ppo_attach_enabled()
+        auto_attach = bool(auto_attach) and self._is_auto_ppo_attach_enabled()
         reuse_cached_excel = False
+        ppo_num = self._get_effective_ppo_num(result)
+        result["ppo_num"] = ppo_num
         with self._excel_lock:
             if self._excel_state == "IN_PROGRESS" or (auto_attach and self._ppo_attach_state == "IN_PROGRESS"):
                 return
 
             cached_path = result.get("_cached_excel_path")
             if result.get("_cached_excel_ready") and cached_path and os.path.isfile(str(cached_path)):
-                if not auto_attach or result.get("_ppo_attached_paths"):
+                attached_ppo = str(result.get("_ppo_attached_ppo_num") or "").strip().upper()
+                if not auto_attach or (result.get("_ppo_attached_paths") and attached_ppo == ppo_num):
                     self._excel_state = "READY"
                     self._excel_temp_path = str(cached_path)
                     self._excel_temp_filename = str(result.get("_cached_excel_name", os.path.basename(str(cached_path))))
+                    if dev_mode_blocked:
+                        if self._ppo_attach_state == "IN_PROGRESS":
+                            self._ppo_attach_state = "IDLE"
+                        if not result.get("_dev_mode_skip_logged"):
+                            result["_dev_mode_skip_logged"] = True
+                            self.log(
+                                "Attach to PPO: Disabled (Developer Mode) - Excel generated locally; "
+                                "skipping automatic PPO attachment."
+                            )
+                        self._set_status_async(
+                            self._format_ppo_status(result, "Auto-attach to PPO: Disabled (Developer Mode)"),
+                            gen_id=self._excel_generation_id,
+                        )
                     return
                 # Cached Excel is ready, but previous PPO auto-attach did not succeed -> re-attach using cached files
                 reuse_cached_excel = True
@@ -2509,6 +2706,8 @@ class FTDCCheckerFrame(ttk.Frame):
                             self._format_ppo_status(result, "Auto-attach to PPO: Failed (temp file error)"),
                         )
                         self._set_running(False)
+                    elif dev_mode_blocked:
+                        self._ppo_attach_state = "IDLE"
                     return
 
                 self._excel_temp_files.add(target_path)
@@ -2525,6 +2724,10 @@ class FTDCCheckerFrame(ttk.Frame):
                 self._excel_ready_event.clear()
                 if auto_attach:
                     self._ppo_attach_state = "IN_PROGRESS"
+                    result.pop("_dev_mode_skip_logged", None)
+                elif dev_mode_blocked:
+                    self._ppo_attach_state = "IDLE"
+                    result["_dev_mode_skip_logged"] = True
                 result["_cached_excel_ready"] = False
                 result["_cached_excel_path"] = target_path
                 result["_cached_excel_name"] = default_name
@@ -2547,12 +2750,25 @@ class FTDCCheckerFrame(ttk.Frame):
                     gen_id=gen_id,
                 )
             self._start_ppo_status_polling()
+        elif dev_mode_blocked:
+            self.log(
+                "Attach to PPO: Disabled (Developer Mode) - Excel generated locally; "
+                "skipping automatic PPO attachment."
+            )
+            self._set_status_async(
+                self._format_ppo_status(result, "Auto-attach to PPO: Disabled (Developer Mode)"),
+                gen_id=gen_id,
+            )
 
         def _bg_excel_worker():
             import time as _time
             try:
                 pre_subfolders: Optional[List[str]] = None
                 prep_state: Dict[str, Any] = {"subfolders": None, "pre_copied": {}}
+                stage_timeout = self._resolve_ppo_attach_timeout()
+                stage_cancel = threading.Event()
+                stage_deadline = _time.monotonic() + min(stage_timeout, 10.0)
+                prep_join_timeout = min(1.5, max(0.05, stage_timeout * 0.5))
 
                 def _scan_ppo_subfolders():
                     if not auto_attach:
@@ -2564,11 +2780,11 @@ class FTDCCheckerFrame(ttk.Frame):
                         return
                     ppo_lot_dir = os.path.join(get_ppo_base_path(), mask, lot_id_u)
                     try:
-                        entries = _pushdown_scandir(ppo_lot_dir, "*", dirs_only=True)
-                        subs = [e.path for e in entries] if entries else []
-                        if not subs and os.path.isdir(ppo_lot_dir):
-                            with os.scandir(ppo_lot_dir) as sc_entries:
-                                subs = [e.path for e in sc_entries if e.is_dir()]
+                        subs = self._resolve_ppo_target_subfolders(
+                            ppo_lot_dir,
+                            ppo_num=ppo_num,
+                            create_if_missing=True,
+                        )
                         if subs:
                             prep_state["subfolders"] = subs
                     except Exception as scan_exc:
@@ -2587,14 +2803,24 @@ class FTDCCheckerFrame(ttk.Frame):
                         try:
                             img_sz = max(os.path.getsize(target_img_path), 0)
                             if img_sz > 0:
-                                scan_thread.join(timeout=1.5)
+                                scan_thread.join(timeout=prep_join_timeout)
                                 subs = prep_state.get("subfolders") or []
                                 for folder in subs:
-                                    if gen_id != self._excel_generation_id or self._excel_cancel_event.is_set():
+                                    if (
+                                        gen_id != self._excel_generation_id
+                                        or self._excel_cancel_event.is_set()
+                                        or stage_cancel.is_set()
+                                        or _time.monotonic() >= stage_deadline
+                                    ):
                                         break
                                     dest_img = os.path.join(folder, image_default_name)
                                     try:
-                                        _fast_copy_file_with_progress(target_img_path, dest_img)
+                                        _fast_copy_file_with_progress(
+                                            target_img_path,
+                                            dest_img,
+                                            cancel_event=stage_cancel,
+                                            deadline=stage_deadline,
+                                        )
                                         prep_state["pre_copied"][(folder, image_default_name)] = (dest_img, img_sz)
                                     except Exception as copy_exc:
                                         logging.debug("Pre-copy PNG skipped for '%s': %s", dest_img, copy_exc)
@@ -2667,8 +2893,10 @@ class FTDCCheckerFrame(ttk.Frame):
                     self.update_progress(0.0, "")
                     self.set_copy_stats(format_parallel_copy_stats_text(0, max(early_tasks, 1), 0, 0, 0.001))
 
-                scan_thread.join(timeout=1.5)
-                img_thread.join(timeout=1.5)
+                scan_thread.join(timeout=prep_join_timeout)
+                img_thread.join(timeout=prep_join_timeout)
+                if img_thread.is_alive():
+                    stage_cancel.set()
                 pre_subfolders = prep_state.get("subfolders")
                 pre_copied_map = dict(prep_state.get("pre_copied") or {})
 
@@ -2703,6 +2931,21 @@ class FTDCCheckerFrame(ttk.Frame):
     # ── Local download path + automatic PPO attachment ──────────────────
     PPO_ATTACH_MAX_ATTEMPTS = 3
     PPO_ATTACH_RETRY_DELAYS = (3.0, 8.0)  # seconds to wait before attempt 2, 3
+    PPO_ATTACH_TIMEOUT_SEC: Optional[float] = None  # None -> use settings.json ("ppo_attach_timeout_sec", default 60s)
+
+    def _resolve_ppo_attach_timeout(self) -> float:
+        raw = self.PPO_ATTACH_TIMEOUT_SEC
+        if raw is not None:
+            try:
+                val = float(raw)
+                if val > 0:
+                    return val
+            except (TypeError, ValueError):
+                pass
+        try:
+            return max(0.05, float(get_ppo_attach_timeout_sec()))
+        except Exception:
+            return 60.0
 
     @staticmethod
     def _local_excel_dest(result: Dict[str, object], filename: str) -> str:
@@ -2841,8 +3084,28 @@ class FTDCCheckerFrame(ttk.Frame):
         import shutil
         import time as _time
 
+        if not self._is_auto_ppo_attach_enabled():
+            self._ppo_attach_state = "IDLE"
+            self.log("Attach to PPO: Skipped (Developer Mode is active - auto-attach to PPO is disabled).")
+            self._set_status_async(
+                self._format_ppo_status(result, "Auto-attach to PPO: Disabled (Developer Mode)"),
+                gen_id=gen_id,
+            )
+            return
+
         def _cancelled() -> bool:
             return gen_id != self._excel_generation_id or self._excel_cancel_event.is_set()
+
+        timeout_sec = self._resolve_ppo_attach_timeout()
+        attach_deadline = _time.monotonic() + timeout_sec
+        attach_cancel_event = threading.Event()
+        timed_out = False
+
+        def _remaining() -> float:
+            return attach_deadline - _time.monotonic()
+
+        def _is_timed_out() -> bool:
+            return _time.monotonic() >= attach_deadline
 
         all_attachments: List[Tuple[str, str]] = [(src_excel_path, default_name)]
         if extra_attachments:
@@ -2866,9 +3129,14 @@ class FTDCCheckerFrame(ttk.Frame):
             return
 
         base_path = os.path.join(get_ppo_base_path(), mask, lot_id_upper)
+        ppo_num = self._get_effective_ppo_num(result)
         self._ppo_attach_state = "IN_PROGRESS"
         self._start_ppo_status_polling()
-        self.log(f"Attach to PPO: Files ready - automatically attaching {all_names_desc} to '{base_path}'.")
+        ppo_desc = f" (PPO#: '{ppo_num}')" if ppo_num else ""
+        self.log(
+            f"Attach to PPO: Files ready - automatically attaching {all_names_desc} to "
+            f"'{base_path}'{ppo_desc} (timeout {timeout_sec:g}s)."
+        )
         self._set_status_async(
             self._format_ppo_status(result, "Auto-attach to PPO: On-going (attaching to PPO)..."),
             gen_id=gen_id,
@@ -2918,6 +3186,9 @@ class FTDCCheckerFrame(ttk.Frame):
         def _copy_single_task(task: Tuple[str, str, str, int]) -> str:
             nonlocal done_tasks
             folder, s_path, fname, fsize = task
+            if _is_timed_out() or attach_cancel_event.is_set():
+                raise TimeoutError(f"PPO attachment timed out after {timeout_sec:g}s.")
+            os.makedirs(folder, exist_ok=True)
             dest = os.path.join(folder, fname)
             part = dest + ".part"
             task_key = (folder, fname)
@@ -2935,9 +3206,15 @@ class FTDCCheckerFrame(ttk.Frame):
                     progress_callback=None,
                     stats_callback=None,
                     byte_progress_callback=_on_bytes,
+                    cancel_event=attach_cancel_event,
+                    deadline=attach_deadline,
                 )
+            except TimeoutError:
+                raise
             except Exception:
                 try:
+                    if _is_timed_out() or attach_cancel_event.is_set():
+                        raise TimeoutError(f"PPO attachment timed out after {timeout_sec:g}s.")
                     shutil.copyfile(s_path, part)
                     os.replace(part, dest)
                 except Exception:
@@ -2962,22 +3239,40 @@ class FTDCCheckerFrame(ttk.Frame):
 
         for attempt in range(1, max_attempts + 1):
             if _cancelled():
+                attach_cancel_event.set()
                 self.log("Attach to PPO: Cancelled (results cleared).")
                 return
+            if _is_timed_out():
+                timed_out = True
+                attach_cancel_event.set()
+                if not errors:
+                    errors[base_path] = f"Timed out after {timeout_sec:g}s"
+                self.log(f"Attach to PPO: Timed out after {timeout_sec:g}s.")
+                break
             if attempt > 1:
                 delays = self.PPO_ATTACH_RETRY_DELAYS
                 delay = float(delays[min(attempt - 2, len(delays) - 1)]) if delays else 0.0
-                self.log(f"Attach to PPO: Retrying in {delay:g}s (attempt {attempt}/{max_attempts})...")
+                rem_delay = min(delay, max(0.0, _remaining()))
+                self.log(f"Attach to PPO: Retrying in {rem_delay:g}s (attempt {attempt}/{max_attempts})...")
                 self._set_status_async(
                     self._format_ppo_status(result, f"Auto-attach to PPO: On-going (retrying {attempt}/{max_attempts})..."),
                     gen_id=gen_id,
                 )
-                if delay > 0 and self._excel_cancel_event.wait(timeout=delay):
+                if rem_delay > 0 and self._excel_cancel_event.wait(timeout=rem_delay):
+                    attach_cancel_event.set()
                     self.log("Attach to PPO: Cancelled (results cleared).")
                     return
                 if _cancelled():
+                    attach_cancel_event.set()
                     self.log("Attach to PPO: Cancelled (results cleared).")
                     return
+                if _is_timed_out():
+                    timed_out = True
+                    attach_cancel_event.set()
+                    if not errors:
+                        errors[base_path] = f"Timed out after {timeout_sec:g}s"
+                    self.log(f"Attach to PPO: Timed out after {timeout_sec:g}s.")
+                    break
             try:
                 for s_path, fname in all_attachments:
                     if not os.path.isfile(s_path):
@@ -2986,22 +3281,31 @@ class FTDCCheckerFrame(ttk.Frame):
                         att_sizes[s_path] = max(os.path.getsize(s_path), 0)
 
                 if all_subfolders is None:
-                    if pre_discovered_subfolders:
-                        subfolders = list(pre_discovered_subfolders)
-                    else:
-                        if not os.path.isdir(base_path):
-                            raise FileNotFoundError(f"PPO target folder does not exist: {base_path}")
+                    scan_holder: Dict[str, Any] = {}
+
+                    def _scan_dir_worker():
                         try:
-                            push_entries = _pushdown_scandir(base_path, "*", dirs_only=True)
-                            subfolders = [e.path for e in push_entries] if push_entries else []
-                        except Exception:
-                            subfolders = []
-                        if not subfolders:
-                            with os.scandir(base_path) as entries:
-                                subfolders = [e.path for e in entries if e.is_dir()]
-                    if not subfolders:
-                        raise FileNotFoundError(f"PPO target folder has no subfolders: {base_path}")
-                    all_subfolders = subfolders
+                            scan_holder["subfolders"] = self._resolve_ppo_target_subfolders(
+                                base_path,
+                                ppo_num=ppo_num,
+                                pre_discovered=pre_discovered_subfolders,
+                                create_if_missing=True,
+                            )
+                        except BaseException as scan_exc:
+                            scan_holder["error"] = scan_exc
+
+                    scan_worker = threading.Thread(target=_scan_dir_worker, daemon=True, name="PPODirScan")
+                    scan_worker.start()
+                    scan_worker.join(timeout=max(0.01, _remaining()))
+                    if scan_worker.is_alive():
+                        timed_out = True
+                        attach_cancel_event.set()
+                        raise TimeoutError(
+                            f"PPO attachment timed out after {timeout_sec:g}s while accessing '{base_path}'."
+                        )
+                    if "error" in scan_holder:
+                        raise scan_holder["error"]
+                    all_subfolders = scan_holder["subfolders"]
                     all_task_specs = [
                         (f, s_path, fname, att_sizes.get(s_path, 0))
                         for f in all_subfolders
@@ -3032,28 +3336,76 @@ class FTDCCheckerFrame(ttk.Frame):
                 errors = {}
                 failed_tasks: List[Tuple[str, str, str, int]] = []
                 if pending_tasks:
-                    with ThreadPoolExecutor(max_workers=max(1, min(len(pending_tasks), 8))) as pool:
-                        futures = {pool.submit(_copy_single_task, t): t for t in pending_tasks}
-                        for fut, task in futures.items():
-                            folder, _s_path, fname, _fsize = task
-                            try:
-                                dest_path = fut.result()
-                                saved_paths_by_task[(folder, fname)] = dest_path
-                            except Exception as exc:
-                                errors[folder] = str(exc)
-                                failed_tasks.append(task)
+                    if _is_timed_out():
+                        timed_out = True
+                        attach_cancel_event.set()
+                        for folder, _s_path, fname, _fsize in pending_tasks:
+                            errors[folder] = f"Timed out after {timeout_sec:g}s while copying '{fname}'"
+                            failed_tasks.append((folder, _s_path, fname, _fsize))
+                    else:
+                        pool = ThreadPoolExecutor(max_workers=max(1, min(len(pending_tasks), 8)))
+                        try:
+                            futures = {pool.submit(_copy_single_task, t): t for t in pending_tasks}
+                            done_futs, not_done_futs = _futures_wait(
+                                futures.keys(),
+                                timeout=max(0.01, _remaining()),
+                            )
+                            for fut in done_futs:
+                                task = futures[fut]
+                                folder, _s_path, fname, _fsize = task
+                                try:
+                                    dest_path = fut.result()
+                                    saved_paths_by_task[(folder, fname)] = dest_path
+                                except TimeoutError as exc:
+                                    timed_out = True
+                                    errors[folder] = str(exc)
+                                    failed_tasks.append(task)
+                                except Exception as exc:
+                                    errors[folder] = str(exc)
+                                    failed_tasks.append(task)
+                            if not_done_futs:
+                                timed_out = True
+                                attach_cancel_event.set()
+                                for fut in not_done_futs:
+                                    fut.cancel()
+                                    task = futures[fut]
+                                    folder, _s_path, fname, _fsize = task
+                                    errors[folder] = (
+                                        f"Timed out after {timeout_sec:g}s while copying '{fname}'"
+                                    )
+                                    failed_tasks.append(task)
+                        finally:
+                            pool.shutdown(wait=False, cancel_futures=True)
                 pending_tasks = failed_tasks
                 if not pending_tasks:
+                    break
+                if timed_out:
+                    attach_cancel_event.set()
+                    self.log(
+                        f"Attach to PPO: Timed out after {timeout_sec:g}s - "
+                        + "; ".join(f"{k}: {v}" for k, v in errors.items())
+                    )
                     break
                 self.log(
                     f"Attach to PPO: Attempt {attempt}/{max_attempts} failed for {len(errors)} subfolder(s): "
                     + "; ".join(f"{k}: {v}" for k, v in errors.items())
                 )
+            except TimeoutError as exc:
+                timed_out = True
+                attach_cancel_event.set()
+                errors = {base_path: str(exc)}
+                self.log(f"Attach to PPO: Timed out after {timeout_sec:g}s - {exc}")
+                break
             except Exception as exc:
                 errors = {base_path: str(exc)}
                 self.log(f"Attach to PPO: Attempt {attempt}/{max_attempts} failed - {exc}")
+                if _is_timed_out():
+                    timed_out = True
+                    attach_cancel_event.set()
+                    break
 
         if _cancelled():
+            attach_cancel_event.set()
             return
 
         saved_paths: List[str] = []
@@ -3075,6 +3427,7 @@ class FTDCCheckerFrame(ttk.Frame):
                 format_parallel_copy_stats_text(total_tasks, total_tasks, total_bytes, total_bytes, elapsed)
             )
             result["_ppo_attached_paths"] = list(saved_paths)
+            result["_ppo_attached_ppo_num"] = ppo_num
             self._set_status_async(
                 self._format_ppo_status(result, f"Auto-attach to PPO: Done ({num_folders} subfolder(s))"),
                 gen_id=gen_id,
@@ -3091,7 +3444,7 @@ class FTDCCheckerFrame(ttk.Frame):
             )
             return
 
-        # Final failure (full or partial): keep an atomic local copy of all attachments so the user can transfer them manually.
+        # Final failure or timeout (full or partial): keep an atomic local copy of all attachments so the user can transfer them manually.
         local_saved: List[str] = []
         for s_path, fname in all_attachments:
             try:
@@ -3118,37 +3471,49 @@ class FTDCCheckerFrame(ttk.Frame):
             f"\n\nCopies were saved locally for manual transfer:\n" + "\n".join(local_saved) if local_saved
             else "\n\nUse 'Download & Open Excel' to save a local copy for manual transfer."
         )
-        manual_text = f"\n\nPlease copy the files manually to:\n{base_path}"
+        manual_target = os.path.join(base_path, ppo_num) if ppo_num else base_path
+        manual_text = f"\n\nPlease copy the files manually to:\n{manual_target}"
         if saved_paths:
-            status_msg = f"Auto-attach to PPO: Partial ({num_folders} attached, {len(errors)} failed)"
+            if timed_out:
+                status_msg = f"Auto-attach to PPO: Partial / Timed out ({num_folders} attached, {len(errors)} failed)"
+                title = "Attach to PPO - Partially Timed Out"
+                fail_header = f"Timed out after {timeout_sec:g}s in {len(errors)} subfolder(s)"
+            else:
+                status_msg = f"Auto-attach to PPO: Partial ({num_folders} attached, {len(errors)} failed)"
+                title = "Attach to PPO - Partially Failed"
+                fail_header = f"Failed after {max_attempts} attempt(s) in {len(errors)} subfolder(s)"
             self._set_status_async(self._format_ppo_status(result, status_msg), gen_id=gen_id)
             self._ppo_attach_state = "PARTIAL"
             self.log(
                 f"Attach to PPO: PARTIAL - Attached to {num_folders} subfolder(s) "
-                f"({', '.join(saved_paths)}), FAILED after {max_attempts} attempt(s) in {len(errors)} subfolder(s): "
+                f"({', '.join(saved_paths)}), {fail_header}: "
                 + "; ".join(f"{k}: {v}" for k, v in errors.items())
                 + (f". Local copies: {', '.join(local_saved)}" if local_saved else "")
             )
             message = (
                 f"Result files were attached to {num_folders} subfolder(s):\n" + "\n".join(saved_paths)
-                + f"\n\nFailed after {max_attempts} attempt(s) in {len(errors)} subfolder(s):\n{errors_text}"
+                + f"\n\n{fail_header}:\n{errors_text}"
                 + local_text + manual_text
             )
-            title = "Attach to PPO - Partially Failed"
         else:
-            status_msg = "Auto-attach to PPO: Failed (local copy saved)" if local_saved else "Auto-attach to PPO: Failed"
+            if timed_out:
+                status_msg = "Auto-attach to PPO: Timed out (local copy saved)" if local_saved else "Auto-attach to PPO: Timed out"
+                title = "Attach to PPO Timed Out"
+                fail_intro = f"Automatic attachment of the result files to PPO timed out after {timeout_sec:g}s:"
+                log_prefix = f"Attach to PPO: FAILED - Timed out after {timeout_sec:g}s"
+            else:
+                status_msg = "Auto-attach to PPO: Failed (local copy saved)" if local_saved else "Auto-attach to PPO: Failed"
+                title = "Attach to PPO Failed"
+                fail_intro = f"Automatic attachment of the result files to PPO failed after {max_attempts} attempt(s):"
+                log_prefix = f"Attach to PPO: FAILED after {max_attempts} attempt(s)"
             self._set_status_async(self._format_ppo_status(result, status_msg), gen_id=gen_id)
             self._ppo_attach_state = "FAILED"
             self.log(
-                f"Attach to PPO: FAILED after {max_attempts} attempt(s) - "
+                f"{log_prefix} - "
                 + "; ".join(f"{k}: {v}" for k, v in errors.items())
                 + (f". Local copies saved for manual transfer: {', '.join(local_saved)}" if local_saved else "")
             )
-            message = (
-                f"Automatic attachment of the result files to PPO failed after {max_attempts} attempt(s):\n\n"
-                f"{errors_text}" + local_text + manual_text
-            )
-            title = "Attach to PPO Failed"
+            message = f"{fail_intro}\n\n{errors_text}" + local_text + manual_text
         self._queue_ppo_notice("error", title, message,
                                open_dir=os.path.dirname(local_path) if local_path else None)
 
@@ -5216,9 +5581,11 @@ class FTDCCheckerFrame(ttk.Frame):
 
     def start_get_data(self):
         from tkinter import messagebox
-        # Always capitalize the Lot ID
+        # Always capitalize the Lot ID (and normalize PPO# when targeted attach is enabled)
         lot_id_upper = self.lot_id_var.get().strip().upper()
         self.lot_id_var.set(lot_id_upper)
+        if self.ENABLE_TARGETED_PPO_ATTACH:
+            self._normalize_ppo_var()
 
         empty_panels = [panel for panel in self.PANELS if not self.panel_files[panel]]
         if empty_panels:
@@ -5231,9 +5598,13 @@ class FTDCCheckerFrame(ttk.Frame):
         required_fields = [
             ("Lot ID", self.lot_id_var),
             ("MPC", self.mpc_var),
+        ]
+        if self.ENABLE_TARGETED_PPO_ATTACH:
+            required_fields.append(("PPO#", self.ppo_var))
+        required_fields.extend([
             ("First Pass Actual Good QTY", self.fp_actual_good_qty_var),
             ("Total Actual Good QTY", self.total_actual_good_qty_var),
-        ]
+        ])
         empty_fields = [label for label, var in required_fields if not var.get().strip()]
         if empty_fields:
             messagebox.showerror(
@@ -5243,6 +5614,7 @@ class FTDCCheckerFrame(ttk.Frame):
             return
         lot_id_text = self.lot_id_var.get().strip().upper()
         mpc_text = self.mpc_var.get().strip().upper()
+        ppo_text = self._normalize_ppo_var() if self.ENABLE_TARGETED_PPO_ATTACH else ""
         fp_actual_good_qty_text = self.fp_actual_good_qty_var.get().strip()
         total_actual_good_qty_text = self.total_actual_good_qty_var.get().strip()
 
@@ -5314,16 +5686,20 @@ class FTDCCheckerFrame(ttk.Frame):
         )
         cached_result = self._analysis_cache.get(cache_key)
         if cached_result is not None:
+            cached_result["ppo_num"] = ppo_text if self.ENABLE_TARGETED_PPO_ATTACH else ""
             self.log("=" * 80)
             self.log("Using cached result for the current session. No STDF reprocessing was needed.")
             self.update_progress(1.0, "")
             total_status_text = cached_result.get('total_good_status') or 'SKIPPED'
             ppo_attached = cached_result.get("_ppo_attached_paths") or []
-            if self._ppo_attach_state == "IN_PROGRESS":
-                ppo_suffix = " | Auto-attach to PPO: On-going..."
-            elif ppo_attached:
+            attached_ppo = str(cached_result.get("_ppo_attached_ppo_num") or "").strip().upper()
+            if ppo_attached and (not self.ENABLE_TARGETED_PPO_ATTACH or attached_ppo == ppo_text):
                 folder_cnt = len({os.path.dirname(str(p)) for p in ppo_attached})
                 ppo_suffix = f" | Auto-attach to PPO: Done ({folder_cnt} subfolder(s))"
+            elif not self._is_auto_ppo_attach_enabled():
+                ppo_suffix = " | Auto-attach to PPO: Disabled (Developer Mode)"
+            elif self._ppo_attach_state == "IN_PROGRESS":
+                ppo_suffix = " | Auto-attach to PPO: On-going..."
             else:
                 ppo_suffix = ""
             self.set_status(f"Cached result: FP {cached_result['status']} | Total Good {total_status_text}{ppo_suffix}")
@@ -5359,6 +5735,7 @@ class FTDCCheckerFrame(ttk.Frame):
                     # (set to 1 to force sequential; safe fallback if pools are unavailable).
                     max_workers=None,
                 )
+                result["ppo_num"] = ppo_text if self.ENABLE_TARGETED_PPO_ATTACH else ""
                 self._analysis_cache[cache_key] = result
                 self.update_progress(1.0, "")
                 # Log FTDC fails (from FTDC server logs if fetched + FTDC Criteria check details) and final result
@@ -5384,12 +5761,16 @@ class FTDCCheckerFrame(ttk.Frame):
                 )
                 remarks_log = str(result.get("remarks") or compute_remarks(result)).strip()
                 self.log(f"Run Analysis Remarks: {remarks_log}")
-                self.set_status(f"Analysis completed: FP {result['status']} | Total Good {total_status_text}")
+                if self._is_auto_ppo_attach_enabled():
+                    self.set_status(f"Analysis completed: FP {result['status']} | Total Good {total_status_text}")
+                else:
+                    self.set_status(
+                        f"Analysis completed: FP {result['status']} | Total Good {total_status_text} | "
+                        "Auto-attach to PPO: Disabled (Developer Mode)"
+                    )
                 self.root.after(0, lambda result=result: self._deliver_analysis_result(result))
                 self._start_background_excel_generation(result, auto_attach=True)
-                handed_off_to_ppo = (
-                    self._ppo_attach_state == "IN_PROGRESS" or self._excel_state == "IN_PROGRESS"
-                )
+                handed_off_to_ppo = (self._ppo_attach_state == "IN_PROGRESS")
             except Exception as exc:
                 self.log("Analysis failed.")
                 self.log(str(exc))
@@ -5764,7 +6145,7 @@ class FTDCCheckerFrame(ttk.Frame):
             (1, 0, "UID Test #(s):", form_uid_var, "e.g. 93009"),
             (1, 2, "BT MACID #s:", form_bt_var, "e.g. 94016, 94017, ..."),
             (2, 0, "ZB MACID #s:", form_zb_var, "e.g. 94022, 94023, ..."),
-            (2, 2, "MACID Prefix:", form_macid_prefix_var, "e.g. 40:84"),
+            (2, 2, "MACID Prefix:", form_macid_prefix_var, "Leave blank to disable (e.g. 40:84)"),
         ]
         for r_idx, c_base, lbl_txt, var, ph_txt in macid_fields:
             left_pad = (8, 4) if c_base == 2 else (0, 4)
@@ -6133,6 +6514,15 @@ class FTDCCheckerFrame(ttk.Frame):
                     )
                     return
 
+                if (bt_str or zb_str) and not uid_str:
+                    messagebox.showerror(
+                        "UID Test Number Required",
+                        "Please provide UID Test #(s) when configuring BT or ZB MACID test numbers.\n\n"
+                        "UID is required to verify 1 MACID = 1 UID (there is no default UID test number).",
+                        parent=win,
+                    )
+                    return
+
                 if uid_str:
                     uid_parts = [p.strip() for p in uid_str.replace(",", " ").split() if p.strip()]
                     try:
@@ -6178,9 +6568,13 @@ class FTDCCheckerFrame(ttk.Frame):
 
                 if pfx_str:
                     pfx_parts = [p.strip() for p in pfx_str.split(",") if p.strip()]
-                    wxy_dict["macid_prefix"] = pfx_parts[0] if len(pfx_parts) == 1 else pfx_parts
+                    wxy_dict["macid_prefix"] = (
+                        (pfx_parts[0] if len(pfx_parts) == 1 else pfx_parts) if pfx_parts else ""
+                    )
                 else:
                     wxy_dict["macid_prefix"] = ""
+                wxy_dict["bt_prefix"] = ""
+                wxy_dict["zb_prefix"] = ""
 
             custom_conv: Optional[Dict[str, object]] = None
             if form_conv_mode_var.get() == "custom":

@@ -1,7 +1,9 @@
 {
   "mes_url": "http://mth-vm-eaprd1/MPHL/getlot/mes.asmx/GetLotByLotId",
-  "ftdc_fail_primary_url": "http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php", 
+  "ftdc_fail_primary_url": "http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php",
   "ftdc_fail_backup_url": "http://mph-vm-mphl2prd:8080/ftdc/filter.php",
   "local_dest_base": "C:\\FTDC",
-  "ppo_base_path": "\\\\chip\\PPOonline"
+  "ppo_base_path": "\\\\chip\\PPOonline",
+  "ppo_attach_timeout_sec": 60,
+  "app_mode": "developer"
 }

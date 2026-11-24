@@ -18,6 +18,7 @@ Fixes applied vs v25:
   * Normalizes unset values (65535 bins, TEST_T == 0)
 """
 import json
+import logging
 import os
 import re
 import sys
@@ -261,6 +262,11 @@ def save_mask_wxy_entry(
         f.write("\n")
     os.replace(tmp_path, _MASK_WXY_JSON_PATH)
     reload_wxy_config()
+    try:
+        from apps.ftdc_checker.sg406_analysis import clear_macid_validation_cache
+        clear_macid_validation_cache()
+    except Exception as exc:
+        logging.debug("MACID validation cache clear skipped: %s", exc)
     return entry
 
 WXY_KEYS = ("wafer", "x", "y")

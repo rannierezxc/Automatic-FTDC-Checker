@@ -73,6 +73,10 @@ def launch_hub():
         except Exception as exc:
             logging.warning("Failed to save FTDC session log on close: %s", exc)
         try:
+            stdf2sum_frame.clear_all_caches()
+        except Exception as exc:
+            logging.warning("Failed to clear STDF2SUM caches on close: %s", exc)
+        try:
             root.destroy()
         except Exception as exc:
             logging.warning("Failed to destroy root window on close: %s", exc)

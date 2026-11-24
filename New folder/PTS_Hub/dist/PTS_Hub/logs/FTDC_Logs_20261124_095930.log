@@ -1,0 +1,18 @@
+[2026-11-24 08:17:28] Device Settings: Saved MPC 'SG406QRTBA02' (Mask 'SG406', Device=PIC32CX5109BZ*, Tester=V93K, WXY={'wafer': 93005, 'x': 93006, 'y': 93007, 'uid': 93009, 'bt': [94016, 94017, 94018, 94019, 94020, 94021], 'zb': [94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029]}).
+[2026-11-24 08:17:29] Lot Details Input: MPC = 'SG406QRTBA02'
+[2026-11-24 09:22:15] Lot Details Input: Lot ID = 'MMT-273000538.000'
+[2026-11-24 09:22:24] [Check STDF] Lot Details: Lot ID='MMT-273000538.000', MPC='SG406QRTBA02', First Pass Actual Good QTY='N/A', Total Actual Good QTY='N/A'
+[2026-11-24 09:22:25] Check STDF [mmt-273000538.000_w_rj1_20261115142032_ft1_2611152018.stdf.old]: Status=Completed, Total Parts=2996, Tested Good=2180, Mismatch/Discrepancy=None
+[2026-11-24 09:22:26] Check STDF [mmt-273000538.000_e_20261121074440_ft2_2611211650.stdf.old]: Status=Completed, Total Parts=6024, Tested Good=4916, Mismatch/Discrepancy=None
+[2026-11-24 09:22:26] [WARNING] MMT-273000538.000_E_20261120150103_FT2.stdf [Count Reconciliation]: PCR Part(11515) != PRR(11518); PCR Good(9322) != PRR Good(9325); SBR Part(11515) != PRR(11518); SBR Good(9322) != PRR Good(9325)
+[2026-11-24 09:22:26] Check STDF [MMT-273000538.000_E_20261120150103_FT2.stdf]: Status=Mismatch, Total Parts=11518, Tested Good=9325, Mismatch/Discrepancy=PCR Part(11515) != PRR(11518); PCR Good(9322) != PRR Good(9325); SBR Part(11515) != PRR(11518); SBR Good(9322) != PRR Good(9325)
+[2026-11-24 09:22:26] Check STDF [mmt-273000538.000_e_20261121181410_ft2_2611212035.stdf.old]: Status=Completed, Total Parts=978, Tested Good=760, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_w_rj1_20261122000757_ft2_2611220329.stdf.old]: Status=Completed, Total Parts=2050, Tested Good=1695, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_w_rj1_20261122034038_ft2_2611220727.stdf.old]: Status=Completed, Total Parts=1720, Tested Good=1261, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_w_rj1_20261122073018_ft2_2611220813.stdf.old]: Status=Completed, Total Parts=472, Tested Good=406, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_q_20261122091812_qc1_2611221005.stdf.old]: Status=Completed, Total Parts=490, Tested Good=386, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_q_rj2_20261122103153_qc1_2611221122.stdf.old]: Status=Completed, Total Parts=16, Tested Good=15, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_q_rj1_20261122100639_qc1_2611221030.stdf.old]: Status=Completed, Total Parts=104, Tested Good=88, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF [mmt-273000538.000_e_20261114135345_ft1_2611151417.stdf.old]: Status=Completed, Total Parts=19576, Tested Good=16598, Mismatch/Discrepancy=None
+[2026-11-24 09:22:27] Check STDF Lot Summary [MMT-273000538.000]: Files=11, Quantity Total Parts=45,944, Quantity Tested Good=37,630, Mismatches=MMT-273000538.000_E_20261120150103_FT2.stdf: PCR Part(11515) != PRR(11518); PCR Good(9322) != PRR Good(9325); SBR Part(11515) != PRR(11518); SBR Good(9322) != PRR Good(9325)
+[2026-11-24 09:59:30] Application closed. Log saved to C:\Users\A78133\AUTOMA~1\NEWFOL~1\PTS_Hub\dist\PTS_Hub\logs\FTDC_Logs_20261124_095930.log

@@ -114,22 +114,41 @@ PAD_ACCENT_BTN_Y = 8
 
 def setup_theme(root):
     """Initialize sv_ttk light theme and configure centralized #F0F0F0 background."""
-    sv_ttk.set_theme("light")
+    if getattr(root, "_pts_theme_initialized", False):
+        return ttk.Style(master=root)
 
-    # Prevent sv_ttk's <<ThemeChanged>> handler from injecting #fafafa via tk_setPalette
+    sv_ttk.set_theme("light", root=root)
+
+    # Prevent sv_ttk's <<ThemeChanged>> handler from injecting #fafafa or recoloring
+    # existing widgets via tk_setPalette / ::tk::RecolorTree (especially on Tk 9+).
     try:
         root.tk.eval(f"""
             proc configure_colors {{}} {{
                 ttk::style configure . -background "{MAIN_BG}" -font SunValleyBodyFont
-                tk_setPalette background "{MAIN_BG}" foreground "{TEXT_FG}" selectBackground "{ACCENT_BTN_BG}" selectForeground "#FFFFFF"
+                option add *background "{MAIN_BG}" widgetDefault
+                option add *foreground "{TEXT_FG}" widgetDefault
+                option add *selectBackground "{ACCENT_BTN_BG}" widgetDefault
+                option add *selectForeground "#FFFFFF" widgetDefault
+                option add *highlightBackground "{MAIN_BG}" widgetDefault
+                option add *highlightColor "{TEXT_FG}" widgetDefault
+                option add *insertBackground "{TEXT_FG}" widgetDefault
+                option add *activeForeground "{TEXT_FG}" widgetDefault
             }}
         """)
-        root.tk.call("tk_setPalette", "background", MAIN_BG)
-        root.update_idletasks()
+        if not root.winfo_children():
+            root.tk.call(
+                "tk_setPalette",
+                "background", MAIN_BG,
+                "foreground", TEXT_FG,
+                "selectBackground", ACCENT_BTN_BG,
+                "selectForeground", "#FFFFFF",
+            )
+        else:
+            root.tk.eval("configure_colors")
     except Exception as exc:
         logging.warning("Failed to configure tk palette colors: %s", exc)
 
-    style = ttk.Style()
+    style = ttk.Style(master=root)
 
     # Apply app background to root window
     try:
@@ -174,4 +193,11 @@ ttk::style layout Neon.Horizontal.TProgressbar {
     except Exception as exc:
         logging.warning("Failed to register Neon.Horizontal.TProgressbar style: %s", exc)
 
+    # Flush queued <<ThemeChanged>> events after all style updates so later widget updates never re-trigger configure_colors
+    try:
+        root.update_idletasks()
+    except Exception as exc:
+        logging.warning("Failed to flush theme idle tasks: %s", exc)
+
+    root._pts_theme_initialized = True
     return style

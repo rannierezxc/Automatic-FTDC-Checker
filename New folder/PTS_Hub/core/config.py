@@ -101,6 +101,9 @@ ICON_PATH = get_asset_path("FTDC_Checker_icon.ico")
 
 
 # ── Settings Configuration (Loaded from settings.json) ──────────────────────
+APP_MODE_PRODUCTION = "production"
+APP_MODE_DEVELOPER = "developer"
+
 _SETTINGS_CACHE: Optional[Dict[str, Any]] = None
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
@@ -109,6 +112,8 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "ftdc_fail_backup_url": "http://mph-vm-mitprod.mchp-main.com:8080/ftdc/filter.php",
     "local_dest_base": r"C:\FTDC",
     "ppo_base_path": r"\\chip\PPOonline",
+    "ppo_attach_timeout_sec": 60,
+    "app_mode": APP_MODE_PRODUCTION,
     # Folder holding the Automatic FTDC Checker Help presentation (opened by the Help button).
     "help_dir": r"\\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\Automatic_FTDC_Checker",
 }
@@ -143,6 +148,65 @@ def reload_settings() -> Dict[str, Any]:
     return load_settings()
 
 
+def get_app_mode() -> str:
+    """Return active operating mode ('production' or 'developer')."""
+    raw = str(load_settings().get("app_mode") or APP_MODE_PRODUCTION).strip().lower()
+    return APP_MODE_DEVELOPER if raw == APP_MODE_DEVELOPER else APP_MODE_PRODUCTION
+
+
+def is_developer_mode() -> bool:
+    """Return True when Developer Mode is active."""
+    return get_app_mode() == APP_MODE_DEVELOPER
+
+
+def set_app_mode(mode: str, persist: bool = True) -> str:
+    """Set the operating mode ('production' or 'developer'), updating cache and settings.json."""
+    raw = str(mode or "").strip().lower()
+    if raw in (APP_MODE_PRODUCTION, "prod"):
+        normalized = APP_MODE_PRODUCTION
+    elif raw in (APP_MODE_DEVELOPER, "dev"):
+        normalized = APP_MODE_DEVELOPER
+    else:
+        raise ValueError(f"Invalid app mode '{mode}'. Expected 'production' or 'developer'.")
+
+    loaded = load_settings()
+    loaded["app_mode"] = normalized
+
+    if persist:
+        settings_path = get_asset_path("settings.json")
+        data: Dict[str, Any] = {}
+        try:
+            if os.path.isfile(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+                    if isinstance(existing, dict):
+                        data = existing
+        except (OSError, ValueError) as exc:
+            logging.warning("Failed to read settings from '%s' before saving app_mode: %s", settings_path, exc)
+            data = dict(loaded)
+        if not data:
+            data = dict(loaded)
+        data["app_mode"] = normalized
+        tmp_path = settings_path + ".tmp"
+        try:
+            parent_dir = os.path.dirname(settings_path)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+                f.write("\n")
+            os.replace(tmp_path, settings_path)
+        except OSError as exc:
+            logging.warning("Failed to persist app_mode to '%s': %s", settings_path, exc)
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
+
+    return normalized
+
+
 def get_mes_url() -> str:
     return str(load_settings().get("mes_url") or DEFAULT_SETTINGS["mes_url"]).strip()
 
@@ -165,6 +229,18 @@ def get_local_dest_base() -> str:
 
 def get_ppo_base_path() -> str:
     return str(load_settings().get("ppo_base_path") or DEFAULT_SETTINGS["ppo_base_path"]).strip()
+
+
+def get_ppo_attach_timeout_sec() -> float:
+    """Return timeout (seconds) for auto-attaching results to PPO."""
+    raw = load_settings().get("ppo_attach_timeout_sec", DEFAULT_SETTINGS["ppo_attach_timeout_sec"])
+    try:
+        val = float(raw)
+        if val > 0:
+            return val
+    except (TypeError, ValueError):
+        pass
+    return float(DEFAULT_SETTINGS["ppo_attach_timeout_sec"])
 
 
 def get_help_dir() -> str:

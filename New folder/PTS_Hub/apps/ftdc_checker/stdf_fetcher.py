@@ -1299,15 +1299,29 @@ def _fast_copy_file_with_progress(
     total_files: int = 1,
     stats_callback: CopyStatsFunc = None,
     byte_progress_callback: Optional[Callable[[int, int], None]] = None,
+    cancel_event: Optional[object] = None,
+    deadline: Optional[float] = None,
 ) -> None:
     """Copy a file to ``{dst}.part`` first, then rename to ``dst`` on success.
 
     On Windows, uses ``kernel32.CopyFileExW`` with an ``LPPROGRESS_ROUTINE``
-    callback for kernel-mode SMB3/DMA copying with live byte progress.
+    callback for kernel-mode SMB3/DMA copying with live byte progress and optional
+    cancellation/timeout via ``pbCancel``.
     On non-Windows systems (or if ``CopyFileExW`` is unavailable), falls back
     to a Python buffered read/write loop.
     """
+    import threading
     import time
+
+    def _is_aborted() -> bool:
+        if cancel_event is not None and cancel_event.is_set():
+            return True
+        if deadline is not None and time.monotonic() >= deadline:
+            return True
+        return False
+
+    if _is_aborted():
+        raise TimeoutError(f"Copy to '{dst}' timed out before starting.")
 
     try:
         file_size = os.path.getsize(src)
@@ -1328,14 +1342,32 @@ def _fast_copy_file_with_progress(
     copied_via_win32 = False
     try:
         if os.name == "nt":
+            copy_done = threading.Event()
+            watcher_thread = None
             try:
+                import ctypes
+                from ctypes import wintypes
                 LPPROGRESS_ROUTINE, copy_file_ex = _get_kernel32_copy()
                 last_state = [0, t0]  # [last_reported_bytes, last_reported_time]
+                cancel_flag = wintypes.BOOL(0)
+                if cancel_event is not None or deadline is not None:
+                    def _watch_cancel():
+                        while not copy_done.wait(0.05):
+                            if _is_aborted():
+                                cancel_flag.value = 1
+                                break
+                    watcher_thread = threading.Thread(
+                        target=_watch_cancel, daemon=True, name="CopyCancelWatch"
+                    )
+                    watcher_thread.start()
 
                 def _win32_progress_cb(
                     total_sz, transferred_sz, _stream_sz, _stream_trans,
                     _stream_num, _reason, _hsrc, _hdst, _lpdata
                 ):
+                    if _is_aborted():
+                        cancel_flag.value = 1
+                        return 1  # PROGRESS_CANCEL
                     now = time.perf_counter()
                     tot = int(total_sz) if total_sz > 0 else file_size
                     cur = max(0, int(transferred_sz))
@@ -1364,13 +1396,20 @@ def _fast_copy_file_with_progress(
                     os.path.abspath(part_dst),
                     c_cb,
                     None,
-                    None,
+                    ctypes.byref(cancel_flag),
                     0,
                 )
                 if res:
                     copied_via_win32 = True
             except Exception:
                 copied_via_win32 = False
+            finally:
+                copy_done.set()
+                if watcher_thread is not None and watcher_thread.is_alive():
+                    watcher_thread.join(timeout=0.1)
+
+        if _is_aborted():
+            raise TimeoutError(f"Copy to '{dst}' timed out.")
 
         if not copied_via_win32:
             # Python buffered loop fallback for non-Windows systems (or if CopyFileExW failed)
@@ -1385,11 +1424,15 @@ def _fast_copy_file_with_progress(
                     except OSError:
                         pass
                 while True:
+                    if _is_aborted():
+                        raise TimeoutError(f"Copy to '{dst}' timed out.")
                     buf = fsrc.read(buffer_size)
                     if not buf:
                         break
                     fdst.write(buf)
                     bytes_copied += len(buf)
+                    if _is_aborted():
+                        raise TimeoutError(f"Copy to '{dst}' timed out.")
                     now = time.perf_counter()
                     if (
                         (bytes_copied - last_reported_bytes >= _PROGRESS_REPORT_INTERVAL)
@@ -1408,6 +1451,8 @@ def _fast_copy_file_with_progress(
                             )
                         if byte_progress_callback:
                             byte_progress_callback(bytes_copied, file_size)
+            if _is_aborted():
+                raise TimeoutError(f"Copy to '{dst}' timed out.")
             try:
                 shutil.copystat(src, part_dst)
             except OSError:

@@ -17,8 +17,9 @@ if PTS_HUB_DIR not in sys.path:
 
 from core.config import APP_NAME, APP_VERSION, APP_ID, get_asset_path, ICON_PATH
 from core.theme import (
-    setup_theme, MAIN_BG, CARD_BG, BORDER_COLOR, LIST_BG, BTN_BG, ENTRY_BG, ACCENT_BTN_BG,
-    NAV_BG, BADGE_EMPTY_BG, BADGE_EMPTY_FG, BADGE_READY_BG, BADGE_READY_FG
+    setup_theme, MAIN_BG, CARD_BG, BORDER_COLOR, LIST_BG, LISTBOX_BG, BTN_BG, ENTRY_BG, ACCENT_BTN_BG,
+    NAV_BG, NAV_TAB_BG, NAV_TAB_ACTIVE, NAV_TITLE_FG, NAV_BADGE_BG, NAV_BADGE_FG,
+    BADGE_EMPTY_BG, BADGE_EMPTY_FG, BADGE_READY_BG, BADGE_READY_FG
 )
 from core.widgets import ModernHoverButton, ModernGreenProgressBar
 from core.hub_window import HubWindow
@@ -126,7 +127,20 @@ class TestPTSHubArchitecture(unittest.TestCase):
             self.assertEqual(ftdc._panel_count_vars[panel].get(), "0 files")
             self.assertEqual(ftdc._panel_badges[panel].cget("bg"), BADGE_EMPTY_BG)
 
-        # Check neon green progress bar
+        # Check Lot Details variables, hidden PPO#, & neon green progress bar
+        def _iter_widgets(w):
+            yield w
+            for child in w.winfo_children():
+                yield from _iter_widgets(child)
+
+        self.assertFalse(ftdc.ENABLE_TARGETED_PPO_ATTACH)
+        ppo_labels = [
+            w for w in _iter_widgets(ftdc)
+            if isinstance(w, tk.Label) and w.cget("text") == "PPO#"
+        ]
+        self.assertEqual(ppo_labels, [])
+        self.assertTrue(hasattr(ftdc, "lot_id_var"))
+        self.assertTrue(hasattr(ftdc, "mpc_var"))
         self.assertIsInstance(ftdc.progress_bar, ttk.Progressbar)
         self.assertEqual(ftdc.progress_bar.cget("style"), "Neon.Horizontal.TProgressbar")
 
@@ -166,6 +180,7 @@ class TestPTSHubArchitecture(unittest.TestCase):
             ftdc.panel_files[p] = [f"C:\\test\\{p}.std"]
         ftdc.lot_id_var.set("LOT123")
         ftdc.mpc_var.set("MPC456")
+        ftdc.ppo_var.set("")
         ftdc.fp_actual_good_qty_var.set("123.45")  # invalid float
         ftdc.total_actual_good_qty_var.set("100")
 
@@ -1526,7 +1541,8 @@ class TestSTDFParserAndReliability(unittest.TestCase):
             notices = []
             ftdc._queue_ppo_notice = lambda kind, title, msg, open_dir=None: notices.append((kind, title, msg, open_dir))
             gen_id = ftdc._excel_generation_id
-            with mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
+            with mock.patch.object(ftdc_ui, "is_developer_mode", return_value=False), \
+                 mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
                  mock.patch.object(ftdc_ui, "get_local_dest_base", return_value=local_base):
                 ftdc._auto_attach_excel_to_ppo(result, src_xlsx, "MMT-272900204.000_FTDC_X.xlsx", gen_id)
                 self.assertEqual(ftdc._ppo_attach_state, "SUCCESS")
@@ -2420,8 +2436,8 @@ class TestSMBPushdown(unittest.TestCase):
             self.assertEqual(res["first_pass"]["missing_zb"], 1)
 
             # Under the SG406 logic:
-            # Valid BT MACID '64_132_3_4_5_6' (40:84:03:04:05:06) is assigned to UID 1001 and UID 1004 -> Duplicate BT MACID = 1, ZB MACID = 0
-            # Even if a part fails, its MACID is still tracked across UIDs to detect duplicates.
+            # Valid BT MACID '64_132_3_4_5_6' (40:84:03:04:05:06) is assigned to PASS UID 1001 and PASS UID 1004 -> Duplicate BT MACID = 1, ZB MACID = 0
+            # Only PASS parts are tracked for duplicate MACIDs; FAIL parts are excluded.
             self.assertEqual(res["duplicate_bt_macid"], 1)
             self.assertEqual(res["duplicate_bt_macid_count"], 1)
             self.assertEqual(res["duplicate_zb_macid"], 0)
@@ -2643,23 +2659,24 @@ class TestSMBPushdown(unittest.TestCase):
                 "There are 1 QC units that are either UNTESTED/TESTED REJECT from previous FT operation. Please hold lot for review and assessment.",
             )
 
-            # Scenario D: Verify duplicate MACID detection when a part has FAIL result
-            # Unit 1 (PASS, UID 1001) has valid BT MACID 64_132_3_4_5_6 (40:84:03:04:05:06)
-            # Unit 2 (FAIL, UID 1006) has the same valid BT MACID 64_132_3_4_5_6
-            # Duplicate MACID MUST be detected across FAIL parts as well!
-            fp_parts_fail_dup = [
+            # Scenario D: Only PASS units are counted as Duplicate MACID (FAIL units are excluded)
+            # 1) Unit 1 (PASS, UID 1001) + Unit 2 (PASS, UID 1002) have distinct MACIDs, while FAIL units
+            #    (UID 1006, UID 1007) share Unit 1's valid BT & ZB MACIDs -> MUST NOT trigger Duplicate MACID!
+            fp_parts_fail_no_dup = [
                 {"part_id": "1", "pass": True, "wxy": (1, 10, 20), "uid": 1001, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 17)},
-                {"part_id": "2", "pass": False, "wxy": (1, 10, 25), "uid": 1006, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 21)},
+                {"part_id": "2", "pass": True, "wxy": (1, 10, 21), "uid": 1002, "bt": (64, 132, 3, 4, 5, 7), "zb": (64, 132, 12, 13, 14, 15, 16, 18)},
+                {"part_id": "3", "pass": False, "wxy": (1, 10, 25), "uid": 1006, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 17)},
+                {"part_id": "4", "pass": False, "wxy": (1, 10, 26), "uid": 1007, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 17)},
             ]
             qc_parts_fail_dup = [
                 {"part_id": "Q1", "pass": True, "wxy": (1, 10, 20), "uid": 1001, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 17)},
             ]
             with open(fp_path, "wb") as f:
-                f.write(build_sg406_stdf(lot_id, fp_parts_fail_dup))
+                f.write(build_sg406_stdf(lot_id, fp_parts_fail_no_dup))
             with open(qc_path, "wb") as f:
                 f.write(build_sg406_stdf(lot_id, qc_parts_fail_dup))
 
-            res_fail_dup = analyze_guid_data(
+            res_fail_no_dup = analyze_guid_data(
                 first_pass_paths=[fp_path],
                 retest_paths=[rt_path],
                 qc_paths=[qc_path],
@@ -2669,9 +2686,66 @@ class TestSMBPushdown(unittest.TestCase):
                 total_actual_good_qty="2",
                 max_workers=1,
             )
-            self.assertEqual(res_fail_dup["duplicate_bt_macid"], 1)
-            self.assertEqual(res_fail_dup["status"], "FAIL")
-            self.assertIn("Duplicate BT MACID (1) was observed", res_fail_dup["remarks"])
+            self.assertEqual(res_fail_no_dup["duplicate_bt_macid"], 0)
+            self.assertEqual(res_fail_no_dup["duplicate_zb_macid"], 0)
+            self.assertEqual(res_fail_no_dup["duplicate_macid"], 0)
+            self.assertEqual(res_fail_no_dup["status"], "PASS")
+            self.assertEqual(res_fail_no_dup["total_good_status"], "PASS")
+
+            # 2) Two PASS units (UID 1001, UID 1002) sharing BT MACID + a 3rd FAIL unit (UID 1006) sharing it
+            #    -> Only the 2 PASS UIDs are tracked/flagged; FAIL unit is excluded in Excel & Details!
+            fp_parts_mixed_dup = [
+                {"part_id": "1", "pass": True, "wxy": (1, 10, 20), "uid": 1001, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 17)},
+                {"part_id": "2", "pass": True, "wxy": (1, 10, 21), "uid": 1002, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 18)},
+                {"part_id": "3", "pass": False, "wxy": (1, 10, 25), "uid": 1006, "bt": (64, 132, 3, 4, 5, 6), "zb": (64, 132, 12, 13, 14, 15, 16, 21)},
+            ]
+            with open(fp_path, "wb") as f:
+                f.write(build_sg406_stdf(lot_id, fp_parts_mixed_dup))
+
+            res_mixed_dup = analyze_guid_data(
+                first_pass_paths=[fp_path],
+                retest_paths=[rt_path],
+                qc_paths=[qc_path],
+                lot_id=lot_id,
+                mpc_text="SG4064RTBA10",
+                first_pass_actual_good_qty="1",
+                total_actual_good_qty="2",
+                max_workers=1,
+            )
+            self.assertEqual(res_mixed_dup["duplicate_bt_macid"], 1)
+            self.assertEqual(res_mixed_dup["duplicate_zb_macid"], 0)
+            self.assertEqual(res_mixed_dup["status"], "FAIL")
+            self.assertIn("Duplicate BT MACID (1) was observed", res_mixed_dup["remarks"])
+            self.assertEqual(res_mixed_dup["duplicate_bt_macids"]["64_132_3_4_5_6"], ["1001", "1002"])
+
+            mixed_xlsx = os.path.join(tmp_dir, "sg406_mixed_dup.xlsx")
+            write_result_excel(res_mixed_dup, mixed_xlsx)
+            wb_mixed = openpyxl.load_workbook(mixed_xlsx)
+            ws_ft_m = wb_mixed["FT Total"]
+            m_hdr_row = next(r for r in range(1, 20) if ws_ft_m.cell(r, 1).value == "Total Parts")
+            m_hdrs = [ws_ft_m.cell(m_hdr_row, c).value for c in range(1, ws_ft_m.max_column + 1)]
+            uid_col = m_hdrs.index("UID") + 1
+            pf_col = m_hdrs.index("Pass/Fail") + 1
+            flag_col = m_hdrs.index("Duplicate MACID Flag") + 1
+            panel_col = m_hdrs.index("Datalog") + 1
+            fp_flags_by_uid = {}
+            for r_i in range(m_hdr_row + 1, ws_ft_m.max_row + 1):
+                if ws_ft_m.cell(r_i, panel_col).value == "FIRST PASS":
+                    fp_flags_by_uid[(str(ws_ft_m.cell(r_i, uid_col).value), str(ws_ft_m.cell(r_i, pf_col).value))] = ws_ft_m.cell(r_i, flag_col).value
+            self.assertEqual(fp_flags_by_uid[("1001", "PASS")], "Duplicate BT MACID")
+            self.assertEqual(fp_flags_by_uid[("1002", "PASS")], "Duplicate BT MACID")
+            self.assertEqual(fp_flags_by_uid[("1006", "FAIL")], "No Duplicate")
+
+            ws_dup_m = wb_mixed["Duplicate MACID Details"]
+            dup_m_hdrs = [ws_dup_m.cell(1, c).value for c in range(1, ws_dup_m.max_column + 1)]
+            uids_col = dup_m_hdrs.index("Assigned UIDS per BT & ZB MACID pair") + 1
+            detail_uid_tokens = {
+                tok.strip()
+                for r_i in range(2, ws_dup_m.max_row + 1)
+                for tok in str(ws_dup_m.cell(r_i, uids_col).value or "").split(",")
+                if tok.strip()
+            }
+            self.assertEqual(detail_uid_tokens, {"1001", "1002"})
 
             # Scenario D2: Invalid MACIDs (not starting with 64_132 / 40:84, such as 00:00:00:00:00:00 and 11:22:33:44:55:66)
             # on FAIL rows MUST NOT be counted as duplicate MACIDs even when shared across multiple different UIDs!
@@ -3495,7 +3569,8 @@ class TestSMBPushdown(unittest.TestCase):
                 ftdc._queue_ppo_notice = lambda kind, title, msg, open_dir=None: notices.append((kind, title, msg, open_dir))
                 gen_id = ftdc._excel_generation_id
 
-                with mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
+                with mock.patch.object(ftdc_ui, "is_developer_mode", return_value=False), \
+                     mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
                      mock.patch.object(ftdc_ui, "get_local_dest_base", return_value=local_base):
                     ftdc._auto_attach_excel_to_ppo(
                         res, src_xlsx, xlsx_name, gen_id,
@@ -4618,7 +4693,8 @@ class TestSMBPushdown(unittest.TestCase):
                     "qc": {"rows": []},
                 }
 
-                with mock.patch.object(ftdc_ui, "write_result_excel", side_effect=_slow_write_excel) as mock_write_excel, \
+                with mock.patch.object(ftdc_ui, "is_developer_mode", return_value=False), \
+                     mock.patch.object(ftdc_ui, "write_result_excel", side_effect=_slow_write_excel) as mock_write_excel, \
                      mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
                      mock.patch.object(ftdc_ui, "get_local_dest_base", return_value=local_base):
                     ftdc._start_background_excel_generation(res, auto_attach=True)
@@ -4680,7 +4756,8 @@ class TestSMBPushdown(unittest.TestCase):
                 src_xlsx = os.path.join(tmp_dir, "src.xlsx")
                 with open(src_xlsx, "wb") as fh:
                     fh.write(b"PK-dummy")
-                ftdc._auto_attach_excel_to_ppo(bad_mpc_res, src_xlsx, "a.xlsx", ftdc._excel_generation_id)
+                with mock.patch.object(ftdc_ui, "is_developer_mode", return_value=False):
+                    ftdc._auto_attach_excel_to_ppo(bad_mpc_res, src_xlsx, "a.xlsx", ftdc._excel_generation_id)
                 _capture_status()
                 self.assertIn("Auto-attach to PPO: Failed (missing MPC/Lot ID)", seen_statuses[-1])
 
@@ -4757,6 +4834,866 @@ class TestSMBPushdown(unittest.TestCase):
                 self.assertEqual(os.path.abspath(hub_config.get_asset_path("settings.json")), os.path.abspath(ext_cfg))
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_48_targeted_ppo_disabled_and_ppo_attach_timeout(self):
+        """Verify:
+        1) Targeted PPO# attachment is disabled (ENABLE_TARGETED_PPO_ATTACH is False),
+           no 'PPO#' UI label exists, blank ppo_var is allowed, normalization handlers are no-ops,
+           and _get_effective_ppo_num() returns ''.
+        2) Auto-attach copies Excel (.xlsx) and snapshot (.png) to ALL existing PPO subfolders
+           without creating a targeted PPO subfolder.
+        3) get_ppo_attach_timeout_sec() loads the configured 60s timeout from settings.json.
+        4) PPO attachment aborts promptly on slow file copy or slow directory scan timeouts,
+           marks state FAILED with 'Timed out', saves local fallback copies, and unlocks is_running.
+        """
+        import tempfile
+        import time
+        import tkinter as tk
+        from unittest import mock
+        from core.config import get_ppo_attach_timeout_sec, reload_settings
+        from apps.ftdc_checker import ui as ftdc_ui
+        from apps.ftdc_checker.ui import FTDCCheckerFrame
+
+        reload_settings()
+        self.assertEqual(get_ppo_attach_timeout_sec(), 60.0)
+
+        tmp_dir = tempfile.mkdtemp(prefix="pts_hub_ppo_disabled_")
+        try:
+            ppo_base = os.path.join(tmp_dir, "PPO")
+            local_base = os.path.join(tmp_dir, "LOCAL")
+            lot_dir = os.path.join(ppo_base, "59793", "MMT-272900204.000")
+            ppo_100 = os.path.join(lot_dir, "PPO100")
+            ppo_200 = os.path.join(lot_dir, "PPO200")
+            ppo_300 = os.path.join(lot_dir, "PPO300")
+            os.makedirs(ppo_100)
+            os.makedirs(ppo_200)
+            os.makedirs(ppo_300)
+
+            root = tk.Tk()
+            root.withdraw()
+            try:
+                ftdc = FTDCCheckerFrame(root)
+                ftdc.PPO_ATTACH_RETRY_DELAYS = (0.0, 0.0)
+                ftdc._queue_ppo_notice = lambda *args, **kwargs: None
+
+                def _iter_widgets(w):
+                    yield w
+                    for child in w.winfo_children():
+                        yield from _iter_widgets(child)
+
+                # 1. Targeted PPO# disabled in UI & helpers
+                self.assertFalse(FTDCCheckerFrame.ENABLE_TARGETED_PPO_ATTACH)
+                ppo_labels = [
+                    w for w in _iter_widgets(ftdc)
+                    if isinstance(w, tk.Label) and w.cget("text") == "PPO#"
+                ]
+                self.assertEqual(ppo_labels, [])
+
+                for p in ftdc.PANELS:
+                    ftdc.panel_files[p] = [f"C:\\test\\{p}.std"]
+                ftdc.lot_id_var.set("MMT-272900204.000")
+                ftdc.mpc_var.set("59793QRTBC01")
+                ftdc.ppo_var.set("")
+                ftdc.fp_actual_good_qty_var.set("12.5")  # fails int validation only after required check passes
+                ftdc.total_actual_good_qty_var.set("10")
+                with mock.patch("tkinter.messagebox.showerror") as mock_err:
+                    ftdc.start_get_data()
+                    self.assertTrue(mock_err.called)
+                    title, _msg = mock_err.call_args[0]
+                    self.assertEqual(title, "Invalid Integer Input")
+
+                ftdc.ppo_var.set("  ppo200  ")
+                self.assertEqual(ftdc._normalize_ppo_var(), "")
+                ftdc._on_ppo_focus_out()
+                self.assertEqual(ftdc.ppo_var.get(), "  ppo200  ")
+                self.assertEqual(ftdc._get_effective_ppo_num({"ppo_num": "PPO200"}), "")
+
+                # 2. Stage 1 + Stage 2 attaches BOTH Excel and PNG to ALL PPO subfolders
+                def _dummy_write_excel(_result, out_path, progress_callback=None):
+                    with open(out_path, "wb") as fh:
+                        fh.write(b"PK-dummy-xlsx")
+
+                def _dummy_render_img(_result, out_path, **_kwargs):
+                    with open(out_path, "wb") as fh:
+                        fh.write(b"\x89PNG\r\n\x1a\ndummy")
+
+                res = {
+                    "lot_id": "MMT-272900204.000",
+                    "mir_lot_id": "MMT-272900204.000",
+                    "mpc": "59793QRTBC01",
+                    "ppo_num": "  ppo200  ",
+                    "status": "PASS",
+                    "total_good_status": "PASS",
+                    "first_pass_pass_count": 10,
+                    "first_pass_actual_good": 10,
+                    "retest_pass_count": 0,
+                    "qc_good_prev_op_count": 5,
+                    "qc_failed_or_missing_prev_op_qty": 0,
+                    "first_pass": {"rows": []},
+                    "qc": {"rows": []},
+                }
+
+                def _wait_bg_and_ui(timeout_s: float = 5.0):
+                    dl = time.monotonic() + timeout_s
+                    while (
+                        ftdc._excel_bg_thread.is_alive()
+                        or ftdc.is_running
+                        or ftdc._pending_running_state is not None
+                        or ftdc._pending_ppo_status is not None
+                        or bool(ftdc._pending_log_messages)
+                    ) and time.monotonic() < dl:
+                        root.update()
+                        time.sleep(0.01)
+                    root.update()
+
+                with mock.patch.object(ftdc_ui, "is_developer_mode", return_value=False), \
+                     mock.patch.object(ftdc_ui, "write_result_excel", side_effect=_dummy_write_excel) as mock_xl, \
+                     mock.patch.object(ftdc_ui, "render_result_image", side_effect=_dummy_render_img), \
+                     mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
+                     mock.patch.object(ftdc_ui, "get_local_dest_base", return_value=local_base):
+                    ftdc._start_background_excel_generation(res, auto_attach=True)
+                    _wait_bg_and_ui(5.0)
+
+                    self.assertFalse(ftdc.is_running)
+                    self.assertEqual(ftdc._ppo_attach_state, "SUCCESS")
+                    self.assertEqual(res.get("ppo_num"), "")
+                    self.assertEqual(res.get("_ppo_attached_ppo_num"), "")
+                    xl_name = res["_cached_excel_name"]
+                    img_name = res["_cached_image_name"]
+                    for sub in (ppo_100, ppo_200, ppo_300):
+                        self.assertTrue(os.path.isfile(os.path.join(sub, xl_name)), f"Missing {xl_name} in {sub}")
+                        self.assertTrue(os.path.isfile(os.path.join(sub, img_name)), f"Missing {img_name} in {sub}")
+                    self.assertEqual(mock_xl.call_count, 1)
+
+                    # Setting non-existent PPO# on result still attaches to ALL existing folders & creates none
+                    direct_res = dict(res, ppo_num="  ppo999_new  ")
+                    direct_res.pop("_ppo_attached_paths", None)
+                    ftdc._auto_attach_excel_to_ppo(
+                        direct_res,
+                        res["_cached_excel_path"],
+                        "DIRECT.xlsx",
+                        ftdc._excel_generation_id,
+                        extra_attachments=[(res["_cached_image_path"], "DIRECT.png")],
+                    )
+                    self.assertEqual(ftdc._ppo_attach_state, "SUCCESS")
+                    self.assertFalse(os.path.exists(os.path.join(lot_dir, "PPO999_NEW")))
+                    for sub in (ppo_100, ppo_200, ppo_300):
+                        self.assertTrue(os.path.isfile(os.path.join(sub, "DIRECT.xlsx")))
+                        self.assertTrue(os.path.isfile(os.path.join(sub, "DIRECT.png")))
+
+                    # 3. Timeout during slow SMB copy
+                    def _slow_copy(_src, dst, **_kwargs):
+                        ce = _kwargs.get("cancel_event")
+                        if ce is not None:
+                            ce.wait(timeout=2.0)
+                        else:
+                            time.sleep(0.5)
+                        raise TimeoutError(f"Simulated slow copy timeout for {dst}")
+
+                    ftdc.PPO_ATTACH_TIMEOUT_SEC = 0.25
+                    res_timeout_copy = dict(res)
+                    for k in ("_cached_excel_ready", "_cached_excel_path", "_cached_image_path", "_ppo_attached_paths"):
+                        res_timeout_copy.pop(k, None)
+
+                    t_start = time.monotonic()
+                    with mock.patch.object(ftdc_ui, "_fast_copy_file_with_progress", side_effect=_slow_copy):
+                        ftdc._start_background_excel_generation(res_timeout_copy, auto_attach=True)
+                        _wait_bg_and_ui(4.0)
+                    elapsed_copy = time.monotonic() - t_start
+
+                    self.assertLess(elapsed_copy, 3.0)
+                    self.assertFalse(ftdc.is_running)
+                    self.assertEqual(ftdc._ppo_attach_state, "FAILED")
+                    self.assertIn("Timed out", ftdc.status_var.get())
+                    self.assertIn("Timed out", ftdc.log_text.get("1.0", "end"))
+                    local_lot_dir = os.path.join(local_base, "MMT-272900204.000")
+                    self.assertTrue(os.path.isfile(os.path.join(local_lot_dir, res_timeout_copy["_cached_excel_name"])))
+                    self.assertTrue(os.path.isfile(os.path.join(local_lot_dir, res_timeout_copy["_cached_image_name"])))
+
+                    # 4. Timeout during slow PPO directory scan
+                    def _slow_scan(*_args, **_kwargs):
+                        time.sleep(0.6)
+                        return [ppo_100]
+
+                    ftdc.PPO_ATTACH_TIMEOUT_SEC = 0.2
+                    res_timeout_scan = dict(res)
+                    for k in ("_cached_excel_ready", "_cached_excel_path", "_cached_image_path", "_ppo_attached_paths"):
+                        res_timeout_scan.pop(k, None)
+
+                    t_start = time.monotonic()
+                    with mock.patch.object(ftdc, "_resolve_ppo_target_subfolders", side_effect=_slow_scan):
+                        ftdc._start_background_excel_generation(res_timeout_scan, auto_attach=True)
+                        _wait_bg_and_ui(4.0)
+                    elapsed_scan = time.monotonic() - t_start
+
+                    self.assertLess(elapsed_scan, 3.0)
+                    self.assertFalse(ftdc.is_running)
+                    self.assertEqual(ftdc._ppo_attach_state, "FAILED")
+                    self.assertIn("Timed out", ftdc.status_var.get())
+                    self.assertIn("Timed out", ftdc.log_text.get("1.0", "end"))
+                    self.assertTrue(os.path.isfile(os.path.join(local_lot_dir, res_timeout_scan["_cached_excel_name"])))
+                    self.assertTrue(os.path.isfile(os.path.join(local_lot_dir, res_timeout_scan["_cached_image_name"])))
+            finally:
+                ftdc.PPO_ATTACH_TIMEOUT_SEC = None
+                root.destroy()
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_49_config_only_macid_prefix_and_no_hardcoded_defaults(self):
+        """Verify:
+        1) Hardcoded default MACID prefixes & SG406 parameter constants are removed; DEFAULT_MACID_PREFIXES == ().
+        2) resolve_macid_device_config() raises ValueError when mask/WXY/UID/BT-or-ZB config is missing.
+        3) Blank/omitted macid_prefix disables MACID prefix checking while still rejecting dummy MACIDs.
+        4) Non-blank macid_prefix strictly enforces only the configured prefix.
+        5) End-to-end analyze_guid_data() with blank macid_prefix accepts arbitrary non-40:84 MACIDs
+           and detects duplicates properly.
+        6) save_mask_wxy_entry() with blank prefixes removes prefix keys from JSON and clears cache.
+        """
+        import json
+        import struct
+        import tempfile
+        from apps.ftdc_checker import guid_analysis as ga
+        from apps.ftdc_checker import sg406_analysis as sg
+        from apps.ftdc_checker.guid_analysis import analyze_guid_data, MPC_WXY_TEST_MAP, reload_wxy_config, save_mask_wxy_entry
+
+        # 1. Removed hardcoded defaults
+        self.assertEqual(sg.DEFAULT_MACID_PREFIXES, ())
+        for removed_name in (
+            "SG406_DEFAULT_WXY_TESTS",
+            "SG406_UID_TEST",
+            "SG406_BT_TESTS",
+            "SG406_ZB_TESTS",
+            "INVALID_BT",
+            "INVALID_ZB",
+        ):
+            self.assertFalse(hasattr(sg, removed_name), f"{removed_name} should be removed")
+
+        # 2. resolve_macid_device_config requires complete config (no hardcoded fallbacks even for SG406)
+        with self.assertRaises(ValueError):
+            sg.resolve_macid_device_config("UNCFG", {})
+        with self.assertRaises(ValueError):
+            sg.resolve_macid_device_config("SG406", {})
+        with self.assertRaises(ValueError):
+            sg.resolve_macid_device_config("SG406", {"SG406": {"wafer": 1, "x": 2, "uid": 3, "bt": [4]}})
+        with self.assertRaises(ValueError):
+            sg.resolve_macid_device_config("TESTD", {"TESTD": {"wafer": 1, "x": 2, "y": 3, "bt": [4]}})
+        with self.assertRaises(ValueError):
+            sg.resolve_macid_device_config("TESTD", {"TESTD": {"wafer": 1, "x": 2, "y": 3, "uid": 4}})
+
+        # 3. Blank or omitted macid_prefix disables prefix checking while still excluding dummies
+        for extra_cfg in ({"macid_prefix": ""}, {}):
+            cfg_blank = sg.resolve_macid_device_config(
+                "BLANK",
+                {"BLANK": {"wafer": 1, "x": 2, "y": 3, "uid": 4, "bt": [5], "zb": [6], **extra_cfg}},
+            )
+            self.assertEqual(cfg_blank["macid_prefixes"], {"bt": (), "zb": ()})
+            for valid_mac in ("AA:BB:11:22:33:44", "12:34:56:78:9A:BC", "40:84:32:0C:C0:72", "170_187_1_2_3_4"):
+                self.assertTrue(sg._is_valid_macid_cfg(valid_mac, "bt", cfg_blank), valid_mac)
+                self.assertTrue(sg._is_valid_macid_cfg(valid_mac, "zb", cfg_blank), valid_mac)
+            for dummy_mac in ("00:00:00:00:00:00", "FF:FF:FF:FF:FF:FF", "11:22:33:44:55:66", "0_0_0_0_0_0", "NaN"):
+                self.assertFalse(sg._is_valid_macid_cfg(dummy_mac, "bt", cfg_blank), dummy_mac)
+                self.assertFalse(sg._is_valid_macid_cfg(dummy_mac, "zb", cfg_blank), dummy_mac)
+
+        # 4. Configured prefix strictly enforces only that prefix
+        cfg_pfx = sg.resolve_macid_device_config(
+            "PFXDV",
+            {"PFXDV": {"wafer": 1, "x": 2, "y": 3, "uid": 4, "bt": [5], "macid_prefix": "A0:B1"}},
+        )
+        self.assertTrue(sg._is_valid_macid_cfg("A0:B1:00:00:00:01", "bt", cfg_pfx))
+        self.assertFalse(sg._is_valid_macid_cfg("40:84:32:0C:C0:72", "bt", cfg_pfx))
+        self.assertFalse(sg._is_valid_macid_cfg("AA:BB:11:22:33:44", "bt", cfg_pfx))
+
+        # 5. End-to-end analyze_guid_data() with blank macid_prefix
+        def _build_macid_stdf(lot_id: str, dev_name: str, parts_spec: list) -> bytes:
+            out = bytearray()
+            out += TestSTDFParserAndReliability._rec(0, 10, bytes([2, 4]), "<")
+            mir = bytearray(struct.pack("<IIBBBBH", 1700000000, 1700000010, 1, ord("P"), ord(" "), ord(" "), 65535))
+            mir += b" "
+            for s in (lot_id, dev_name, "NODE1", "V93K", "JOB1"):
+                mir += TestSTDFParserAndReliability._cn(s)
+            mir += b"\x00" * 25
+            out += TestSTDFParserAndReliability._rec(1, 10, bytes(mir), "<")
+            for p in parts_spec:
+                out += TestSTDFParserAndReliability._rec(5, 10, bytes([1, 1]), "<")
+                tmap = dict(p["tests"])
+                for tnum, val in sorted(tmap.items()):
+                    ptr = bytearray(struct.pack("<IBBBBf", int(tnum), 1, 1, 0, 0, float(val)))
+                    ptr += TestSTDFParserAndReliability._cn(f"T_{tnum}") + b"\x00\x00\x00\x00\x00"
+                    ptr += struct.pack("<ff", -1e6, 1e6)
+                    out += TestSTDFParserAndReliability._rec(15, 10, bytes(ptr), "<")
+                is_p = p.get("pass", True)
+                prr = bytearray(struct.pack("<BBBHHHhhI", 1, 1, 0x00 if is_p else 0x08, len(tmap), 1 if is_p else 5, 1 if is_p else 5, -32768, -32768, 12))
+                prr += TestSTDFParserAndReliability._cn(str(p["part_id"])) + b"\x00\x00"
+                out += TestSTDFParserAndReliability._rec(5, 20, bytes(prr), "<")
+            good_cnt = sum(1 for p in parts_spec if p.get("pass", True))
+            out += TestSTDFParserAndReliability._rec(1, 30, struct.pack("<BBIIIII", 255, 0, len(parts_spec), 0, 0, good_cnt, 0), "<")
+            out += TestSTDFParserAndReliability._rec(1, 20, struct.pack("<IB", 1700001000, ord(" ")) + b"\x00\x00", "<")
+            return bytes(out)
+
+        tmp_dir = tempfile.mkdtemp(prefix="pts_hub_cfg_only_")
+        orig_json_path = ga._MASK_WXY_JSON_PATH
+        try:
+            fp_path = os.path.join(tmp_dir, "fp.std")
+            rt_path = os.path.join(tmp_dir, "rt.std")
+            qc_path = os.path.join(tmp_dir, "qc.std")
+
+            custom_map = dict(MPC_WXY_TEST_MAP)
+            custom_map["NOPFX"] = {
+                "wafer": 1001, "x": 1002, "y": 1003,
+                "uid": 1004,
+                "bt": [2001, 2002, 2003, 2004, 2005, 2006],
+                "macid_prefix": "",
+            }
+            with patch.dict(MPC_WXY_TEST_MAP, custom_map, clear=False):
+                pass_fp_parts = [
+                    {"part_id": "1", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 1, 1004: 5001, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 4}},
+                    {"part_id": "2", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 2, 1004: 5002, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 5}},
+                ]
+                with open(fp_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX.000", "NOPFX", pass_fp_parts))
+                with open(rt_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX.000", "NOPFX", []))
+                with open(qc_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX.000", "NOPFX", [pass_fp_parts[0]]))
+
+                res_pass = analyze_guid_data(
+                    first_pass_paths=[fp_path], retest_paths=[rt_path], qc_paths=[qc_path],
+                    lot_id="LOT_NOPFX.000", mpc_text="NOPFX1RTBA10",
+                    first_pass_actual_good_qty="2", total_actual_good_qty="2",
+                    max_workers=1,
+                )
+                self.assertEqual(res_pass["status"], "PASS")
+                self.assertEqual(res_pass["duplicate_bt_macid"], 0)
+                self.assertEqual(res_pass["fp_good_unique_discrepancy"], 0)
+
+                dup_fp_parts = [
+                    {"part_id": "1", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 1, 1004: 5001, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 4}},
+                    {"part_id": "2", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 2, 1004: 5002, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 4}},
+                ]
+                with open(fp_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_DUP.000", "NOPFX", dup_fp_parts))
+                with open(rt_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_DUP.000", "NOPFX", []))
+                with open(qc_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_DUP.000", "NOPFX", [dup_fp_parts[0]]))
+
+                res_dup = analyze_guid_data(
+                    first_pass_paths=[fp_path], retest_paths=[rt_path], qc_paths=[qc_path],
+                    lot_id="LOT_NOPFX_DUP.000", mpc_text="NOPFX1RTBA10",
+                    first_pass_actual_good_qty="2", total_actual_good_qty="2",
+                    max_workers=1,
+                )
+                self.assertEqual(res_dup["status"], "FAIL")
+                self.assertEqual(res_dup["duplicate_bt_macid"], 1)
+
+                # FAIL units sharing the same non-dummy MACID (06:80:FC:81:01:07) across different UIDs
+                # MUST NOT be counted as Duplicate MACID when prefix checking is disabled.
+                fail_shared_mac_parts = [
+                    {"part_id": "1", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 1, 1004: 5001, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 4}},
+                    {"part_id": "2", "pass": True, "tests": {1001: 1, 1002: 10, 1003: 2, 1004: 5002, 2001: 170, 2002: 187, 2003: 1, 2004: 2, 2005: 3, 2006: 5}},
+                    {"part_id": "3", "pass": False, "tests": {1001: 1, 1002: 20, 1003: 1, 1004: 6001, 2001: 6, 2002: 128, 2003: 252, 2004: 129, 2005: 1, 2006: 7}},
+                    {"part_id": "4", "pass": False, "tests": {1001: 1, 1002: 20, 1003: 2, 1004: 6002, 2001: 6, 2002: 128, 2003: 252, 2004: 129, 2005: 1, 2006: 7}},
+                ]
+                with open(fp_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_FAIL_MAC.000", "NOPFX", fail_shared_mac_parts))
+                with open(rt_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_FAIL_MAC.000", "NOPFX", []))
+                with open(qc_path, "wb") as f:
+                    f.write(_build_macid_stdf("LOT_NOPFX_FAIL_MAC.000", "NOPFX", [fail_shared_mac_parts[0]]))
+
+                res_fail_mac = analyze_guid_data(
+                    first_pass_paths=[fp_path], retest_paths=[rt_path], qc_paths=[qc_path],
+                    lot_id="LOT_NOPFX_FAIL_MAC.000", mpc_text="NOPFX1RTBA10",
+                    first_pass_actual_good_qty="2", total_actual_good_qty="2",
+                    max_workers=1,
+                )
+                self.assertEqual(res_fail_mac["status"], "PASS")
+                self.assertEqual(res_fail_mac["total_good_status"], "PASS")
+                self.assertEqual(res_fail_mac["duplicate_bt_macid"], 0)
+                self.assertEqual(res_fail_mac["duplicate_macid"], 0)
+
+            # 6. save_mask_wxy_entry() with blank prefixes removes prefix keys and clears cache
+            tmp_mask_json = os.path.join(tmp_dir, "mask_wxy_map.json")
+            with open(tmp_mask_json, "w", encoding="utf-8") as f:
+                json.dump({
+                    "TMPMK": {
+                        "wafer": 10, "x": 11, "y": 12,
+                        "uid": 13, "bt": [14],
+                        "macid_prefix": "40:84",
+                        "bt_prefix": "40:84",
+                        "zb_prefix": "40:84",
+                    }
+                }, f)
+
+            ga._MASK_WXY_JSON_PATH = tmp_mask_json
+            reload_wxy_config()
+            sg._compile_macid_rules(("40:84",), ())
+            self.assertGreater(sg._compile_macid_rules.cache_info().currsize, 0)
+
+            saved = save_mask_wxy_entry(
+                "TMPMK", 10, 11, 12,
+                uid=13, bt=[14],
+                macid_prefix="", bt_prefix="", zb_prefix="",
+            )
+            self.assertEqual(sg._compile_macid_rules.cache_info().currsize, 0)
+            for k in ("macid_prefix", "bt_prefix", "zb_prefix"):
+                self.assertNotIn(k, saved)
+            with open(tmp_mask_json, "r", encoding="utf-8") as f:
+                on_disk = json.load(f)
+            for k in ("macid_prefix", "bt_prefix", "zb_prefix"):
+                self.assertNotIn(k, on_disk["TMPMK"])
+        finally:
+            ga._MASK_WXY_JSON_PATH = orig_json_path
+            reload_wxy_config()
+            sg.clear_macid_validation_cache()
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_50_hub_settings_button_and_developer_mode_disables_ppo_auto_attach(self):
+        """Verify:
+        1) HubWindow top navbar includes a Settings button (outside nav tabs) and hides DEV MODE badge in Production Mode.
+        2) Clicking Settings opens a single-instance Settings dialog with Production / Developer Mode toggle.
+        3) Switching to Developer Mode shows the DEV MODE badge, persists app_mode='developer',
+           updates dialog description, and notifies FTDCCheckerFrame.
+        4) In Developer Mode, generated Excel stays local and auto-attachment to PPO subfolders is skipped
+           (both via _start_background_excel_generation and direct _auto_attach_excel_to_ppo), leaving is_running=False.
+        5) Switching back to Production Mode hides DEV MODE badge, persists app_mode='production',
+           and re-enables auto-attachment of cached Excel + snapshot image to all PPO subfolders.
+        """
+        import json
+        import tempfile
+        import time
+        import tkinter as tk
+        from unittest import mock
+        import core.config as app_cfg
+        from core.hub_window import HubWindow, NAV_ICON_BITMAPS
+        from apps.ftdc_checker import ui as ftdc_ui
+        from apps.ftdc_checker.ui import FTDCCheckerFrame
+
+        self.assertIn("Settings", NAV_ICON_BITMAPS)
+        orig_get_asset_path = app_cfg.get_asset_path
+
+        tmp_dir = tempfile.mkdtemp(prefix="pts_hub_settings_mode_")
+        tmp_settings_json = os.path.join(tmp_dir, "settings.json")
+        real_settings_path = orig_get_asset_path("settings.json")
+        if os.path.isfile(real_settings_path):
+            shutil.copy2(real_settings_path, tmp_settings_json)
+            with open(tmp_settings_json, "r", encoding="utf-8") as fh:
+                init_cfg = json.load(fh)
+        else:
+            init_cfg = {}
+        init_cfg["app_mode"] = "production"
+        with open(tmp_settings_json, "w", encoding="utf-8") as fh:
+            json.dump(init_cfg, fh, indent=2)
+
+        ppo_base = os.path.join(tmp_dir, "PPO")
+        local_base = os.path.join(tmp_dir, "LOCAL")
+        lot_dir = os.path.join(ppo_base, "59793", "MMT-272900204.000")
+        ppo_100 = os.path.join(lot_dir, "PPO100")
+        ppo_200 = os.path.join(lot_dir, "PPO200")
+        ppo_300 = os.path.join(lot_dir, "PPO300")
+        os.makedirs(ppo_100)
+        os.makedirs(ppo_200)
+        os.makedirs(ppo_300)
+
+        def _patched_get_asset_path(filename: str) -> str:
+            if filename == "settings.json":
+                return tmp_settings_json
+            return orig_get_asset_path(filename)
+
+        with mock.patch.object(app_cfg, "get_asset_path", side_effect=_patched_get_asset_path):
+            app_cfg.reload_settings()
+            root = tk.Tk()
+            root.withdraw()
+            try:
+                setup_theme(root)
+                hub = HubWindow(root)
+                ftdc = FTDCCheckerFrame(hub.content_area, hub=hub)
+                hub.register_app("FTDC Checker", ftdc, is_default=True)
+                ftdc.PPO_ATTACH_RETRY_DELAYS = (0.0, 0.0)
+                ftdc._queue_ppo_notice = lambda *args, **kwargs: None
+
+                # 1. Navbar Settings button & default Production Mode state
+                self.assertTrue(hasattr(hub, "settings_btn"))
+                self.assertEqual(hub.settings_btn.cget("compound"), "left")
+                self.assertNotEqual(hub.settings_btn.cget("image"), "")
+                self.assertEqual(hub.settings_btn.cget("text"), "  Settings")
+                self.assertNotIn("Settings", hub._nav_items)
+                self.assertEqual(app_cfg.get_app_mode(), "production")
+                self.assertFalse(app_cfg.is_developer_mode())
+                self.assertEqual(hub.mode_badge.winfo_manager(), "")
+
+                # 2. Open Settings dialog (single-instance check)
+                win = hub.open_settings_dialog()
+                self.assertTrue(win.winfo_exists())
+                self.assertIs(hub.open_settings_dialog(), win)
+                self.assertEqual(win.mode_status_label.cget("text"), "Production Mode")
+                self.assertIn("automatically attach", win.mode_desc_label.cget("text"))
+
+                # 3. Toggle to Developer Mode
+                win.toggle_command()
+                root.update()
+                self.assertEqual(app_cfg.get_app_mode(), "developer")
+                self.assertTrue(app_cfg.is_developer_mode())
+                self.assertNotEqual(hub.mode_badge.winfo_manager(), "")
+                self.assertEqual(hub.mode_badge.cget("text"), "DEV MODE")
+                self.assertEqual(win.mode_status_label.cget("text"), "Developer Mode")
+                self.assertIn("disabled", win.mode_desc_label.cget("text").lower())
+                with open(tmp_settings_json, "r", encoding="utf-8") as fh:
+                    self.assertEqual(json.load(fh).get("app_mode"), "developer")
+                while ftdc._pending_log_messages:
+                    root.update()
+                    time.sleep(0.01)
+                self.assertIn("Developer Mode", ftdc.log_text.get("1.0", "end"))
+
+                # 4. In Developer Mode, Excel is generated locally and PPO auto-attach is skipped
+                def _dummy_write_excel(_result, out_path, progress_callback=None):
+                    with open(out_path, "wb") as fh:
+                        fh.write(b"PK-dummy-xlsx")
+
+                def _dummy_render_img(_result, out_path, **_kwargs):
+                    with open(out_path, "wb") as fh:
+                        fh.write(b"\x89PNG\r\n\x1a\ndummy")
+
+                def _wait_ui(timeout_s: float = 5.0):
+                    dl = time.monotonic() + timeout_s
+                    while (
+                        (ftdc._excel_bg_thread is not None and ftdc._excel_bg_thread.is_alive())
+                        or ftdc.is_running
+                        or ftdc._pending_running_state is not None
+                        or ftdc._pending_ppo_status is not None
+                        or bool(ftdc._pending_log_messages)
+                    ) and time.monotonic() < dl:
+                        root.update()
+                        time.sleep(0.01)
+                    root.update()
+
+                res = {
+                    "lot_id": "MMT-272900204.000",
+                    "mir_lot_id": "MMT-272900204.000",
+                    "mpc": "59793QRTBC01",
+                    "status": "PASS",
+                    "total_good_status": "PASS",
+                    "first_pass_pass_count": 10,
+                    "first_pass_actual_good": 10,
+                    "retest_pass_count": 0,
+                    "qc_good_prev_op_count": 5,
+                    "qc_failed_or_missing_prev_op_qty": 0,
+                    "first_pass": {"rows": []},
+                    "qc": {"rows": []},
+                }
+
+                with mock.patch.object(ftdc_ui, "write_result_excel", side_effect=_dummy_write_excel) as mock_xl, \
+                     mock.patch.object(ftdc_ui, "render_result_image", side_effect=_dummy_render_img), \
+                     mock.patch.object(ftdc_ui, "get_ppo_base_path", return_value=ppo_base), \
+                     mock.patch.object(ftdc_ui, "get_local_dest_base", return_value=local_base):
+                    ftdc._start_background_excel_generation(res, auto_attach=True)
+                    _wait_ui(5.0)
+
+                    self.assertFalse(ftdc.is_running)
+                    self.assertEqual(ftdc._excel_state, "READY")
+                    self.assertTrue(res.get("_cached_excel_ready"))
+                    self.assertTrue(os.path.isfile(res["_cached_excel_path"]))
+                    self.assertEqual(ftdc._ppo_attach_state, "IDLE")
+                    self.assertIn("Developer Mode", ftdc.status_var.get())
+                    self.assertIn("Developer Mode", ftdc.log_text.get("1.0", "end"))
+                    for sub in (ppo_100, ppo_200, ppo_300):
+                        self.assertEqual(os.listdir(sub), [], f"PPO folder {sub} should be empty in Developer Mode")
+                    self.assertEqual(mock_xl.call_count, 1)
+
+                    # Direct _auto_attach_excel_to_ppo call is also skipped in Developer Mode
+                    ftdc._auto_attach_excel_to_ppo(
+                        res,
+                        res["_cached_excel_path"],
+                        res["_cached_excel_name"],
+                        ftdc._excel_generation_id,
+                    )
+                    _wait_ui(2.0)
+                    self.assertEqual(ftdc._ppo_attach_state, "IDLE")
+                    for sub in (ppo_100, ppo_200, ppo_300):
+                        self.assertEqual(os.listdir(sub), [])
+
+                    # 5. Toggle back to Production Mode -> auto-attaches cached Excel + image to all PPO folders
+                    win.toggle_command()
+                    root.update()
+                    self.assertEqual(app_cfg.get_app_mode(), "production")
+                    self.assertFalse(app_cfg.is_developer_mode())
+                    self.assertEqual(hub.mode_badge.winfo_manager(), "")
+                    self.assertEqual(win.mode_status_label.cget("text"), "Production Mode")
+                    with open(tmp_settings_json, "r", encoding="utf-8") as fh:
+                        self.assertEqual(json.load(fh).get("app_mode"), "production")
+
+                    ftdc._start_background_excel_generation(res, auto_attach=True)
+                    _wait_ui(5.0)
+
+                    self.assertFalse(ftdc.is_running)
+                    self.assertEqual(ftdc._ppo_attach_state, "SUCCESS")
+                    self.assertEqual(mock_xl.call_count, 1)  # Cached Excel reused
+                    xl_name = res["_cached_excel_name"]
+                    img_name = res["_cached_image_name"]
+                    for sub in (ppo_100, ppo_200, ppo_300):
+                        self.assertTrue(os.path.isfile(os.path.join(sub, xl_name)), f"Missing {xl_name} in {sub}")
+                        self.assertTrue(os.path.isfile(os.path.join(sub, img_name)), f"Missing {img_name} in {sub}")
+            finally:
+                root.destroy()
+                app_cfg.reload_settings()
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+class TestSTDF2SumIntegration(unittest.TestCase):
+    """Integration tests for optimized STDF2SUM inside PTS Hub."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.root = tk.Tk()
+        cls.root.withdraw()
+        setup_theme(cls.root)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.root.destroy()
+
+    @staticmethod
+    def _build_synthetic_stdf_file(path: str):
+        import struct
+
+        def cn(s: str) -> bytes:
+            b = s.encode("latin-1", errors="replace")
+            return struct.pack("<B", len(b)) + b
+
+        def rec(rt, body: bytes) -> bytes:
+            return struct.pack("<HBB", len(body), rt[0], rt[1]) + body
+
+        out = bytearray()
+        out += rec((0, 10), struct.pack("<BB", 0, 4))
+        mir_body = (
+            struct.pack("<IIB", 1700000000, 1700000060, 1)
+            + b"P  "
+            + struct.pack("<H", 0)
+            + b" "
+            + cn("LOT_HUB_1")
+            + cn("PROD_HUB")
+        )
+        out += rec((1, 10), mir_body)
+        out += rec((1, 80), struct.pack("<BBBB", 1, 1, 1, 1) + cn("HND"))
+        out += rec((1, 40), struct.pack("<BBHI", 1, 1, 1, 1) + b"P" + cn("PASS_BIN"))
+        out += rec((1, 50), struct.pack("<BBHI", 1, 1, 1, 1) + b"P" + cn("GOOD_SBIN"))
+
+        # Part 1 (PASS)
+        out += rec((5, 10), struct.pack("<BB", 1, 1))
+        ptr1 = (
+            struct.pack("<IBBBBf", 9000, 1, 1, 0, 0, 5.5)
+            + cn("VOLTS")
+            + cn("")
+            + bytes(4)
+            + struct.pack("<ff", 0.0, 10.0)
+            + cn("V")
+        )
+        out += rec((15, 10), ptr1)
+        prr1 = bytearray(17)
+        prr1[0] = 1
+        prr1[1] = 1
+        prr1[2] = 0
+        struct.pack_into("<HH", prr1, 5, 1, 1)
+        struct.pack_into("<I", prr1, 13, 100)
+        prr1 += cn("P1")
+        out += rec((5, 20), bytes(prr1))
+
+        # Part 2 (FAIL)
+        out += rec((5, 10), struct.pack("<BB", 1, 1))
+        ptr2 = (
+            struct.pack("<IBBBBf", 9000, 1, 1, 0, 0, 12.5)
+            + cn("VOLTS")
+            + cn("")
+            + bytes(4)
+            + struct.pack("<ff", 0.0, 10.0)
+            + cn("V")
+        )
+        out += rec((15, 10), ptr2)
+        prr2 = bytearray(17)
+        prr2[0] = 1
+        prr2[1] = 1
+        prr2[2] = 0x08
+        struct.pack_into("<HH", prr2, 5, 2, 2)
+        struct.pack_into("<I", prr2, 13, 120)
+        prr2 += cn("P2")
+        out += rec((5, 20), bytes(prr2))
+
+        out += rec((1, 20), struct.pack("<I", 1700000120) + b" " + cn("") + cn(""))
+        with open(path, "wb") as f:
+            f.write(bytes(out))
+
+    def test_01_stdf2sum_frame_widgets_and_file_badges(self):
+        """Verify STDF2SumFrame widgets, Neon progress bar, badge transitions, auto output prefix, and PTS Hub colors."""
+        hub = HubWindow(self.root)
+        ftdc = FTDCCheckerFrame(hub.content_area, hub=hub)
+        stdf2sum = STDF2SumFrame(hub.content_area, hub=hub)
+        data_analysis = DataAnalysisFrame(hub.content_area, hub=hub)
+        hub.register_app("FTDC Checker", ftdc)
+        hub.register_app("STDF2SUM", stdf2sum)
+        hub.register_app("Data Analysis", data_analysis)
+        hub.switch_tab("Home")
+        self.root.update()
+
+        # Verify HubWindow navbar, tabs, Home cards, FTDCCheckerFrame, and STDF2SumFrame retain exact design colors
+        nav = hub.tabs_frame.master
+        self.assertEqual(nav.cget("bg"), NAV_BG)
+        all_labels = []
+        def _collect_labels(w):
+            for ch in w.winfo_children():
+                if isinstance(ch, tk.Label):
+                    all_labels.append(ch)
+                _collect_labels(ch)
+        _collect_labels(nav)
+        brand_lbl = next(lbl for lbl in all_labels if lbl.cget("text") == APP_NAME)
+        badge_lbl = next(lbl for lbl in all_labels if lbl.cget("text") == APP_VERSION)
+        self.assertEqual(brand_lbl.cget("fg"), NAV_TITLE_FG)
+        self.assertEqual(badge_lbl.cget("bg"), NAV_BADGE_BG)
+        self.assertEqual(badge_lbl.cget("fg"), NAV_BADGE_FG)
+        self.assertEqual(hub._nav_items["Home"].cget("bg"), NAV_TAB_ACTIVE)
+        for tab_name in ("FTDC Checker", "STDF2SUM", "Data Analysis"):
+            self.assertEqual(hub._nav_items[tab_name].cget("bg"), NAV_TAB_BG)
+
+        for card_name, card in hub.home_frame.cards.items():
+            self.assertEqual(card.cget("bg"), hub.home_frame.CARD_SURFACE, f"Home card {card_name} bg")
+            self.assertEqual(
+                card.cget("highlightbackground"),
+                hub.home_frame.CARD_BORDER_IDLE,
+                f"Home card {card_name} border",
+            )
+
+        self.assertEqual(ftdc.add_device_button.cget("bg"), BTN_BG)
+        for panel in ftdc.PANELS:
+            self.assertEqual(ftdc.panel_listboxes[panel].cget("bg"), LISTBOX_BG)
+            self.assertEqual(ftdc._panel_badges[panel].cget("bg"), BADGE_EMPTY_BG)
+        self.assertEqual(ftdc.get_stdf_button.cget("bg"), BTN_BG)
+        self.assertEqual(ftdc.convert_button.cget("bg"), ACCENT_BTN_BG)
+
+        self.assertEqual(stdf2sum.files_listbox.cget("bg"), LISTBOX_BG)
+        self.assertEqual(stdf2sum.files_badge.cget("bg"), BADGE_EMPTY_BG)
+        self.assertEqual(stdf2sum.add_files_button.cget("bg"), BTN_BG)
+        self.assertEqual(stdf2sum.convert_button.cget("bg"), ACCENT_BTN_BG)
+
+        for attr in (
+            "files_listbox",
+            "files_badge",
+            "convert_button",
+            "show_all_tests_button",
+            "clear_selected_tests_button",
+            "output_entry",
+            "progress_bar",
+            "log_text",
+        ):
+            self.assertIsNotNone(getattr(stdf2sum, attr), f"Missing attribute: {attr}")
+
+        self.assertEqual(stdf2sum.progress_bar.cget("style"), "Neon.Horizontal.TProgressbar")
+        self.assertEqual(stdf2sum._files_count_var.get(), "0 files")
+        self.assertEqual(stdf2sum.files_badge.cget("bg"), BADGE_EMPTY_BG)
+        self.assertEqual(stdf2sum.clear_selected_tests_button.grid_info(), {})
+
+        # Add file -> badge green, count 1 file, output_var auto-populated
+        stdf2sum.selected_files.append(r"C:\tmp\lot_sample.std")
+        stdf2sum.refresh_file_list()
+        self.assertEqual(stdf2sum._files_count_var.get(), "1 file")
+        self.assertEqual(stdf2sum.files_badge.cget("bg"), BADGE_READY_BG)
+        self.assertEqual(stdf2sum.files_badge.cget("fg"), BADGE_READY_FG)
+        self.assertTrue(stdf2sum.output_var.get().endswith("lot_sample"))
+
+        # Select & remove file -> back to 0 files
+        stdf2sum.files_listbox.selection_set(0)
+        stdf2sum.remove_selected_files()
+        self.assertEqual(stdf2sum._files_count_var.get(), "0 files")
+        self.assertEqual(stdf2sum.files_badge.cget("bg"), BADGE_EMPTY_BG)
+        self.assertEqual(stdf2sum.output_var.get(), "")
+
+        # Add again & clear_files -> back to 0 files
+        stdf2sum.selected_files.append(r"C:\tmp\lot_sample2.std")
+        stdf2sum.refresh_file_list()
+        self.assertEqual(stdf2sum._files_count_var.get(), "1 file")
+        stdf2sum.clear_files()
+        self.assertEqual(stdf2sum._files_count_var.get(), "0 files")
+        self.assertEqual(stdf2sum.files_badge.cget("bg"), BADGE_EMPTY_BG)
+
+    def test_02_stdf2sum_end_to_end_conversion_and_sheets(self):
+        """Verify end-to-end STDF2SUM Excel generation & STDF2SumFrame background conversion."""
+        import glob
+        import tempfile
+        import time
+        from openpyxl import load_workbook
+        from apps.stdf2sum.excel_output import convert_multiple_stdf_to_single_csv, clear_parse_cache
+
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            stdf_path = os.path.join(tmp_dir, "hub_sample.std")
+            self._build_synthetic_stdf_file(stdf_path)
+            clear_parse_cache()
+
+            out_prefix = os.path.join(tmp_dir, "direct_out")
+            files = convert_multiple_stdf_to_single_csv([stdf_path], output_prefix=out_prefix, verbose=False)
+            self.assertTrue(files and os.path.isfile(files[0]))
+            wb = load_workbook(files[0], data_only=True)
+            for sheet in ("Summary", "Data", "Hard Bins", "Soft Bins", "Test Parameters", "Bin Mapping"):
+                self.assertIn(sheet, wb.sheetnames)
+            data_rows = list(wb["Data"].iter_rows(min_row=6, values_only=True))
+            self.assertEqual(len(data_rows), 2)
+            self.assertEqual(data_rows[0][1], "P1")
+            self.assertEqual(data_rows[0][7], "PASS")
+            self.assertEqual(data_rows[1][1], "P2")
+            self.assertEqual(data_rows[1][7], "FAIL")
+            wb.close()
+
+            # Also test conversion triggered from STDF2SumFrame
+            hub = HubWindow(self.root)
+            stdf2sum = STDF2SumFrame(hub.content_area, hub=hub)
+            hub.register_app("STDF2SUM", stdf2sum)
+            hub.switch_tab("STDF2SUM")
+
+            ui_prefix = os.path.join(tmp_dir, "ui_out")
+            stdf2sum.selected_files = [stdf_path]
+            stdf2sum.refresh_file_list()
+            stdf2sum._set_output_value(ui_prefix, auto_managed=False)
+
+            with patch.object(stdf2sum, "_show_success_dialog") as mock_dlg:
+                stdf2sum.start_conversion()
+                deadline = time.monotonic() + 10.0
+                while stdf2sum.is_running and time.monotonic() < deadline:
+                    self.root.update()
+                    time.sleep(0.01)
+                self.root.update()
+                self.assertFalse(stdf2sum.is_running)
+                self.assertTrue(mock_dlg.called)
+
+            created_xlsx = glob.glob(ui_prefix + "_*.xlsx")
+            self.assertEqual(len(created_xlsx), 1)
+            stdf2sum.clear_all()
+            self.assertEqual(stdf2sum.selected_files, [])
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_03_stdf2sum_hub_busy_and_alert_sync(self):
+        """Verify STDF2SUM background task busy and blinking Done alert synchronization in HubWindow."""
+        hub = HubWindow(self.root)
+        ftdc = FTDCCheckerFrame(hub.content_area, hub=hub)
+        stdf2sum = STDF2SumFrame(hub.content_area, hub=hub)
+        hub.register_app("FTDC Checker", ftdc, is_default=True)
+        hub.register_app("STDF2SUM", stdf2sum)
+
+        hub.switch_tab("STDF2SUM")
+        stdf2sum._set_running(True)
+        self.assertTrue(stdf2sum.is_running)
+
+        # Navigate away while STDF2SUM is busy
+        hub.switch_tab("FTDC Checker")
+        self.assertEqual(hub._tab_states["STDF2SUM"], "busy")
+        self.assertIn("⏳", hub._nav_items["STDF2SUM"].cget("text"))
+
+        # Task finishes while user is on FTDC Checker -> blinking alert
+        stdf2sum._set_running(False)
+        self.assertFalse(stdf2sum.is_running)
+        self.assertEqual(hub._tab_states["STDF2SUM"], "alert")
+        self.assertIsNotNone(hub._tab_blink_jobs["STDF2SUM"])
+        self.assertIn("Done", hub._nav_items["STDF2SUM"].cget("text"))
+
+        hub.stop_tab_alert("STDF2SUM")
 
 
 if __name__ == "__main__":

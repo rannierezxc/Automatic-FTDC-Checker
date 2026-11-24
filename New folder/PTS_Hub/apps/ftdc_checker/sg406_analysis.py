@@ -1,15 +1,10 @@
 """
-Dedicated multi-identifier (WXY, UID, BT MACID, ZB MACID) analysis and Excel reporting
-module for SG406 devices.
+Multi-Identifier (WXY, UID, BT MACID, ZB MACID) analysis and Excel reporting module.
 
-Separates the 4-way checking logic (WXY, UID, BT, ZB) from standard single-WXY devices
-so existing optimizations and behavior for all other masks remain 100% untouched.
-
-SG406 Test Parameters (18 total):
-- WXY (3 tests): Wafer=93005, X=93006, Y=93007
-- UID (1 test):  UID=93009
-- BT  (6 tests): BT1=94016, BT2=94017, BT3=94018, BT4=94019, BT5=94020, BT6=94021
-- ZB  (8 tests): ZB1=94022, ZB2=94023, ZB3=94024, ZB4=94025, ZB5=94026, ZB6=94027, ZB7=94028, ZB8=94029
+Separates the multi-parameter checking logic (WXY, UID, BT, ZB) from standard
+WXY-only devices. All test numbers (Wafer, X, Y, UID, BT, ZB) and optional
+MACID prefix rules are read strictly from assets/mask_wxy_map.json (managed
+via Device Settings) with no hardcoded per-device defaults.
 """
 import functools
 import itertools
@@ -31,20 +26,9 @@ from apps.ftdc_checker.stdf_parser import (
 
 SG406_MASK = "SG406"
 
-SG406_DEFAULT_WXY_TESTS: Dict[str, int] = {
-    "wafer": 93005,
-    "x": 93006,
-    "y": 93007,
-}
-SG406_UID_TEST: int = 93009
-SG406_BT_TESTS: Tuple[int, ...] = (94016, 94017, 94018, 94019, 94020, 94021)
-SG406_ZB_TESTS: Tuple[int, ...] = (94022, 94023, 94024, 94025, 94026, 94027, 94028, 94029)
-
 INVALID_WXY = "NaN_NaN_NaN"
 INVALID_WXYS = {INVALID_WXY, "0_0_0"}
 INVALID_UID = "NaN"
-INVALID_BT = "_".join(["NaN"] * len(SG406_BT_TESTS))
-INVALID_ZB = "_".join(["NaN"] * len(SG406_ZB_TESTS))
 
 CHECK_KEYS: Tuple[str, ...] = ("wxy", "uid", "bt", "zb")
 CHECK_LABELS: Dict[str, str] = {
@@ -109,13 +93,15 @@ def macid_decimal_to_hex(macid_str: Any) -> str:
 #   }
 #
 # MACID validity is a strict 2-way check:
-#   1) INCLUSION : MACID must start with one of the configured valid prefixes
-#                  (default "40:84" / decimal "64_132" when not configured), AND
+#   1) INCLUSION : If one or more prefixes are configured in Device Settings
+#                  ("macid_prefix" / "bt_prefix" / "zb_prefix"), the MACID must
+#                  start with one of those prefixes. When blank/unconfigured,
+#                  MACID prefix checking is disabled.
 #   2) EXCLUSION : MACID must NOT be missing ('NaN'), all-zeros (00:00:...),
 #                  all-FF (FF:FF:...), the dummy sequence 11:22:33:44:55:66:...,
 #                  or any extra dummy listed in "macid_invalid".
 # ══════════════════════════════════════════════════════════════════════════════
-DEFAULT_MACID_PREFIXES: Tuple[str, ...] = ("40:84",)
+DEFAULT_MACID_PREFIXES: Tuple[str, ...] = ()
 MACID_TYPES: Tuple[str, ...] = ("bt", "zb")
 MACID_SHORT_LABELS: Dict[str, str] = {"bt": "BT", "zb": "ZB"}
 
@@ -185,39 +171,41 @@ def get_macid_mask_key(mpc_or_mask: str, mpc_wxy_map: Optional[Dict[str, Dict[st
 
 
 def resolve_macid_device_config(
-    mpc_or_mask: str = SG406_MASK,
+    mpc_or_mask: str = "",
     mpc_wxy_map: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Resolve the generic multi-identifier configuration for any MACID-enabled mask.
 
-    Supports BT + ZB, BT-only or ZB-only devices with any number of test numbers per MACID,
-    and UID logged as a single test or split across several tests.
+    All test numbers (WXY, UID, BT, ZB) and optional MACID prefixes are read
+    strictly from ``mask_wxy_map.json`` (managed via Device Settings) with no
+    hardcoded default values. When MACID prefixes are blank/unconfigured, prefix
+    checking is disabled.
     """
     if mpc_wxy_map is None:
         from apps.ftdc_checker.guid_analysis import MPC_WXY_TEST_MAP
         mpc_wxy_map = MPC_WXY_TEST_MAP
 
-    mask = str(mpc_or_mask or SG406_MASK).strip().upper()[:5]
+    mask = str(mpc_or_mask or "").strip().upper()[:5]
+    if not mask:
+        raise ValueError("Mask or MPC is required to resolve multi-identifier configuration.")
     mapped = (mpc_wxy_map or {}).get(mask) or {}
-    is_sg406_defaults = (mask == SG406_MASK)
+    if not mapped:
+        raise ValueError(
+            f"Mask '{mask}' is not configured in mask_wxy_map.json. Please configure it in Device Settings."
+        )
 
     def _req_int(key: str) -> int:
-        if key in mapped and mapped[key] is not None:
+        if key in mapped and mapped[key] is not None and str(mapped[key]).strip() != "":
             return int(mapped[key])
-        if is_sg406_defaults:
-            return int(SG406_DEFAULT_WXY_TESTS[key])
-        raise ValueError(f"Mask '{mask}' is missing the '{key}' WXY test number in mask_wxy_map.json.")
+        raise ValueError(
+            f"Mask '{mask}' is missing the '{key}' WXY test number in mask_wxy_map.json. Please configure it in Device Settings."
+        )
 
     wxy = {"wafer": _req_int("wafer"), "x": _req_int("x"), "y": _req_int("y")}
 
     uid = _as_test_tuple(mapped.get("uid"))
     bt = _as_test_tuple(mapped.get("bt"))
     zb = _as_test_tuple(mapped.get("zb"))
-    if is_sg406_defaults and not (bt or zb):
-        # Backward compatibility: SG406 historical defaults if JSON has no MACID lists at all.
-        bt, zb = SG406_BT_TESTS, SG406_ZB_TESTS
-    if is_sg406_defaults and not uid:
-        uid = (SG406_UID_TEST,)
     if not (bt or zb):
         raise ValueError(
             f"Mask '{mask}' has no BT or ZB MACID test numbers configured in mask_wxy_map.json."
@@ -237,7 +225,7 @@ def resolve_macid_device_config(
         elif common_prefix is not None:
             prefixes[mtype] = common_prefix
         else:
-            prefixes[mtype] = DEFAULT_MACID_PREFIXES
+            prefixes[mtype] = ()
 
     extra_invalid = tuple(
         h for h in (_normalize_macid_hex(v) for v in (_normalize_prefix_list(mapped.get("macid_invalid")) or ()))
@@ -280,11 +268,11 @@ def _cfg_active_macids(cfg: Optional[Dict[str, Any]]) -> Tuple[str, ...]:
 
 def _cfg_prefixes(cfg: Optional[Dict[str, Any]], mtype: str) -> Tuple[str, ...]:
     if not cfg:
-        return DEFAULT_MACID_PREFIXES
+        return ()
     pmap = cfg.get("macid_prefixes") or {}
     val = pmap.get(mtype)
     if val is None:
-        return DEFAULT_MACID_PREFIXES
+        return ()
     return tuple(val)
 
 
@@ -337,7 +325,7 @@ def _compile_macid_rules(
         if norm
     )
     if pfx_raw is None:
-        pfx = DEFAULT_MACID_PREFIXES
+        pfx = ()
     else:
         pfx_norm = _normalize_prefix_list(pfx_raw)
         pfx = pfx_norm if pfx_norm is not None else tuple(pfx_raw)
@@ -388,8 +376,8 @@ def _is_valid_macid(
 
     1) EXCLUSION: reject missing ('NaN'), all-zeros, all-FF, dummy 11:22:33:44:55:66:...
        and any extra configured dummy MACIDs.
-    2) INCLUSION: MACID must start with one of the valid prefixes (default '40:84' /
-       decimal '64_132'). An explicitly empty prefix list disables only the inclusion check.
+    2) INCLUSION: when ``prefixes`` / ``valid_prefixes`` is non-empty, MACID must start with
+       one of those valid prefixes. When None or empty, prefix checking is disabled.
     """
     if not macid_val:
         return False
@@ -530,7 +518,7 @@ def _compute_duplicate_macid_summary(
     dup_bt_map: Optional[Dict[str, Sequence[str]]] = None,
     dup_zb_map: Optional[Dict[str, Sequence[str]]] = None,
 ) -> Tuple[Dict[str, List[str]], Dict[str, List[str]], List[Dict[str, Any]]]:
-    """Single-pass computation of ``(dup_bt, dup_zb, duplicate_pair_details)``."""
+    """Single-pass computation of ``(dup_bt, dup_zb, duplicate_pair_details)`` on PASS parts only."""
     active = _cfg_active_macids(cfg)
     use_bt = "bt" in active
     use_zb = "zb" in active
@@ -542,6 +530,8 @@ def _compute_duplicate_macid_summary(
     zb_uids: Dict[str, Set[str]] = defaultdict(set)
 
     for r in all_rows or ():
+        if "pass_fail" in r and str(r.get("pass_fail") or "").strip().upper() != "PASS":
+            continue
         u_raw = r.get("uid")
         u_val = str(u_raw).strip() if u_raw is not None else ""
         if not u_val or u_val == "NaN" or "NaN" in u_val or u_val == INVALID_UID:
@@ -1325,7 +1315,7 @@ def analyze_sg406_guid_data(
     wxy_tests = sg406_cfg["wxy"]
     has_bt = bool(sg406_cfg.get("has_bt", True))
     has_zb = bool(sg406_cfg.get("has_zb", True))
-    mask_key = str(sg406_cfg.get("mask") or SG406_MASK)
+    mask_key = str(sg406_cfg["mask"])
     active_lbls = ["WXY", "UID"] + (["BT"] if has_bt else []) + (["ZB"] if has_zb else [])
     wxy_source = f"MPC prefix {mask_key} (Multi-Parameter: {' + '.join(active_lbls)})"
 
@@ -1339,10 +1329,19 @@ def analyze_sg406_guid_data(
     _emit_log(f"MPC: {mpc_text}", True, logger)
     _emit_log(f"First Pass Actual Good QTY: {fp_actual:,}", True, logger)
     _emit_log(f"Total Actual Good QTY: {total_actual:,}", True, logger)
+    _pfx_map = sg406_cfg.get("macid_prefixes") or {}
+    _pfx_parts = []
+    if has_bt:
+        _bp = _pfx_map.get("bt") or ()
+        _pfx_parts.append(f"BT={','.join(_bp) if _bp else 'Disabled'}")
+    if has_zb:
+        _zp = _pfx_map.get("zb") or ()
+        _pfx_parts.append(f"ZB={','.join(_zp) if _zp else 'Disabled'}")
     _emit_log(
         f"{mask_key} Tests resolved: Wafer={wxy_tests['wafer']}, X={wxy_tests['x']}, Y={wxy_tests['y']} | "
         f"UID={list(sg406_cfg.get('uid_tests', (sg406_cfg['uid'],)))} | "
-        f"BT={list(sg406_cfg['bt'])} | ZB={list(sg406_cfg['zb'])}",
+        f"BT={list(sg406_cfg['bt'])} | ZB={list(sg406_cfg['zb'])} | "
+        f"MACID Prefix={', '.join(_pfx_parts) if _pfx_parts else 'Disabled'}",
         True, logger,
     )
 
@@ -1465,17 +1464,18 @@ def analyze_sg406_guid_data(
         total_actual=total_actual,
     )
 
-    # 2. Single-pass MACID duplicate analysis:
-    # Each active BT MACID and/or ZB MACID should be uniquely assigned to one UID only.
+    # 2. Single-pass MACID duplicate analysis (PASS parts only; FAIL parts excluded):
+    # Each active BT MACID and/or ZB MACID among PASS units should be uniquely assigned to one UID only.
+    fp_good_rows = [r for r in fp_rows if r.get("pass_fail") == "PASS"]
+    rt_good_rows = [r for r in retest_rows if r.get("pass_fail") == "PASS"]
+    qc_good_rows = [r for r in qc_rows if r.get("pass_fail") == "PASS"]
     dup_bt, dup_zb, dup_macid_pairs = _compute_duplicate_macid_summary(
-        itertools.chain(fp_rows, retest_rows, qc_rows),
+        itertools.chain(fp_good_rows, rt_good_rows, qc_good_rows),
         cfg=sg406_cfg,
     )
     duplicate_macid_count = len(dup_bt) + len(dup_zb)
 
     # 3. Good Unique Count tally (active parameters: WXY vs UID vs BT MACID and/or ZB MACID) on PASS rows.
-    fp_good_rows = [r for r in fp_rows if r.get("pass_fail") == "PASS"]
-    rt_good_rows = [r for r in retest_rows if r.get("pass_fail") == "PASS"]
     gu_fp = compute_good_unique_discrepancy(fp_good_rows, cfg=sg406_cfg)
     gu_total = compute_good_unique_discrepancy(fp_good_rows + rt_good_rows, cfg=sg406_cfg)
     fp_good_unique_disc = int(gu_fp["discrepancy"])
@@ -1969,12 +1969,22 @@ def build_sg406_summary_and_details(
         ),
     ]
 
-    wxy_tests = result.get("wxy_tests") or SG406_DEFAULT_WXY_TESTS
-    sg406_tests = result.get("sg406_tests") or resolve_sg406_test_config()
+    sg406_tests = result.get("sg406_tests") or {}
+    if not sg406_tests and result.get("mpc"):
+        try:
+            sg406_tests = resolve_macid_device_config(str(result.get("mpc")))
+        except ValueError:
+            sg406_tests = {}
+    wxy_tests = result.get("wxy_tests") or (sg406_tests.get("wxy") if isinstance(sg406_tests, dict) else None) or {}
     remarks = str(result.get("remarks") or compute_sg406_remarks(result))
 
-    uid_tests_seq = sg406_tests.get("uid_tests") or (sg406_tests.get("uid", SG406_UID_TEST),)
-    uid_tests_val = uid_tests_seq[0] if len(uid_tests_seq) == 1 else ", ".join(str(t) for t in uid_tests_seq)
+    uid_tests_seq = tuple(sg406_tests.get("uid_tests") or _as_test_tuple(sg406_tests.get("uid")))
+    if len(uid_tests_seq) == 1:
+        uid_tests_val: Any = uid_tests_seq[0]
+    elif uid_tests_seq:
+        uid_tests_val = ", ".join(str(t) for t in uid_tests_seq)
+    else:
+        uid_tests_val = ""
     bt_tests_str = ", ".join(str(t) for t in sg406_tests.get("bt", ())) if has_bt else "N/A"
     zb_tests_str = ", ".join(str(t) for t in sg406_tests.get("zb", ())) if has_zb else "N/A"
     active_gu_hdr = " / ".join(["WXY", "UID"] + (["BT MACID"] if has_bt else []) + (["ZB MACID"] if has_zb else []))
@@ -2519,8 +2529,9 @@ def write_sg406_result_excel(
     def _build_ft_row_values(part_num: int, r_obj: Dict[str, Any]) -> Tuple[Any, ...]:
         bt_val = row_get(r_obj, "bt", "") if has_bt else ""
         zb_val = row_get(r_obj, "zb", "") if has_zb else ""
-        is_dup_bt = has_bt and dup_bt_has(bt_val)
-        is_dup_zb = has_zb and dup_zb_has(zb_val)
+        is_pass = str(row_get(r_obj, "pass_fail", "") or "").strip().upper() == "PASS"
+        is_dup_bt = is_pass and has_bt and dup_bt_has(bt_val)
+        is_dup_zb = is_pass and has_zb and dup_zb_has(zb_val)
         if is_dup_bt and is_dup_zb:
             mac_flag = "Duplicate BT & ZB MACID"
         elif is_dup_bt:

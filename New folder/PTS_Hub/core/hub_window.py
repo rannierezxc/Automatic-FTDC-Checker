@@ -2,17 +2,23 @@
 Hub window shell, top navigation bar, and tab dispatcher for PTS Hub.
 """
 import logging
+import os
 import tkinter as tk
 from tkinter import ttk
 from typing import Dict, Optional
 
-from core.config import APP_NAME, APP_VERSION
+from core.config import (
+    APP_NAME, APP_VERSION, ICON_PATH,
+    APP_MODE_PRODUCTION, APP_MODE_DEVELOPER,
+    get_app_mode, set_app_mode as _set_config_app_mode, is_developer_mode,
+)
 from core.theme import (
     NAV_BG, NAV_BORDER, NAV_TAB_BG, NAV_TAB_BORDER, NAV_TAB_HOVER, NAV_TAB_HOVER_BORDER,
     NAV_TAB_HOVER_FG, NAV_TAB_ACTIVE, NAV_TAB_ACTIVE_BORDER, NAV_TEXT, NAV_TEXT_ACTIVE,
     NAV_TITLE_FG, NAV_BADGE_BG, NAV_BADGE_FG, NAV_BADGE_BORDER,
-    MAIN_BG, BADGE_EMPTY_BG, BADGE_EMPTY_FG, TEXT_FG, TEXT_MUTED
+    MAIN_BG, BADGE_EMPTY_BG, BADGE_EMPTY_FG, TEXT_FG, TEXT_MUTED, CARD_BORDER, ACCENT_BTN_BG
 )
+from core.widgets import ModernHoverButton
 
 
 NAV_ICON_BITMAPS: Dict[str, list] = {
@@ -87,6 +93,24 @@ NAV_ICON_BITMAPS: Dict[str, list] = {
         ".#..............",
         ".##############.",
         "................",
+    ],
+    "Settings": [
+        "......####......",
+        "......####......",
+        "..##.######.##..",
+        ".####......####.",
+        ".###..####..###.",
+        "..#..##..##..#..",
+        "###..#....#..###",
+        "###..#....#..###",
+        "###..#....#..###",
+        "###..#....#..###",
+        "..#..##..##..#..",
+        ".###..####..###.",
+        ".####......####.",
+        "..##.######.##..",
+        "......####......",
+        "......####......",
     ],
 }
 
@@ -354,6 +378,10 @@ class HubWindow:
         self._tab_blink_jobs: Dict[str, Optional[str]] = {}
         self._tab_blink_phase: Dict[str, bool] = {}
 
+        self._settings_dialog: Optional[tk.Toplevel] = None
+        self._settings_dialog_refresh = None
+        self._app_mode: str = get_app_mode()
+
         self._nav_icons_active: Dict[str, tk.PhotoImage] = {}
         self._nav_icons_inactive: Dict[str, tk.PhotoImage] = {}
         self._init_nav_icons()
@@ -450,6 +478,372 @@ class HubWindow:
         # Tabs Container
         self.tabs_frame = tk.Frame(nav, bg=NAV_BG)
         self.tabs_frame.pack(side="left", fill="y", padx=4)
+
+        # Right-side Action Container (Developer Mode badge + Settings button)
+        self.nav_right_frame = tk.Frame(nav, bg=NAV_BG)
+        self.nav_right_frame.pack(side="right", fill="y", padx=(8, 14))
+
+        set_act_icon = self._get_nav_icon("Settings", active=True)
+        set_inact_icon = self._get_nav_icon("Settings", active=False)
+        set_kwargs = {}
+        if set_inact_icon is not None:
+            set_kwargs["image"] = set_inact_icon
+            set_kwargs["compound"] = "left"
+            set_text = "  Settings"
+        else:
+            set_text = "⚙ Settings"
+
+        self.settings_btn = tk.Label(
+            self.nav_right_frame,
+            text=set_text,
+            font=("Segoe UI", 9, "bold"),
+            bg=NAV_TAB_BG,
+            fg=NAV_TEXT,
+            padx=12,
+            pady=6,
+            cursor="hand2",
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=NAV_TAB_BORDER,
+            highlightcolor=NAV_TAB_BORDER,
+            **set_kwargs,
+        )
+        self.settings_btn.pack(side="right", padx=(6, 0), pady=11)
+
+        def _on_settings_enter(_e):
+            cfg = dict(
+                bg=NAV_TAB_HOVER,
+                fg=NAV_TAB_HOVER_FG,
+                highlightbackground=NAV_TAB_HOVER_BORDER,
+                highlightcolor=NAV_TAB_HOVER_BORDER,
+            )
+            if set_act_icon is not None:
+                cfg["image"] = set_act_icon
+            self.settings_btn.configure(**cfg)
+
+        def _on_settings_leave(_e):
+            cfg = dict(
+                bg=NAV_TAB_BG,
+                fg=NAV_TEXT,
+                highlightbackground=NAV_TAB_BORDER,
+                highlightcolor=NAV_TAB_BORDER,
+            )
+            if set_inact_icon is not None:
+                cfg["image"] = set_inact_icon
+            self.settings_btn.configure(**cfg)
+
+        self.settings_btn.bind("<Enter>", _on_settings_enter)
+        self.settings_btn.bind("<Leave>", _on_settings_leave)
+        self.settings_btn.bind("<Button-1>", lambda _e: self.open_settings_dialog())
+
+        self.mode_badge = tk.Label(
+            self.nav_right_frame,
+            text="DEV MODE",
+            font=("Segoe UI", 8, "bold"),
+            bg="#D97706",
+            fg="#FFFFFF",
+            padx=8,
+            pady=4,
+            cursor="hand2",
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#F59E0B",
+            highlightcolor="#F59E0B",
+        )
+        self.mode_badge.bind("<Button-1>", lambda _e: self.open_settings_dialog())
+        self._sync_mode_badge()
+
+    def _sync_mode_badge(self):
+        """Show the navbar DEV MODE indicator only while Developer Mode is active."""
+        if getattr(self, "mode_badge", None) is None:
+            return
+        if is_developer_mode():
+            if not self.mode_badge.winfo_manager():
+                self.mode_badge.pack(side="right", padx=(0, 4), pady=13)
+        else:
+            if self.mode_badge.winfo_manager():
+                self.mode_badge.pack_forget()
+
+    def get_app_mode(self) -> str:
+        """Return the active operating mode ('production' or 'developer')."""
+        return get_app_mode()
+
+    def set_app_mode(self, mode: str, persist: bool = True) -> str:
+        """Update the active operating mode, refresh navbar/dialog UI, and notify registered apps."""
+        normalized = _set_config_app_mode(mode, persist=persist)
+        self._app_mode = normalized
+        self._sync_mode_badge()
+        if callable(self._settings_dialog_refresh):
+            try:
+                self._settings_dialog_refresh()
+            except Exception as exc:
+                logging.debug("Failed to refresh settings dialog: %s", exc)
+        for name, frame in list(self._app_frames.items()):
+            if hasattr(frame, "on_app_mode_changed"):
+                try:
+                    frame.on_app_mode_changed(normalized)
+                except Exception as exc:
+                    logging.warning("Error notifying '%s' of mode change: %s", name, exc)
+        return normalized
+
+    def toggle_app_mode(self, persist: bool = True) -> str:
+        """Toggle between Production Mode and Developer Mode."""
+        target = APP_MODE_PRODUCTION if is_developer_mode() else APP_MODE_DEVELOPER
+        return self.set_app_mode(target, persist=persist)
+
+    def open_settings_dialog(self) -> tk.Toplevel:
+        """Open (or focus) the PTS Hub Settings dialog with Operating Mode toggle."""
+        if self._settings_dialog is not None:
+            try:
+                if self._settings_dialog.winfo_exists():
+                    if callable(self._settings_dialog_refresh):
+                        self._settings_dialog_refresh()
+                    self._settings_dialog.deiconify()
+                    self._settings_dialog.lift()
+                    self._settings_dialog.focus_set()
+                    return self._settings_dialog
+            except Exception as exc:
+                logging.debug("Previous settings dialog handle invalid: %s", exc)
+            self._settings_dialog = None
+            self._settings_dialog_refresh = None
+
+        win = tk.Toplevel(self.root)
+        win.title(f"{APP_NAME} - Settings")
+        win.configure(bg=MAIN_BG)
+        win.transient(self.root)
+        win.resizable(False, False)
+        try:
+            if os.path.isfile(ICON_PATH):
+                win.iconbitmap(ICON_PATH)
+        except Exception as exc:
+            logging.debug("Could not set settings dialog icon: %s", exc)
+
+        body = tk.Frame(win, bg=MAIN_BG, padx=20, pady=16)
+        body.pack(fill="both", expand=True)
+
+        # Header
+        tk.Label(
+            body,
+            text="Settings",
+            font=("Segoe UI", 14, "bold"),
+            bg=MAIN_BG,
+            fg=TEXT_FG,
+            anchor="w",
+        ).pack(fill="x")
+        tk.Label(
+            body,
+            text="Configure PTS Hub operating mode and preferences.",
+            font=("Segoe UI", 9),
+            bg=MAIN_BG,
+            fg=TEXT_MUTED,
+            anchor="w",
+        ).pack(fill="x", pady=(2, 12))
+
+        # Operating Mode Card
+        card = tk.Frame(
+            body,
+            bg="#FFFFFF",
+            padx=16,
+            pady=14,
+            highlightthickness=1,
+            highlightbackground=CARD_BORDER,
+            highlightcolor=CARD_BORDER,
+        )
+        card.pack(fill="x")
+
+        top_row = tk.Frame(card, bg="#FFFFFF")
+        top_row.pack(fill="x")
+
+        title_col = tk.Frame(top_row, bg="#FFFFFF")
+        title_col.pack(side="left", fill="x", expand=True)
+
+        tk.Label(
+            title_col,
+            text="Operating Mode",
+            font=("Segoe UI", 10, "bold"),
+            bg="#FFFFFF",
+            fg=TEXT_FG,
+            anchor="w",
+        ).pack(anchor="w")
+
+        mode_status_label = tk.Label(
+            title_col,
+            text="",
+            font=("Segoe UI", 8, "bold"),
+            padx=8,
+            pady=2,
+            relief="flat",
+            bd=0,
+        )
+        mode_status_label.pack(anchor="w", pady=(4, 0))
+
+        switch_row = tk.Frame(top_row, bg="#FFFFFF")
+        switch_row.pack(side="right", padx=(16, 0))
+
+        prod_lbl = tk.Label(
+            switch_row,
+            text="Production",
+            font=("Segoe UI", 9, "bold"),
+            bg="#FFFFFF",
+            fg=TEXT_FG,
+            cursor="hand2",
+        )
+        prod_lbl.pack(side="left", padx=(0, 8))
+
+        toggle_switch = tk.Canvas(
+            switch_row,
+            width=54,
+            height=28,
+            bg="#FFFFFF",
+            highlightthickness=0,
+            bd=0,
+            cursor="hand2",
+        )
+        toggle_switch.pack(side="left")
+
+        dev_lbl = tk.Label(
+            switch_row,
+            text="Developer",
+            font=("Segoe UI", 9),
+            bg="#FFFFFF",
+            fg=TEXT_MUTED,
+            cursor="hand2",
+        )
+        dev_lbl.pack(side="left", padx=(8, 0))
+
+        tk.Frame(card, bg="#E2E8F0", height=1).pack(fill="x", pady=(12, 10))
+
+        tk.Label(
+            card,
+            text="Auto-Attach to PPO Behavior",
+            font=("Segoe UI", 8, "bold"),
+            bg="#FFFFFF",
+            fg=TEXT_MUTED,
+            anchor="w",
+        ).pack(fill="x", pady=(0, 4))
+
+        mode_desc_label = tk.Label(
+            card,
+            text="",
+            font=("Segoe UI", 9),
+            bg="#FFFFFF",
+            fg=TEXT_FG,
+            wraplength=430,
+            justify="left",
+            anchor="w",
+        )
+        mode_desc_label.pack(fill="x")
+
+        def _draw_switch(dev_active: bool):
+            toggle_switch.delete("all")
+            track_color = "#D97706" if dev_active else ACCENT_BTN_BG
+            toggle_switch.create_oval(2, 2, 26, 26, fill=track_color, outline="")
+            toggle_switch.create_oval(28, 2, 52, 26, fill=track_color, outline="")
+            toggle_switch.create_rectangle(14, 2, 40, 26, fill=track_color, outline="")
+            if dev_active:
+                toggle_switch.create_oval(31, 5, 49, 23, fill="#FFFFFF", outline="")
+            else:
+                toggle_switch.create_oval(5, 5, 23, 23, fill="#FFFFFF", outline="")
+
+        def _refresh_dialog():
+            if not win.winfo_exists():
+                return
+            dev_active = is_developer_mode()
+            _draw_switch(dev_active)
+            if dev_active:
+                mode_status_label.configure(
+                    text="Developer Mode",
+                    bg="#FEF3C7",
+                    fg="#B45309",
+                )
+                prod_lbl.configure(font=("Segoe UI", 9), fg=TEXT_MUTED)
+                dev_lbl.configure(font=("Segoe UI", 9, "bold"), fg="#B45309")
+                mode_desc_label.configure(
+                    text=(
+                        "Developer Mode: Auto-attachment to PPO is disabled. "
+                        "Once the Excel report is generated, it will remain local only "
+                        "and will NOT be automatically attached to PPO folders for the lot."
+                    )
+                )
+            else:
+                mode_status_label.configure(
+                    text="Production Mode",
+                    bg="#DBEAFE",
+                    fg="#1D4ED8",
+                )
+                prod_lbl.configure(font=("Segoe UI", 9, "bold"), fg="#1D4ED8")
+                dev_lbl.configure(font=("Segoe UI", 9), fg=TEXT_MUTED)
+                mode_desc_label.configure(
+                    text=(
+                        "Production Mode (Default): Runs normally. "
+                        "Once the Excel report is generated, it will automatically attach "
+                        "the Excel file and result image to all PPO folders for the lot."
+                    )
+                )
+
+        def _on_toggle(_event=None):
+            self.toggle_app_mode(persist=True)
+            _refresh_dialog()
+
+        def _select_production(_event=None):
+            if is_developer_mode():
+                self.set_app_mode(APP_MODE_PRODUCTION, persist=True)
+                _refresh_dialog()
+
+        def _select_developer(_event=None):
+            if not is_developer_mode():
+                self.set_app_mode(APP_MODE_DEVELOPER, persist=True)
+                _refresh_dialog()
+
+        toggle_switch.bind("<Button-1>", _on_toggle)
+        prod_lbl.bind("<Button-1>", _select_production)
+        dev_lbl.bind("<Button-1>", _select_developer)
+
+        # Footer
+        footer = tk.Frame(body, bg=MAIN_BG)
+        footer.pack(fill="x", pady=(14, 0))
+
+        def _close(_event=None):
+            self._settings_dialog = None
+            self._settings_dialog_refresh = None
+            try:
+                if win.winfo_exists():
+                    win.destroy()
+            except Exception as exc:
+                logging.debug("Failed to destroy settings dialog: %s", exc)
+
+        close_btn = ModernHoverButton(footer, text="Close", command=_close, padx=18, pady=5)
+        close_btn.pack(side="right")
+
+        win.toggle_switch = toggle_switch
+        win.mode_status_label = mode_status_label
+        win.mode_desc_label = mode_desc_label
+        win.toggle_command = _on_toggle
+
+        self._settings_dialog = win
+        self._settings_dialog_refresh = _refresh_dialog
+        win.protocol("WM_DELETE_WINDOW", _close)
+        win.bind("<Escape>", _close)
+        _refresh_dialog()
+
+        try:
+            win.update_idletasks()
+            if self.root.winfo_viewable():
+                rx = self.root.winfo_rootx()
+                ry = self.root.winfo_rooty()
+                rw = self.root.winfo_width()
+                rh = self.root.winfo_height()
+                ww = win.winfo_reqwidth()
+                wh = win.winfo_reqheight()
+                px = max(0, rx + (rw - ww) // 2)
+                py = max(0, ry + (rh - wh) // 2)
+                win.geometry(f"+{px}+{py}")
+        except Exception as exc:
+            logging.debug("Skipped centering settings dialog: %s", exc)
+
+        return win
 
     def register_app(self, name: str, frame: ttk.Frame, is_default: bool = False):
         """Register an application frame into the hub."""
