@@ -16,7 +16,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 from apps.ftdc_checker.excel_output import build_summary_and_details, _fmt
 from apps.ftdc_checker.guid_analysis import compute_remarks
-from apps.ftdc_checker.sg406_analysis import resolve_summary_metric_style
+from apps.ftdc_checker.sg406_analysis import (
+    resolve_summary_metric_style,
+    format_macid_prefix_outlier_banner,
+)
 
 
 def _wrap_text_to_pixel_width(draw_ctx: Any, text: str, font: Any, max_px: int) -> List[str]:
@@ -196,19 +199,38 @@ def render_result_image(result: Dict[str, Any], out_path: str) -> bool:
     img_w = max(900, req_col_w * 2 + 38)
     max_rows = max(len(sec[1]) for sec in summary_sections) if summary_sections else 8
     truncated_list = result.get("truncated_files") or []
+    po_banner = format_macid_prefix_outlier_banner(result)
 
     warn_h = (28 + len(truncated_list) * 18) if truncated_list else 0
+    _measure_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    wrapped_po_lines: List[Tuple[str, bool]] = []
+    if po_banner:
+        po_max_px = max(320, img_w - 60)
+        for line_idx, raw_line in enumerate(po_banner["lines"]):
+            is_title = (line_idx == 0)
+            use_font = f_bold if is_title else f_sm
+            for seg in _wrap_text_to_pixel_width(_measure_draw, raw_line, use_font, po_max_px):
+                wrapped_po_lines.append((seg, is_title))
+    po_h = (12 + len(wrapped_po_lines) * 17) if wrapped_po_lines else 0
+
     header_h = 42
     table_row_h = 24
     table_content_h = max_rows * table_row_h
     table_box_h = 28 + table_content_h + 4
 
-    _measure_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
     wrapped_remarks = _wrap_text_to_pixel_width(_measure_draw, remarks_text, f_bold, max(320, img_w - 115))
     remarks_h = 24 + len(wrapped_remarks) * 18
     footer_h = 24
 
-    img_h = header_h + (warn_h + 8 if warn_h else 0) + table_box_h + remarks_h + footer_h + 24
+    img_h = (
+        header_h
+        + (warn_h + 8 if warn_h else 0)
+        + (po_h + 8 if po_h else 0)
+        + table_box_h
+        + remarks_h
+        + footer_h
+        + 24
+    )
 
     img = Image.new("RGB", (img_w, img_h), "#F0F0F2")
     draw = ImageDraw.Draw(img)
@@ -235,6 +257,15 @@ def render_result_image(result: Dict[str, Any], out_path: str) -> bool:
             draw.text((35, wy), f"• [{tf.get('panel')}] {tf.get('filename')}: {r_txt}", fill="#856404", font=f_sm)
             wy += 16
         y += warn_h + 8
+
+    # Layer 2 MACID Prefix Outlier card
+    if po_banner and wrapped_po_lines:
+        draw.rounded_rectangle([15, y, img_w - 15, y + po_h], radius=4, fill=po_banner["bg"], outline=po_banner["border"])
+        py = y + 6
+        for seg_txt, is_title in wrapped_po_lines:
+            draw.text((25 if is_title else 32, py), seg_txt, fill=po_banner["fg"], font=f_bold if is_title else f_sm)
+            py += 17
+        y += po_h + 8
 
     # Side-by-side matrices
     col_w = (img_w - 38) // 2
@@ -281,8 +312,12 @@ def render_result_image(result: Dict[str, Any], out_path: str) -> bool:
     y += table_box_h + 8
 
     # Remarks Card
-    rem_is_pass = (remarks_text == "No abnormalities or discrepancies were observed.")
-    rem_fg = "#008000" if rem_is_pass else "#C00000"
+    if remarks_text == "No abnormalities or discrepancies were observed.":
+        rem_fg = "#008000"
+    elif remarks_text.startswith("PASS with Warning:"):
+        rem_fg = "#9A5B00"
+    else:
+        rem_fg = "#C00000"
     draw.rounded_rectangle([15, y, img_w - 15, y + remarks_h], radius=4, fill="#FFFFFF", outline="#B7B7B7")
     draw.text((22, y + 6), "Remarks:", fill="#111111", font=f_bold)
 

@@ -5438,6 +5438,434 @@ class TestSMBPushdown(unittest.TestCase):
                 app_cfg.reload_settings()
                 shutil.rmtree(tmp_dir, ignore_errors=True)
 
+    def test_51_layer2_macid_prefix_profiling_and_outlier_detection(self):
+        """Verify Layer 2 MACID Prefix Profiling & Outlier Detection:
+        1) Config defaults (mode='fail', prefix_bytes=3, min_pass_units=50, max_count=2, max_pct=0.5)
+           plus safe validation/clamping on invalid values in get_macid_prefix_profile_config().
+        2) Unit-level profiling across single-pool, divergent BT/ZB pools, 60/40 rollover,
+           Option B OR outliers (count<=2 OR pct<0.5%), lot-boundary vs mid-lot hint, small lot (<50),
+           retested unit deduplication, disabled mode, explicitly allowlisted prefix, and BT-only cfg.
+        3) End-to-end SG406 analysis, FAIL-part exclusion, Remarks, Details/Criteria, Excel
+           (Valid Good Count Cross-Check Section 3 & row DISCREPANCY/WARNING tagging), and Result PNG
+           in fail mode, warn mode, and clean control run.
+        """
+        import struct
+        import tempfile
+        import openpyxl
+        from unittest import mock
+        import core.config as app_cfg
+        from apps.ftdc_checker.guid_analysis import analyze_guid_data
+        from apps.ftdc_checker.excel_output import (
+            build_summary_and_details, build_details_text, write_result_excel,
+        )
+        from apps.ftdc_checker.result_image import render_result_image
+        from apps.ftdc_checker.sg406_analysis import compute_macid_prefix_profile
+
+        # ── 1. Config defaults & validation bounds ────────────────────────────
+        with mock.patch.object(app_cfg, "load_settings", return_value={}):
+            dflt_pcfg = app_cfg.get_macid_prefix_profile_config()
+        self.assertEqual(dflt_pcfg, {
+            "mode": "fail",
+            "prefix_bytes": 3,
+            "min_pass_units": 50,
+            "max_count": 2,
+            "max_pct": 0.5,
+        })
+
+        with mock.patch.object(app_cfg, "load_settings", return_value={
+            "macid_prefix_outlier_mode": "WARN",
+            "macid_prefix_bytes": 2,
+            "macid_prefix_outlier_min_pass_units": 100,
+            "macid_prefix_outlier_max_count": 0,
+            "macid_prefix_outlier_max_pct": 1.25,
+        }):
+            custom_pcfg = app_cfg.get_macid_prefix_profile_config()
+        self.assertEqual(custom_pcfg, {
+            "mode": "warn",
+            "prefix_bytes": 2,
+            "min_pass_units": 100,
+            "max_count": 0,
+            "max_pct": 1.25,
+        })
+
+        with mock.patch.object(app_cfg, "load_settings", return_value={
+            "macid_prefix_outlier_mode": "bogus",
+            "macid_prefix_bytes": 4,
+            "macid_prefix_outlier_min_pass_units": 0,
+            "macid_prefix_outlier_max_count": -3,
+            "macid_prefix_outlier_max_pct": 75.0,
+        }):
+            clamped_pcfg = app_cfg.get_macid_prefix_profile_config()
+        self.assertEqual(clamped_pcfg, dflt_pcfg)
+
+        # ── 2. Unit-level checks on compute_macid_prefix_profile ──────────────
+        base_cfg = {
+            "has_bt": True,
+            "has_zb": True,
+            "bt": (94016,),
+            "zb": (94022,),
+            "macid_prefixes": {"bt": (), "zb": ()},
+            "macid_invalid": (),
+        }
+
+        def _make_row(i: int, bt_str: Optional[str] = None, zb_str: Optional[str] = None, uid: Optional[int] = None, panel: str = "FIRST PASS") -> dict:
+            u = uid if uid is not None else (5000 + i)
+            return {
+                "uid": str(u),
+                "wxy": f"1_{i // 100 + 1}_{i % 100 + 1}",
+                "bt": bt_str if bt_str is not None else f"20_160_125_{(i >> 8) & 0xFF}_{i & 0xFF}_1",
+                "zb": zb_str if zb_str is not None else f"64_132_50_0_0_{(i >> 8) & 0xFF}_{i & 0xFF}_2",
+                "panel": panel,
+                "part_id": str(i + 1),
+            }
+
+        # (a) Single pool 100 units + (b) Divergent BT (14:A0:7D) and ZB (40:84:32) -> 0 outliers
+        rows_single = [_make_row(i) for i in range(100)]
+        p_single = compute_macid_prefix_profile(rows_single, cfg=base_cfg)
+        self.assertEqual(p_single["outlier_unit_count"], 0)
+        self.assertFalse(p_single["rollover_detected"])
+        self.assertEqual(p_single["by_type"]["bt"]["entries"][0]["prefix"], "14:A0:7D")
+        self.assertEqual(p_single["by_type"]["bt"]["entries"][0]["classification"], "Primary Pool")
+        self.assertEqual(p_single["by_type"]["zb"]["entries"][0]["prefix"], "40:84:32")
+        self.assertEqual(p_single["by_type"]["zb"]["entries"][0]["classification"], "Primary Pool")
+
+        # (c) Rollover 60/40 -> Rollover Pool, rollover_detected=True, 0 outliers
+        rows_rollover = [_make_row(i, bt_str=f"64_132_50_0_{i}_1") for i in range(60)] + [
+            _make_row(60 + i, bt_str=f"20_160_125_0_{i}_1") for i in range(40)
+        ]
+        p_roll = compute_macid_prefix_profile(rows_rollover, cfg=base_cfg)
+        self.assertEqual(p_roll["outlier_unit_count"], 0)
+        self.assertTrue(p_roll["rollover_detected"])
+        self.assertEqual(p_roll["by_type"]["bt"]["entries"][1]["prefix"], "14:A0:7D")
+        self.assertEqual(p_roll["by_type"]["bt"]["entries"][1]["classification"], "Rollover Pool")
+
+        # (d) 199 + 1 at mid-lot -> OUTLIER with exact UID, HEX, and Mid-lot hint; at boundary -> Lot boundary hint
+        rows_mid = [_make_row(i) for i in range(200)]
+        rows_mid[100] = _make_row(100, bt_str="6_128_252_129_1_7", uid=9100)
+        p_mid = compute_macid_prefix_profile(rows_mid, cfg=base_cfg)
+        self.assertEqual(p_mid["outlier_unit_count"], 1)
+        self.assertEqual(p_mid["outliers"][0]["prefix"], "06:80:FC")
+        self.assertEqual(p_mid["outliers"][0]["samples"][0]["uid"], "9100")
+        self.assertEqual(p_mid["outliers"][0]["samples"][0]["macid_hex"], "06:80:FC:81:01:07")
+        self.assertIn("Mid-lot", p_mid["outliers"][0]["boundary_hint"])
+
+        rows_bnd = [_make_row(i) for i in range(200)]
+        rows_bnd[199] = _make_row(199, bt_str="6_128_252_129_1_8", uid=9199)
+        p_bnd = compute_macid_prefix_profile(rows_bnd, cfg=base_cfg)
+        self.assertEqual(p_bnd["outlier_unit_count"], 1)
+        self.assertIn("Lot boundary", p_bnd["outliers"][0]["boundary_hint"])
+
+        # (e) Option B OR pct path: 1,000 + 4 stray (0.4% < 0.5%, > 2) -> OUTLIER; 1,000 + 6 stray (0.6%) -> NOT outlier
+        rows_pct_hit = [_make_row(i) for i in range(996)] + [
+            _make_row(996 + j, bt_str=f"6_128_252_129_1_{10 + j}") for j in range(4)
+        ]
+        p_pct_hit = compute_macid_prefix_profile(rows_pct_hit, cfg=base_cfg)
+        self.assertEqual(p_pct_hit["outlier_unit_count"], 4)
+        self.assertEqual(p_pct_hit["outliers"][0]["classification"], "OUTLIER")
+
+        rows_pct_pass = [_make_row(i) for i in range(994)] + [
+            _make_row(994 + j, bt_str=f"6_128_252_129_1_{20 + j}") for j in range(6)
+        ]
+        p_pct_pass = compute_macid_prefix_profile(rows_pct_pass, cfg=base_cfg)
+        self.assertEqual(p_pct_pass["outlier_unit_count"], 0)
+        self.assertTrue(p_pct_pass["rollover_detected"])
+
+        # (f) Small lot 19 + 1 (< min_pass_units=50) -> evaluated=False, 0 outliers
+        rows_small = [_make_row(i) for i in range(19)] + [_make_row(19, bt_str="6_128_252_129_1_7")]
+        p_small = compute_macid_prefix_profile(rows_small, cfg=base_cfg)
+        self.assertFalse(p_small["by_type"]["bt"]["evaluated"])
+        self.assertEqual(p_small["outlier_unit_count"], 0)
+        self.assertEqual(p_small["by_type"]["bt"]["entries"][1]["classification"], "Observed (Not Evaluated)")
+
+        # (g) Retested outlier (same UID + HEX across 3 rows) -> deduplicated to count=1
+        rows_retest = [_make_row(i) for i in range(59)]
+        stray_row = _make_row(59, bt_str="6_128_252_129_1_7", uid=9555, panel="FIRST PASS")
+        rows_retest.extend([
+            stray_row,
+            dict(stray_row, panel="RETEST"),
+            dict(stray_row, panel="RETEST"),
+        ])
+        p_retest = compute_macid_prefix_profile(rows_retest, cfg=base_cfg)
+        self.assertEqual(p_retest["outlier_unit_count"], 1)
+        self.assertEqual(p_retest["outliers"][0]["count"], 1)
+
+        # (h) mode == 'disabled' -> 0 outliers, entries still recorded
+        p_dis = compute_macid_prefix_profile(rows_mid, cfg=base_cfg, mode="disabled")
+        self.assertEqual(p_dis["outlier_unit_count"], 0)
+        self.assertEqual(len(p_dis["by_type"]["bt"]["entries"]), 2)
+
+        # (i) Allowlisted prefix -> NOT flagged as OUTLIER
+        allow_cfg = dict(base_cfg, macid_prefixes={"bt": ("14:A0:7D", "06:80:FC"), "zb": ()})
+        p_allow = compute_macid_prefix_profile(rows_mid, cfg=allow_cfg)
+        self.assertEqual(p_allow["outlier_unit_count"], 0)
+        self.assertEqual(p_allow["by_type"]["bt"]["entries"][1]["classification"], "Rollover Pool")
+
+        # (j) BT-only config -> no 'zb' in by_type
+        bt_only_cfg = {
+            "has_bt": True, "has_zb": False, "bt": (94016,), "zb": (),
+            "macid_prefixes": {"bt": (), "zb": ()}, "macid_invalid": (),
+        }
+        p_bt_only = compute_macid_prefix_profile(rows_mid, cfg=bt_only_cfg)
+        self.assertIn("bt", p_bt_only["by_type"])
+        self.assertNotIn("zb", p_bt_only["by_type"])
+
+        # ── 3. End-to-end SG406 STDF + Excel + PNG checks ───────────────────
+        def build_sg406_stdf(lot_id: str, parts_spec: list) -> bytes:
+            out = bytearray()
+            out += TestSTDFParserAndReliability._rec(0, 10, bytes([2, 4]), "<")
+            mir_payload = bytearray(
+                struct.pack("<IIBBBBH", 1700000000, 1700000010, 1, ord("P"), ord(" "), ord(" "), 65535)
+            )
+            mir_payload += ord(" ").to_bytes(1, "little")
+            for s in (lot_id, "SG406", "NODE1", "V93K", "JOB1"):
+                mir_payload += TestSTDFParserAndReliability._cn(s)
+            for _ in range(25):
+                mir_payload += b"\x00"
+            out += TestSTDFParserAndReliability._rec(1, 10, bytes(mir_payload), "<")
+            out += TestSTDFParserAndReliability._rec(
+                1, 80, bytes([1, 2, 1, 1]) + TestSTDFParserAndReliability._cn("HAND1"), "<"
+            )
+
+            for idx, p in enumerate(parts_spec, start=1):
+                out += TestSTDFParserAndReliability._rec(5, 10, bytes([1, 1]), "<")
+                tmap = {}
+                if "wxy" in p and p["wxy"] is not None:
+                    tmap[93005], tmap[93006], tmap[93007] = p["wxy"]
+                if "uid" in p and p["uid"] is not None:
+                    tmap[93009] = p["uid"]
+                if "bt" in p and p["bt"] is not None:
+                    for b_i, b_val in enumerate(p["bt"]):
+                        tmap[94016 + b_i] = b_val
+                if "zb" in p and p["zb"] is not None:
+                    for z_i, z_val in enumerate(p["zb"]):
+                        tmap[94022 + z_i] = z_val
+
+                for tnum, val in sorted(tmap.items()):
+                    if val is None:
+                        continue
+                    ptr_body = bytearray(struct.pack("<IBBBBf", tnum, 1, 1, 0, 0, float(val)))
+                    ptr_body += TestSTDFParserAndReliability._cn(f"T_{tnum}") + b"\x00"
+                    ptr_body += bytes([0, 0, 0, 0])
+                    ptr_body += struct.pack("<ff", -1e6, 1e6)
+                    out += TestSTDFParserAndReliability._rec(15, 10, bytes(ptr_body), "<")
+
+                part_flg = 0x00 if p.get("pass", True) else 0x08
+                hb = p.get("hard_bin", 1 if p.get("pass", True) else 5)
+                sb = p.get("soft_bin", 1 if p.get("pass", True) else 5)
+                prr_body = bytearray(
+                    struct.pack("<BBBHHHhhI", 1, 1, part_flg, len(tmap), hb, sb, -32768, -32768, 12)
+                )
+                prr_body += TestSTDFParserAndReliability._cn(str(p.get("part_id", idx))) + b"\x00\x00"
+                out += TestSTDFParserAndReliability._rec(5, 20, bytes(prr_body), "<")
+
+            good_cnt = sum(1 for p in parts_spec if p.get("pass", True))
+            pcr_body = struct.pack("<BBIIIII", 255, 0, len(parts_spec), 0, 0, good_cnt, 0)
+            out += TestSTDFParserAndReliability._rec(1, 30, pcr_body, "<")
+            mrr_body = struct.pack("<I", 1700001000) + b" \x00\x00"
+            out += TestSTDFParserAndReliability._rec(1, 20, mrr_body, "<")
+            return bytes(out)
+
+        tmp_dir = tempfile.mkdtemp(prefix="pts_layer2_")
+        try:
+            lot_id = "MMT-260000888.000"
+            fp_path = os.path.join(tmp_dir, f"{lot_id}_e_20261124100000.std")
+            rt_path = os.path.join(tmp_dir, f"{lot_id}_w_rj1_20261124110000.std")
+            qc_path = os.path.join(tmp_dir, f"{lot_id}_q_20261124120000.std")
+
+            fp_parts = []
+            for i in range(60):
+                bt_t = (6, 128, 252, 129, 1, 7) if i == 29 else (20, 160, 125, (i >> 8) & 0xFF, i & 0xFF, 1)
+                fp_parts.append({
+                    "part_id": str(i + 1),
+                    "pass": True,
+                    "wxy": (1, 10 + (i // 20), (i % 20) + 1),
+                    "uid": 5000 + i,
+                    "bt": bt_t,
+                    "zb": (64, 132, 50, 0, 0, (i >> 8) & 0xFF, i & 0xFF, 2),
+                })
+            # FAIL unit with rogue prefix 12:34:56 -> MUST be excluded from Layer 2 profiling
+            fp_parts.append({
+                "part_id": "61",
+                "pass": False,
+                "wxy": (1, 99, 99),
+                "uid": 9999,
+                "bt": (0x12, 0x34, 0x56, 1, 2, 3),
+                "zb": (0x12, 0x34, 0x56, 0, 0, 1, 2, 3),
+            })
+            rt_parts = [{
+                "part_id": "R1",
+                "pass": True,
+                "wxy": (1, 13, 1),
+                "uid": 5060,
+                "bt": (20, 160, 125, 0, 60, 1),
+                "zb": (64, 132, 50, 0, 0, 0, 60, 2),
+            }]
+            qc_parts = [fp_parts[0], fp_parts[1]]
+
+            for path, spec in ((fp_path, fp_parts), (rt_path, rt_parts), (qc_path, qc_parts)):
+                with open(path, "wb") as f:
+                    f.write(build_sg406_stdf(lot_id, spec))
+
+            # (a) Fail mode
+            with mock.patch.object(app_cfg, "get_macid_prefix_profile_config", return_value={
+                "mode": "fail", "prefix_bytes": 3, "min_pass_units": 50, "max_count": 2, "max_pct": 0.5,
+            }):
+                res_fail = analyze_guid_data(
+                    first_pass_paths=[fp_path],
+                    retest_paths=[rt_path],
+                    qc_paths=[qc_path],
+                    lot_id=lot_id,
+                    mpc_text="SG4064RTBA10",
+                    first_pass_actual_good_qty="60",
+                    total_actual_good_qty="61",
+                    max_workers=1,
+                )
+
+            self.assertEqual(res_fail["status"], "FAIL")
+            self.assertEqual(res_fail["total_good_status"], "FAIL")
+            self.assertEqual(res_fail["check1_result"], "FAIL")
+            self.assertEqual(res_fail["macid_prefix_outlier_count"], 1)
+            self.assertIn("MACID prefix outlier", res_fail["remarks"])
+            bt_prefixes_fail = [e["prefix"] for e in res_fail["macid_prefix_profile"]["by_type"]["bt"]["entries"]]
+            self.assertNotIn("12:34:56", bt_prefixes_fail)
+
+            _, det_fail, _, _, _, crit_fail = build_summary_and_details(res_fail)
+            det_txt_fail = build_details_text(det_fail, ftdc_criteria=crit_fail)
+            self.assertIn("[MACID Prefix Profile (Layer 2)]", det_txt_fail)
+            self.assertIn("6) MACID prefix outlier", det_txt_fail)
+
+            xlsx_fail = os.path.join(tmp_dir, "layer2_fail.xlsx")
+            write_result_excel(res_fail, xlsx_fail)
+            wb_fail = openpyxl.load_workbook(xlsx_fail)
+            ws_gu_fail = wb_fail["Valid Good Count Cross-Check"]
+            has_outlier_cell = any(
+                ws_gu_fail.cell(r, c).value == "OUTLIER"
+                for r in range(1, 35) for c in range(1, 8)
+            )
+            self.assertTrue(has_outlier_cell)
+            gu_hdr_row = next(r for r in range(1, 40) if ws_gu_fail.cell(r, 1).value == "Good Part #")
+            gu_hdrs = [ws_gu_fail.cell(gu_hdr_row, c).value for c in range(1, ws_gu_fail.max_column + 1)]
+            bt_hex_col = gu_hdrs.index("BT MACID HEX") + 1
+            st_col = gu_hdrs.index("Cross-Check Status") + 1
+            rem_col = gu_hdrs.index("Cross-Check Remarks") + 1
+            stray_row_f = next(
+                r for r in range(gu_hdr_row + 1, ws_gu_fail.max_row + 1)
+                if ws_gu_fail.cell(r, bt_hex_col).value == "06:80:FC:81:01:07"
+            )
+            self.assertEqual(ws_gu_fail.cell(stray_row_f, st_col).value, "DISCREPANCY")
+            self.assertIn("BT MACID Prefix Outlier", str(ws_gu_fail.cell(stray_row_f, rem_col).value))
+            wb_fail.close()
+
+            png_fail = os.path.join(tmp_dir, "layer2_fail.png")
+            self.assertTrue(render_result_image(res_fail, png_fail))
+            self.assertTrue(os.path.isfile(png_fail) and os.path.getsize(png_fail) > 1000)
+
+            # (b) Warn mode
+            with mock.patch.object(app_cfg, "get_macid_prefix_profile_config", return_value={
+                "mode": "warn", "prefix_bytes": 3, "min_pass_units": 50, "max_count": 2, "max_pct": 0.5,
+            }):
+                res_warn = analyze_guid_data(
+                    first_pass_paths=[fp_path],
+                    retest_paths=[rt_path],
+                    qc_paths=[qc_path],
+                    lot_id=lot_id,
+                    mpc_text="SG4064RTBA10",
+                    first_pass_actual_good_qty="60",
+                    total_actual_good_qty="61",
+                    max_workers=1,
+                )
+
+            self.assertEqual(res_warn["status"], "PASS")
+            self.assertEqual(res_warn["total_good_status"], "PASS")
+            self.assertEqual(res_warn["check1_result"], "PASS")
+            self.assertEqual(res_warn["macid_prefix_outlier_count"], 1)
+            self.assertTrue(res_warn["remarks"].startswith("PASS with Warning:"))
+
+            xlsx_warn = os.path.join(tmp_dir, "layer2_warn.xlsx")
+            write_result_excel(res_warn, xlsx_warn)
+            wb_warn = openpyxl.load_workbook(xlsx_warn)
+            ws_gu_warn = wb_warn["Valid Good Count Cross-Check"]
+            gu_hdr_row_w = next(r for r in range(1, 40) if ws_gu_warn.cell(r, 1).value == "Good Part #")
+            gu_hdrs_w = [ws_gu_warn.cell(gu_hdr_row_w, c).value for c in range(1, ws_gu_warn.max_column + 1)]
+            bt_hex_col_w = gu_hdrs_w.index("BT MACID HEX") + 1
+            st_col_w = gu_hdrs_w.index("Cross-Check Status") + 1
+            stray_row_w = next(
+                r for r in range(gu_hdr_row_w + 1, ws_gu_warn.max_row + 1)
+                if ws_gu_warn.cell(r, bt_hex_col_w).value == "06:80:FC:81:01:07"
+            )
+            self.assertEqual(ws_gu_warn.cell(stray_row_w, st_col_w).value, "WARNING")
+            wb_warn.close()
+
+            png_warn = os.path.join(tmp_dir, "layer2_warn.png")
+            self.assertTrue(render_result_image(res_warn, png_warn))
+            self.assertTrue(os.path.isfile(png_warn) and os.path.getsize(png_warn) > 1000)
+
+            # (c) Clean control run (no outlier on PASS units, FAIL-part rogue prefix still present)
+            fp_parts[29]["bt"] = (20, 160, 125, 0, 29, 1)
+            with open(fp_path, "wb") as f:
+                f.write(build_sg406_stdf(lot_id, fp_parts))
+
+            with mock.patch.object(app_cfg, "get_macid_prefix_profile_config", return_value={
+                "mode": "fail", "prefix_bytes": 3, "min_pass_units": 50, "max_count": 2, "max_pct": 0.5,
+            }):
+                res_ctrl = analyze_guid_data(
+                    first_pass_paths=[fp_path],
+                    retest_paths=[rt_path],
+                    qc_paths=[qc_path],
+                    lot_id=lot_id,
+                    mpc_text="SG4064RTBA10",
+                    first_pass_actual_good_qty="60",
+                    total_actual_good_qty="61",
+                    max_workers=1,
+                )
+
+            self.assertEqual(res_ctrl["status"], "PASS")
+            self.assertEqual(res_ctrl["total_good_status"], "PASS")
+            self.assertEqual(res_ctrl["macid_prefix_outlier_count"], 0)
+            self.assertEqual(res_ctrl["remarks"], "No abnormalities or discrepancies were observed.")
+
+            # (d) Result Popup UI banner & Remarks color checks (fail -> red, warn -> amber)
+            import tkinter as tk
+            from apps.ftdc_checker.ui import FTDCCheckerFrame
+
+            def _gather_label_widgets(w):
+                out = []
+                for child in w.winfo_children():
+                    if isinstance(child, tk.Label):
+                        out.append(child)
+                    out.extend(_gather_label_widgets(child))
+                return out
+
+            ui_root = tk.Tk()
+            ui_root.withdraw()
+            try:
+                frame = FTDCCheckerFrame(ui_root, hub=None)
+                frame._show_result_popup(res_fail)
+                fail_win = frame._result_window
+                fail_win.update_idletasks()
+                fail_labels = _gather_label_widgets(fail_win)
+                self.assertTrue(any("FAIL: MACID Prefix Outlier" in lbl.cget("text") for lbl in fail_labels))
+                self.assertTrue(any(
+                    "MACID prefix outlier" in lbl.cget("text") and lbl.cget("fg") == "#C00000"
+                    for lbl in fail_labels
+                ))
+                fail_win.destroy()
+
+                frame._show_result_popup(res_warn)
+                warn_win = frame._result_window
+                warn_win.update_idletasks()
+                warn_labels = _gather_label_widgets(warn_win)
+                self.assertTrue(any("WARNING: MACID Prefix Outlier" in lbl.cget("text") for lbl in warn_labels))
+                self.assertTrue(any(
+                    lbl.cget("text").startswith("PASS with Warning:") and lbl.cget("fg") == "#9A5B00"
+                    for lbl in warn_labels
+                ))
+                warn_win.destroy()
+            finally:
+                ui_root.destroy()
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
 
 class TestSTDF2SumIntegration(unittest.TestCase):
     """Integration tests for optimized STDF2SUM inside PTS Hub."""

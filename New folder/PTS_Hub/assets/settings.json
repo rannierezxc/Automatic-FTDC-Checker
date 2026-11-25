@@ -5,5 +5,10 @@
   "local_dest_base": "C:\\FTDC",
   "ppo_base_path": "\\\\chip\\PPOonline",
   "ppo_attach_timeout_sec": 60,
+  "macid_prefix_outlier_mode": "fail",
+  "macid_prefix_bytes": 3,
+  "macid_prefix_outlier_min_pass_units": 50,
+  "macid_prefix_outlier_max_count": 2,
+  "macid_prefix_outlier_max_pct": 0.5,
   "app_mode": "developer"
 }

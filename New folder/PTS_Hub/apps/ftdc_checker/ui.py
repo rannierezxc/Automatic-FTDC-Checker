@@ -66,6 +66,7 @@ from apps.ftdc_checker.result_image import (
 )
 from apps.ftdc_checker.sg406_analysis import (
     resolve_summary_metric_style, clear_macid_validation_cache,
+    format_macid_prefix_outlier_banner,
 )
 from apps.ftdc_checker.stdf_fetcher import (
     STDF_EXTENSIONS, STDF_FILEDIALOG_EXTENSIONS,
@@ -3751,6 +3752,32 @@ class FTDCCheckerFrame(ttk.Frame):
             )
             warn_label.pack(fill="x")
 
+        po_banner = format_macid_prefix_outlier_banner(result)
+        po_label = None
+        if po_banner:
+            po_card = tk.Frame(
+                container,
+                bg=po_banner["bg"],
+                highlightthickness=1,
+                highlightbackground=po_banner["border"],
+                bd=0,
+            )
+            po_card.grid(row=curr_row, column=0, sticky="ew", pady=(0, 6))
+            curr_row += 1
+            po_label = tk.Label(
+                po_card,
+                text="\n".join(po_banner["lines"]),
+                font=("Segoe UI", 9, "bold"),
+                bg=po_banner["bg"],
+                fg=po_banner["fg"],
+                justify="left",
+                anchor="w",
+                padx=8,
+                pady=6,
+                wraplength=820,
+            )
+            po_label.pack(fill="x")
+
         panels = ttk.Frame(container)
         panels.grid(row=curr_row, column=0, sticky="nsew")
         curr_row += 1
@@ -3829,8 +3856,12 @@ class FTDCCheckerFrame(ttk.Frame):
 
         # Remarks row across FP and Total Good
         remarks_text = str(result.get("remarks") or compute_remarks(result)).strip()
-        remarks_is_pass = (remarks_text == "No abnormalities or discrepancies were observed.")
-        remarks_fg = "#008000" if remarks_is_pass else "#C00000"
+        if remarks_text == "No abnormalities or discrepancies were observed.":
+            remarks_fg = "#008000"
+        elif remarks_text.startswith("PASS with Warning:"):
+            remarks_fg = "#9A5B00"
+        else:
+            remarks_fg = "#C00000"
 
         remarks_card = tk.Frame(container, bg=BORDER_COLOR, highlightthickness=1, highlightbackground=BORDER_COLOR, bd=0)
         remarks_card.grid(row=curr_row, column=0, sticky="ew", pady=(6, 0))
@@ -3875,6 +3906,8 @@ class FTDCCheckerFrame(ttk.Frame):
             req_w = container.winfo_reqwidth() + 12
             target_w = max(width or 860, req_w)
             remarks_val.configure(wraplength=max(target_w - 110, 700))
+            if po_label is not None:
+                po_label.configure(wraplength=max(target_w - 40, 820))
             window.update_idletasks()
             try:
                 screen_w = window.winfo_screenwidth()

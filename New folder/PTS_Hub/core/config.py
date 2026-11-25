@@ -113,6 +113,11 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "local_dest_base": r"C:\FTDC",
     "ppo_base_path": r"\\chip\PPOonline",
     "ppo_attach_timeout_sec": 60,
+    "macid_prefix_outlier_mode": "fail",
+    "macid_prefix_bytes": 3,
+    "macid_prefix_outlier_min_pass_units": 50,
+    "macid_prefix_outlier_max_count": 2,
+    "macid_prefix_outlier_max_pct": 0.5,
     "app_mode": APP_MODE_PRODUCTION,
     # Folder holding the Automatic FTDC Checker Help presentation (opened by the Help button).
     "help_dir": r"\\acpnetapp02\tsti\backend\data\Shared_Engineering_Directory\Automatic_FTDC_Checker",
@@ -241,6 +246,60 @@ def get_ppo_attach_timeout_sec() -> float:
     except (TypeError, ValueError):
         pass
     return float(DEFAULT_SETTINGS["ppo_attach_timeout_sec"])
+
+
+def get_macid_prefix_profile_config() -> Dict[str, Any]:
+    """Return Layer 2 MACID prefix profiling & outlier detection settings."""
+    settings = load_settings()
+
+    def _int_setting(key: str, min_val: int, allowed: Optional[Tuple[int, ...]] = None) -> int:
+        default = int(DEFAULT_SETTINGS[key])
+        raw = settings.get(key, default)
+        try:
+            if isinstance(raw, bool):
+                raise ValueError("boolean is not valid")
+            if isinstance(raw, float) and not raw.is_integer():
+                raise ValueError("non-integer float")
+            val = int(raw)
+            if allowed is not None and val not in allowed:
+                raise ValueError(f"must be one of {allowed}")
+            if val < min_val:
+                raise ValueError(f"must be >= {min_val}")
+            return val
+        except (TypeError, ValueError) as exc:
+            logging.warning("Invalid '%s' (%r): %s; using default %s.", key, raw, exc, default)
+            return default
+
+    mode_default = str(DEFAULT_SETTINGS["macid_prefix_outlier_mode"])
+    raw_mode = settings.get("macid_prefix_outlier_mode", mode_default)
+    mode = str(raw_mode if raw_mode is not None else mode_default).strip().lower()
+    if mode not in ("fail", "warn", "disabled"):
+        logging.warning(
+            "Invalid 'macid_prefix_outlier_mode' (%r); expected 'fail', 'warn', or 'disabled'. Using '%s'.",
+            raw_mode,
+            mode_default,
+        )
+        mode = mode_default
+
+    pct_default = float(DEFAULT_SETTINGS["macid_prefix_outlier_max_pct"])
+    raw_pct = settings.get("macid_prefix_outlier_max_pct", pct_default)
+    try:
+        if isinstance(raw_pct, bool):
+            raise ValueError("boolean is not valid")
+        max_pct = float(raw_pct)
+        if not (0.0 <= max_pct <= 50.0):
+            raise ValueError("must be between 0 and 50")
+    except (TypeError, ValueError) as exc:
+        logging.warning("Invalid 'macid_prefix_outlier_max_pct' (%r): %s; using default %s.", raw_pct, exc, pct_default)
+        max_pct = pct_default
+
+    return {
+        "mode": mode,
+        "prefix_bytes": _int_setting("macid_prefix_bytes", 2, allowed=(2, 3)),
+        "min_pass_units": _int_setting("macid_prefix_outlier_min_pass_units", 1),
+        "max_count": _int_setting("macid_prefix_outlier_max_count", 0),
+        "max_pct": max_pct,
+    }
 
 
 def get_help_dir() -> str:

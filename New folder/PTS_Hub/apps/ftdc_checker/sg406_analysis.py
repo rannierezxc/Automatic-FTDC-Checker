@@ -709,6 +709,353 @@ def compute_duplicate_macid_pairs(
     return details
 
 
+def _extract_macid_prefix(hex_val: str, prefix_bytes: int = 3) -> str:
+    """Return the uppercase colon-separated leading ``prefix_bytes`` octets of ``hex_val``."""
+    s = str(hex_val or "").strip().upper()
+    if not s:
+        return ""
+    octets = [o for o in s.split(":") if o]
+    if not octets:
+        return ""
+    take = min(max(int(prefix_bytes), 1), len(octets))
+    return ":".join(octets[:take])
+
+
+def _is_prefix_explicitly_allowed(prefix_hex: str, configured: Optional[Sequence[str]]) -> bool:
+    """Return True when ``prefix_hex`` matches an allowlisted prefix on an octet boundary."""
+    p_obs = str(prefix_hex or "").strip().upper()
+    if not p_obs or not configured:
+        return False
+    for raw_c in configured:
+        c_norm = _normalize_macid_hex(raw_c) or str(raw_c or "").strip().upper()
+        if not c_norm:
+            continue
+        if (
+            p_obs == c_norm
+            or p_obs.startswith(c_norm + ":")
+            or c_norm.startswith(p_obs + ":")
+        ):
+            return True
+    return False
+
+
+def format_macid_prefix_outlier_text(
+    profile: Optional[Dict[str, Any]],
+    fallback_outliers: Optional[Sequence[Dict[str, Any]]] = None,
+) -> str:
+    """Format concise Layer 2 outlier summary string, e.g. 'BT: 06:80:FC [1 unit / 0.02%]'."""
+    parts: List[str] = []
+    by_type = (profile or {}).get("by_type") if isinstance(profile, dict) else None
+    if isinstance(by_type, dict) and by_type:
+        for mtype in MACID_TYPES:
+            tdata = by_type.get(mtype)
+            if not isinstance(tdata, dict):
+                continue
+            outliers = tdata.get("outliers") or []
+            if not outliers:
+                continue
+            short_lbl = MACID_SHORT_LABELS.get(mtype, mtype.upper())
+            items = []
+            for ol in outliers:
+                cnt = int(ol.get("count") or 0)
+                pct = float(ol.get("pct") or 0.0)
+                u_word = "unit" if cnt == 1 else "units"
+                items.append(f"{ol.get('prefix', '')} [{cnt:,} {u_word} / {pct:.2f}%]")
+            if items:
+                parts.append(f"{short_lbl}: {', '.join(items)}")
+        return "; ".join(parts)
+
+    if fallback_outliers:
+        grouped: Dict[str, List[str]] = defaultdict(list)
+        for ol in fallback_outliers:
+            mtype = str(ol.get("macid_type") or "").strip().lower()
+            short_lbl = MACID_SHORT_LABELS.get(mtype, str(ol.get("label") or "MACID"))
+            cnt = int(ol.get("count") or 0)
+            pct = float(ol.get("pct") or 0.0)
+            u_word = "unit" if cnt == 1 else "units"
+            grouped[short_lbl].append(f"{ol.get('prefix', '')} [{cnt:,} {u_word} / {pct:.2f}%]")
+        return "; ".join(f"{lbl}: {', '.join(vals)}" for lbl, vals in grouped.items() if vals)
+    return ""
+
+
+def format_macid_prefix_outlier_banner(
+    result: Optional[Dict[str, Any]],
+    max_lines: int = 10,
+) -> Optional[Dict[str, Any]]:
+    """Build banner styling and bullet lines when Layer 2 MACID prefix outliers exist."""
+    if not isinstance(result, dict):
+        return None
+    outlier_cnt = int(result.get("macid_prefix_outlier_count") or 0)
+    outliers = result.get("macid_prefix_outliers") or []
+    if outlier_cnt <= 0 or not outliers:
+        return None
+
+    mode = str(result.get("macid_prefix_outlier_mode") or "fail").strip().lower()
+    is_fail = (mode == "fail")
+    title = (
+        "⛔ FAIL: MACID Prefix Outlier(s) detected:"
+        if is_fail
+        else "⚠️ WARNING: MACID Prefix Outlier(s) detected (non-blocking):"
+    )
+    lines: List[str] = [title]
+    shown = 0
+    remaining = 0
+
+    for ol in outliers:
+        lbl = str(ol.get("label") or ol.get("macid_type") or "MACID")
+        pfx = str(ol.get("prefix") or "")
+        cnt = int(ol.get("count") or 0)
+        pct = float(ol.get("pct") or 0.0)
+        hint = str(ol.get("boundary_hint") or "")
+        u_word = "unit" if cnt == 1 else "units"
+        samples = ol.get("samples") or []
+        if shown >= max_lines:
+            remaining += max(1, len(samples))
+            continue
+        if samples:
+            take = samples[: max(1, max_lines - shown)]
+            remaining += len(samples) - len(take)
+            uids_txt = ", ".join(str(s.get("uid") or "N/A") for s in take)
+            hexes_txt = ", ".join(str(s.get("macid_hex") or "") for s in take)
+            line = f"  • {lbl} prefix {pfx} — {cnt:,} {u_word} ({pct:.2f}%) | UID: {uids_txt} | {hexes_txt}"
+            shown += len(take)
+        else:
+            line = f"  • {lbl} prefix {pfx} — {cnt:,} {u_word} ({pct:.2f}%)"
+            shown += 1
+        if hint:
+            line += f" [{hint}]"
+        lines.append(line)
+
+    if remaining > 0:
+        lines.append(f"  …and {remaining:,} more")
+
+    return {
+        "is_fail": is_fail,
+        "bg": "#F8D7DA" if is_fail else "#FFF3CD",
+        "border": "#F5C2C7" if is_fail else "#FFEEBA",
+        "fg": "#721C24" if is_fail else "#856404",
+        "lines": lines,
+    }
+
+
+def compute_macid_prefix_profile(
+    pass_rows: Sequence[Dict[str, Any]],
+    cfg: Optional[Dict[str, Any]] = None,
+    *,
+    prefix_bytes: int = 3,
+    min_pass_units: int = 50,
+    max_outlier_count: int = 2,
+    max_outlier_pct: float = 0.5,
+    mode: str = "fail",
+) -> Dict[str, Any]:
+    """Profile active BT/ZB MACID prefixes across PASS parts and detect minority outliers.
+
+    Pure O(N) pass over ``pass_rows`` (PASS units only):
+    - Validates active MACIDs with configured rules (exclusions + optional allowlist).
+    - Deduplicates by ``(uid or wxy or '#seq', macid_hex)`` so retested units are counted once.
+    - Classifies sorted prefixes as Primary Pool, Rollover Pool, OUTLIER (Option B OR rule:
+      ``count <= max_outlier_count or pct < max_outlier_pct`` when ``evaluated``), or
+      Observed (Not Evaluated).
+    """
+    norm_mode = str(mode or "fail").strip().lower()
+    if norm_mode not in ("fail", "warn", "disabled"):
+        norm_mode = "fail"
+    try:
+        p_bytes = 2 if int(prefix_bytes) == 2 else 3
+    except (TypeError, ValueError):
+        p_bytes = 3
+    try:
+        min_units = max(1, int(min_pass_units))
+    except (TypeError, ValueError):
+        min_units = 50
+    try:
+        max_cnt = max(0, int(max_outlier_count))
+    except (TypeError, ValueError):
+        max_cnt = 2
+    try:
+        max_pct = float(max_outlier_pct)
+        if not (0.0 <= max_pct <= 50.0):
+            max_pct = 0.5
+    except (TypeError, ValueError):
+        max_pct = 0.5
+
+    has_bt, has_zb = _resolve_active_macid_flags(cfg)
+    active_types = tuple(m for m, flag in (("bt", has_bt), ("zb", has_zb)) if flag)
+
+    good_rows: List[Dict[str, Any]] = [
+        r for r in (pass_rows or ())
+        if isinstance(r, dict) and ("pass_fail" not in r or str(r.get("pass_fail") or "").strip().upper() == "PASS")
+    ]
+    n_good_rows = len(good_rows)
+
+    by_type: Dict[str, Dict[str, Any]] = {}
+    all_outliers: List[Dict[str, Any]] = []
+    outlier_unit_keys: Set[str] = set()
+    outlier_macids_by_type: Dict[str, Set[str]] = {m: set() for m in active_types}
+    any_rollover = False
+
+    for mtype in active_types:
+        pfx_rules, inv_norm = _prepare_macid_rules(mtype, cfg)
+        seen_keys: Set[Tuple[str, str]] = set()
+        hex_cache: Dict[str, str] = {}
+        buckets: Dict[str, Dict[str, Any]] = {}
+        prefix_unit_keys: Dict[str, Set[str]] = defaultdict(set)
+
+        for seq, row in enumerate(good_rows, start=1):
+            raw_val = row.get(mtype)
+            val_str = str(raw_val).strip() if raw_val is not None else ""
+            if not val_str or not _is_valid_macid_compiled(val_str, pfx_rules, inv_norm):
+                continue
+
+            mhex = hex_cache.get(val_str)
+            if mhex is None:
+                mhex = _normalize_macid_hex(val_str)
+                hex_cache[val_str] = mhex
+            if not mhex:
+                continue
+
+            u_raw = row.get("uid")
+            u_str = str(u_raw).strip() if u_raw is not None else ""
+            if not u_str or u_str == INVALID_UID or "NaN" in u_str:
+                u_str = ""
+
+            w_raw = row.get("wxy")
+            w_str = str(w_raw).strip() if w_raw is not None else ""
+            if not w_str or "NaN" in w_str:
+                w_str = ""
+
+            unit_id = u_str or w_str or f"#{seq}"
+            dedup_key = (unit_id, mhex)
+            if dedup_key in seen_keys:
+                continue
+            seen_keys.add(dedup_key)
+
+            prefix_hex = _extract_macid_prefix(mhex, p_bytes)
+            if not prefix_hex:
+                continue
+
+            prefix_unit_keys[prefix_hex].add(unit_id)
+            bucket = buckets.get(prefix_hex)
+            if bucket is None:
+                bucket = {
+                    "prefix": prefix_hex,
+                    "count": 0,
+                    "first_seq": seq,
+                    "last_seq": seq,
+                    "samples": [],
+                    "macid_hexes": set(),
+                }
+                buckets[prefix_hex] = bucket
+
+            bucket["count"] += 1
+            if seq < bucket["first_seq"]:
+                bucket["first_seq"] = seq
+            if seq > bucket["last_seq"]:
+                bucket["last_seq"] = seq
+            bucket["macid_hexes"].add(mhex)
+            if len(bucket["samples"]) < 50:
+                bucket["samples"].append({
+                    "uid": u_str,
+                    "wxy": w_str,
+                    "macid_hex": mhex,
+                    "panel": str(row.get("panel") or ""),
+                    "part_id": str(row.get("part_id") or ""),
+                    "seq": seq,
+                })
+
+        total_units = sum(b["count"] for b in buckets.values())
+        sorted_buckets = sorted(buckets.values(), key=lambda b: (-b["count"], b["prefix"]))
+        evaluated = (norm_mode != "disabled") and (total_units >= min_units) and (len(sorted_buckets) > 1)
+
+        entries: List[Dict[str, Any]] = []
+        type_outliers: List[Dict[str, Any]] = []
+        type_rollover = False
+
+        for idx, b in enumerate(sorted_buckets):
+            cnt = b["count"]
+            pct = round((cnt / total_units) * 100.0, 4) if total_units > 0 else 0.0
+            allowed = _is_prefix_explicitly_allowed(b["prefix"], pfx_rules)
+
+            if idx == 0:
+                classification = "Primary Pool"
+            elif evaluated and not allowed and (cnt <= max_cnt or pct < max_pct):
+                classification = "OUTLIER"
+            elif evaluated or allowed:
+                classification = "Rollover Pool"
+                type_rollover = True
+            else:
+                classification = "Observed (Not Evaluated)"
+
+            boundary_hint = ""
+            if classification == "OUTLIER":
+                if b["first_seq"] <= 5 or b["last_seq"] >= max(1, n_good_rows - 4):
+                    boundary_hint = "Lot boundary (possible pool rollover)"
+                else:
+                    boundary_hint = "Mid-lot (possible corrupted/stray MACID)"
+
+            entry = {
+                "prefix": b["prefix"],
+                "count": cnt,
+                "pct": pct,
+                "classification": classification,
+                "first_seq": b["first_seq"],
+                "last_seq": b["last_seq"],
+                "boundary_hint": boundary_hint,
+                "samples": list(b["samples"]),
+            }
+            entries.append(entry)
+
+            if classification == "OUTLIER":
+                type_outliers.append(entry)
+                outlier_macids_by_type[mtype].update(b["macid_hexes"])
+                outlier_unit_keys.update(prefix_unit_keys[b["prefix"]])
+                tagged = dict(entry)
+                tagged["macid_type"] = mtype
+                tagged["label"] = CHECK_LABELS.get(mtype, f"{mtype.upper()} MACID")
+                all_outliers.append(tagged)
+
+        if type_rollover:
+            any_rollover = True
+
+        if not entries:
+            summary_str = "None"
+        else:
+            part_strs = []
+            for e in entries:
+                tag = ""
+                if e["classification"] == "OUTLIER":
+                    tag = " [OUTLIER]"
+                elif e["classification"] == "Rollover Pool":
+                    tag = " [Rollover]"
+                part_strs.append(f"{e['prefix']} ({e['count']:,} / {e['pct']:.2f}%{tag})")
+            summary_str = ", ".join(part_strs)
+
+        by_type[mtype] = {
+            "label": CHECK_LABELS.get(mtype, f"{mtype.upper()} MACID"),
+            "total_units": total_units,
+            "evaluated": evaluated,
+            "rollover_detected": type_rollover,
+            "entries": entries,
+            "outliers": type_outliers,
+            "outlier_unit_count": sum(o["count"] for o in type_outliers),
+            "summary_str": summary_str,
+        }
+
+    return {
+        "mode": norm_mode,
+        "prefix_bytes": p_bytes,
+        "min_pass_units": min_units,
+        "max_count": max_cnt,
+        "max_pct": max_pct,
+        "by_type": by_type,
+        "outliers": all_outliers,
+        "outlier_prefix_count": len(all_outliers),
+        "outlier_unit_count": len(outlier_unit_keys),
+        "rollover_detected": any_rollover,
+        "outlier_macids_by_type": outlier_macids_by_type,
+    }
+
+
 def parse_panel_sg406_parts(
     input_paths: Sequence[str],
     panel_name: str,
@@ -1487,6 +1834,22 @@ def analyze_sg406_guid_data(
     has_fp_gu_disc = fp_good_unique_disc > 0
     has_total_gu_disc = total_good_unique_disc > 0
 
+    # 4. Layer 2: Automatic BT/ZB MACID prefix profiling & statistical outlier detection (PASS parts only).
+    from core import config as app_config
+    _pcfg = app_config.get_macid_prefix_profile_config()
+    prefix_profile = compute_macid_prefix_profile(
+        fp_good_rows + rt_good_rows,
+        cfg=sg406_cfg,
+        prefix_bytes=_pcfg["prefix_bytes"],
+        min_pass_units=_pcfg["min_pass_units"],
+        max_outlier_count=_pcfg["max_count"],
+        max_outlier_pct=_pcfg["max_pct"],
+        mode=_pcfg["mode"],
+    )
+    prefix_outlier_mode = str(prefix_profile.get("mode") or "fail").strip().lower()
+    prefix_outlier_count = int(prefix_profile.get("outlier_unit_count") or 0)
+    has_prefix_outlier_fail = (prefix_outlier_mode == "fail" and prefix_outlier_count > 0)
+
     # Status & Criteria
     has_fp_wxy_dup = (wxy_m["fp_datalog_duplicate_count"] > 0)
     has_dup_macid = (duplicate_macid_count > 0)
@@ -1495,21 +1858,21 @@ def analyze_sg406_guid_data(
 
     check1_result = "PASS" if (
         wxy_m["delta_vs_total_actual_good"] >= 0 and not has_fp_wxy_dup and not has_dup_macid
-        and not has_fp_gu_disc and not has_total_gu_disc
+        and not has_fp_gu_disc and not has_total_gu_disc and not has_prefix_outlier_fail
     ) else "FAIL"
 
     status = "PASS" if (
         wxy_m["delta_vs_fp_actual_good"] >= 0 and check4_result == "PASS" and not has_fp_wxy_dup
-        and not has_dup_macid and not has_fp_gu_disc
+        and not has_dup_macid and not has_fp_gu_disc and not has_prefix_outlier_fail
     ) else "FAIL"
-    if total_actual == 0 and (has_dup_macid or has_total_gu_disc):
+    if total_actual == 0 and (has_dup_macid or has_total_gu_disc or has_prefix_outlier_fail):
         total_status = "FAIL"
     elif total_actual == 0:
         total_status = "SKIPPED"
     else:
         total_status = "PASS" if (
             wxy_m["delta_vs_total_actual_good"] >= 0 and check4_result == "PASS" and not has_fp_wxy_dup
-            and not has_dup_macid and not has_total_gu_disc
+            and not has_dup_macid and not has_total_gu_disc and not has_prefix_outlier_fail
         ) else "FAIL"
 
     _emit_log("-" * 80, True, logger)
@@ -1548,6 +1911,38 @@ def analyze_sg406_guid_data(
                     f"values mapped to >1 counterpart={_pd['multi_mapped_values']:,}",
                     True, logger,
                 )
+    _mode_lbl = prefix_outlier_mode.upper()
+    _emit_log(
+        f"[{mask_key} MACID Prefix Profile] Mode={_mode_lbl} "
+        f"({prefix_profile['prefix_bytes']}-byte prefix, "
+        f"min_units={prefix_profile['min_pass_units']}, "
+        f"outlier: <={prefix_profile['max_count']} units OR <{prefix_profile['max_pct']:.2f}%)",
+        True, logger,
+    )
+    for _mt, _tdata in (prefix_profile.get("by_type") or {}).items():
+        _emit_log(
+            f"  - {_tdata['label']} ({_tdata['total_units']:,} unique PASS): {_tdata['summary_str']}",
+            True, logger,
+        )
+    if prefix_profile.get("rollover_detected"):
+        _emit_log(
+            "  [INFO] Multi-pool MACID prefix rollover detected (valid pool transition; no hold triggered).",
+            True, logger,
+        )
+    for _ol in prefix_profile.get("outliers") or ():
+        _lvl = "[FAIL]" if _mode_lbl == "FAIL" else "[WARNING]"
+        _samp_strs = [
+            f"UID={s.get('uid') or 'N/A'} {s.get('macid_hex') or ''} ({s.get('panel') or ''})"
+            for s in (_ol.get("samples") or ())[:10]
+        ]
+        if len(_ol.get("samples") or ()) > 10:
+            _samp_strs.append(f"...+{len(_ol['samples']) - 10} more")
+        _emit_log(
+            f"  {_lvl} {_ol['label']} prefix {_ol['prefix']}: "
+            f"{_ol['count']:,} unit(s) ({_ol['pct']:.2f}%) | {_ol['boundary_hint']} | "
+            f"{', '.join(_samp_strs)}",
+            True, logger,
+        )
     _emit_log(f"First Pass Result: {status}  |  Total Good Result: {total_status}", True, logger)
     _emit_log(f"FTDC Check 1: {check1_result}  |  Check 2: {check2_result}  |  Check 4: {check4_result}", True, logger)
 
@@ -1626,6 +2021,12 @@ def analyze_sg406_guid_data(
         "fp_good_unique_pair_details": gu_fp["pair_details"],
         "total_good_unique_pair_details": gu_total["pair_details"],
         "good_unique_discrepancy_pairs": good_unique_pairs,
+        # Layer 2: Automatic MACID prefix profiling & outlier detection
+        "macid_prefix_profile": prefix_profile,
+        "macid_prefix_outliers": prefix_profile["outliers"],
+        "macid_prefix_outlier_count": prefix_outlier_count,
+        "macid_prefix_outlier_mode": prefix_outlier_mode,
+        "macid_prefix_rollover_detected": bool(prefix_profile["rollover_detected"]),
         # Backward-compatibility aliases
         "wxy_duplicate_guid": wxy_m["duplicate_guid"],
         "wxy_total_duplicate_guid": wxy_m["total_duplicate_guid"],
@@ -1785,10 +2186,30 @@ def compute_sg406_remarks(result: Dict[str, Any]) -> str:
             "Please hold and inform Product Owner for review and assessment."
         )
 
+    # 5. Layer 2: MACID prefix outlier detection
+    prefix_outlier_cnt = int(result.get("macid_prefix_outlier_count") or 0)
+    prefix_outlier_mode = str(result.get("macid_prefix_outlier_mode") or "fail").strip().lower()
+    prefix_outlier_txt = ""
+    if prefix_outlier_cnt > 0:
+        prefix_outlier_txt = format_macid_prefix_outlier_text(
+            result.get("macid_prefix_profile"),
+            result.get("macid_prefix_outliers"),
+        )
+        if not prefix_outlier_txt:
+            u_word = "unit" if prefix_outlier_cnt == 1 else "units"
+            prefix_outlier_txt = f"{prefix_outlier_cnt:,} {u_word}"
+        if prefix_outlier_mode == "fail":
+            violations.append(
+                f"MACID prefix outlier(s) detected ({prefix_outlier_txt}). "
+                "Please hold lot and inform Product Owner for review and assessment."
+            )
+
     if violations:
+        if prefix_outlier_cnt > 0 and prefix_outlier_mode == "warn":
+            violations.append(f"[Prefix Warning] MACID prefix outlier(s) detected ({prefix_outlier_txt}).")
         return " ".join(violations)
 
-    # 4. Check FP and Total Good status combination for remaining cases
+    # Check FP and Total Good status combination for remaining cases
     fp_status = str(result.get("status") or "").strip().upper()
     tot_status = str(result.get("total_good_status") or "").strip().upper()
 
@@ -1796,13 +2217,21 @@ def compute_sg406_remarks(result: Dict[str, Any]) -> str:
     tot_pass = (tot_status == "PASS")
 
     if fp_pass and tot_pass:
+        if prefix_outlier_cnt > 0 and prefix_outlier_mode == "warn":
+            return (
+                f"PASS with Warning: MACID prefix outlier(s) detected ({prefix_outlier_txt}). "
+                "Please review Valid Good Count Cross-Check sheet."
+            )
         return "No abnormalities or discrepancies were observed."
     elif fp_pass and not tot_pass:
-        return "There is abnormality or discrepancy observed in RETEST process. Please check."
+        base_msg = "There is abnormality or discrepancy observed in RETEST process. Please check."
     elif not fp_pass and tot_pass:
-        return "There is abnormality or discrepancy observed in FIRST PASS process. Please check."
+        base_msg = "There is abnormality or discrepancy observed in FIRST PASS process. Please check."
     else:
-        return "There was an anomaly during lot processing. Please hold lot for review and assessment."
+        base_msg = "There was an anomaly during lot processing. Please hold lot for review and assessment."
+    if prefix_outlier_cnt > 0 and prefix_outlier_mode == "warn":
+        return f"{base_msg} [Prefix Warning] MACID prefix outlier(s) detected ({prefix_outlier_txt})."
+    return base_msg
 
 
 def _fmt_gu_counts(counts: Any) -> str:
@@ -1895,6 +2324,8 @@ def build_sg406_summary_and_details(
         result.get("check4_result"),
         result.get("first_pass_pass_count"),
         result.get("total_pass_parts"),
+        result.get("macid_prefix_outlier_count"),
+        result.get("macid_prefix_outlier_mode"),
     )
     cached = result.get("_cached_summary_and_details")
     if isinstance(cached, tuple) and len(cached) == 2 and cached[0] == cache_sig:
@@ -2059,6 +2490,15 @@ def build_sg406_summary_and_details(
         ("FT", "Total PASS parts", result.get("total_pass_parts")),
         ("FT", "Total Good", result.get("wxy_total_good", result.get("total_good"))),
     ])
+    prefix_profile = result.get("macid_prefix_profile")
+    if isinstance(prefix_profile, dict):
+        by_type = prefix_profile.get("by_type") or {}
+        if has_bt and "bt" in by_type:
+            detail_rows.append(("FT", "Observed BT MACID Prefix(es)", by_type["bt"].get("summary_str") or "None"))
+        if has_zb and "zb" in by_type:
+            detail_rows.append(("FT", "Observed ZB MACID Prefix(es)", by_type["zb"].get("summary_str") or "None"))
+        outlier_txt = format_macid_prefix_outlier_text(prefix_profile, result.get("macid_prefix_outliers"))
+        detail_rows.append(("FT", "MACID Prefix Outlier(s)", outlier_txt or "None"))
 
     check1 = result.get("check1_result", "N/A")
     check2 = result.get("check2_result", "N/A")
@@ -2163,6 +2603,41 @@ def build_sg406_ftdc_criteria_text(ftdc_criteria: dict) -> List[str]:
     else:
         lines.append(f"  - All QC units confirmed PASS in previous operation.")
 
+    prefix_profile = res.get("macid_prefix_profile")
+    if isinstance(prefix_profile, dict):
+        pp_mode = str(prefix_profile.get("mode") or res.get("macid_prefix_outlier_mode") or "fail").strip().upper()
+        pp_ol_cnt = int(prefix_profile.get("outlier_unit_count") or res.get("macid_prefix_outlier_count") or 0)
+        if pp_mode == "DISABLED":
+            pp_res = "DISABLED"
+        elif pp_ol_cnt > 0:
+            pp_res = "FAIL" if pp_mode == "FAIL" else "WARNING"
+        else:
+            pp_res = "PASS"
+        lines.append("")
+        lines.append(
+            f"[MACID Prefix Profile (Layer 2)] - Profiles unique PASS BT/ZB {prefix_profile.get('prefix_bytes', 3)}-byte prefixes; "
+            f"flags un-allowlisted minority prefixes when unique PASS units >= {prefix_profile.get('min_pass_units', 50)} "
+            f"and (count <= {prefix_profile.get('max_count', 2)} or share < {float(prefix_profile.get('max_pct', 0.5)):.2f}%). "
+            f"Mode: {pp_mode}."
+        )
+        lines.append(f"[Result: {pp_res}]")
+        for _mt, _tdata in (prefix_profile.get("by_type") or {}).items():
+            lines.append(
+                f"  - {_tdata.get('label', _mt.upper())} ({int(_tdata.get('total_units') or 0):,} unique PASS): "
+                f"{_tdata.get('summary_str') or 'None'}"
+            )
+        for _ol in (prefix_profile.get("outliers") or ()):
+            _samps = ", ".join(
+                f"UID={s.get('uid') or 'N/A'} {s.get('macid_hex') or ''} ({s.get('panel') or ''})"
+                for s in (_ol.get("samples") or ())[:10]
+            )
+            lines.append(
+                f"  - OUTLIER {_ol.get('label', '')}: {_ol.get('prefix', '')} "
+                f"({_ol.get('count', 0):,} unit(s) / {float(_ol.get('pct') or 0.0):.2f}%) | "
+                f"{_ol.get('boundary_hint', '')}"
+                + (f" | {_samps}" if _samps else "")
+            )
+
     if fp_status == "FAIL" or total_status == "FAIL":
         lines.append("")
         lines.append("These are the possible reasons for Check 1 and/or Check 4 Fail:")
@@ -2175,6 +2650,9 @@ def build_sg406_ftdc_criteria_text(ftdc_criteria: dict) -> List[str]:
         lines.append(f"4) Discrepancy in Good Unique Count of {active_vs_str} - A GOOD unit has a missing/invalid UID or MACID, or one UID is linked to more than one MACID (or vice versa). Please inform Product Owner.")
         lines.append("")
         lines.append("5) Incorrect Actual Good QTY input - Kindly double check the ACTUAL GOOD QUANTITY, perform recount if possible.")
+        if int(res.get("macid_prefix_outlier_count") or 0) > 0:
+            lines.append("")
+            lines.append("6) MACID prefix outlier - a PASS unit carries a MACID prefix not matching the lot's MACID pool(s). Please inform Product Owner.")
 
     return lines
 
@@ -2443,7 +2921,14 @@ def write_sg406_result_excel(
     remarks_text = str(result.get("remarks") or compute_sg406_remarks(result))
     remarks_row = start_row_for_panels + len(fp_matrix_rows) + 2
     ws_sum.write(remarks_row, 0, "Remarks:", border_fmt)
-    ws_sum.merge_range(remarks_row, 1, remarks_row, 4, remarks_text, border_fmt)
+    if remarks_text.startswith("PASS with Warning:"):
+        amber_remarks_fmt = wb.add_format({
+            'border': 1, 'bg_color': '#FFF3CD', 'font_color': '#856404',
+            'bold': True, 'valign': 'vcenter',
+        })
+        ws_sum.merge_range(remarks_row, 1, remarks_row, 4, remarks_text, amber_remarks_fmt)
+    else:
+        ws_sum.merge_range(remarks_row, 1, remarks_row, 4, remarks_text, border_fmt)
     sum_tracker.track(0, "Remarks:")
     sum_tracker.apply(ws_sum, max_width=85)
 
@@ -2998,8 +3483,110 @@ def write_sg406_result_excel(
             gu_tracker.track_row(4, p_vals + (p_st,))
             p_row_idx += 1
 
-    # Section 3: Row-by-Row Good Units (PASS) Tracking & Cross-Check Table
-    good_table_start = max(len(gu_sum_rows) + 2, p_row_idx + 2)
+    # Section 3: MACID Prefix Distribution & Outlier Profile (Layer 2)
+    amber_center_fmt = wb.add_format({
+        'border': 1, 'bg_color': '#FFF3CD', 'font_color': '#856404', 'bold': True,
+        'align': 'center', 'valign': 'vcenter',
+    })
+    amber_row_fmt = wb.add_format({
+        'border': 1, 'bg_color': '#FFF3CD', 'font_color': '#856404',
+        'align': 'center', 'valign': 'vcenter',
+    })
+    rollover_center_fmt = wb.add_format({
+        'border': 1, 'bg_color': '#E8F1FD', 'font_color': '#1A4E8A',
+        'align': 'center', 'valign': 'vcenter',
+    })
+
+    prefix_profile = result.get("macid_prefix_profile")
+    if not isinstance(prefix_profile, dict) and total_good_rows_list:
+        try:
+            from core import config as app_config
+            _pcfg = app_config.get_macid_prefix_profile_config()
+            prefix_profile = compute_macid_prefix_profile(
+                total_good_rows_list,
+                cfg=sg406_cfg,
+                prefix_bytes=_pcfg["prefix_bytes"],
+                min_pass_units=_pcfg["min_pass_units"],
+                max_outlier_count=_pcfg["max_count"],
+                max_outlier_pct=_pcfg["max_pct"],
+                mode=_pcfg["mode"],
+            )
+        except (OSError, TypeError, ValueError, RuntimeError) as exc:
+            logging.warning("Skipping Layer 2 MACID Prefix table in Excel: %s", exc)
+            prefix_profile = None
+
+    prefix_start = max(len(gu_sum_rows) + 2, p_row_idx + 2)
+    prefix_rows_written = 0
+    pp_mode = "fail"
+    pp_prefix_bytes = 3
+    outlier_macids_by_type: Dict[str, Set[str]] = {}
+
+    if isinstance(prefix_profile, dict):
+        pp_mode = str(prefix_profile.get("mode") or result.get("macid_prefix_outlier_mode") or "fail").strip().lower()
+        pp_prefix_bytes = int(prefix_profile.get("prefix_bytes") or 3)
+        outlier_macids_by_type = prefix_profile.get("outlier_macids_by_type") or {}
+        prefix_hdrs = [
+            "MACID Type", "Prefix", "Unique PASS Units", "Share (%)",
+            "Classification", "Position / Boundary Hint", "Outlier UID(s) & MACID HEX(s)",
+        ]
+        ws_gu.write_row(prefix_start, 0, prefix_hdrs, hdr_fmt)
+        gu_tracker.track_row(0, prefix_hdrs)
+        prefix_rows_written = 1
+
+        by_type_map = prefix_profile.get("by_type") or {}
+        for mtype in MACID_TYPES:
+            tdata = by_type_map.get(mtype)
+            if not isinstance(tdata, dict):
+                continue
+            m_label = str(tdata.get("label") or CHECK_LABELS.get(mtype, mtype.upper()))
+            for entry in tdata.get("entries") or ():
+                cls_str = str(entry.get("classification") or "")
+                hint_str = str(entry.get("boundary_hint") or "") or "-"
+                if cls_str == "OUTLIER":
+                    samples = entry.get("samples") or ()
+                    ol_samp_txt = ", ".join(
+                        f"{s.get('uid') or 'N/A'} ({s.get('macid_hex') or ''})"
+                        for s in samples[:10]
+                    )
+                    if len(samples) > 10:
+                        ol_samp_txt += f", ...+{len(samples) - 10} more"
+                    cls_fmt = red_center_fmt if pp_mode == "fail" else amber_center_fmt
+                elif cls_str == "Rollover Pool":
+                    ol_samp_txt = "-"
+                    cls_fmt = rollover_center_fmt
+                else:
+                    ol_samp_txt = "-"
+                    cls_fmt = center_border_fmt
+
+                pct_str = f"{float(entry.get('pct') or 0.0):.2f}%"
+                p_row_vals = (
+                    m_label,
+                    str(entry.get("prefix") or ""),
+                    int(entry.get("count") or 0),
+                    pct_str,
+                    cls_str,
+                    hint_str,
+                    ol_samp_txt,
+                )
+                curr_pr = prefix_start + prefix_rows_written
+                ws_gu.write(curr_pr, 0, p_row_vals[0], center_border_fmt)
+                ws_gu.write(curr_pr, 1, p_row_vals[1], center_border_fmt)
+                ws_gu.write(curr_pr, 2, p_row_vals[2], center_border_fmt)
+                ws_gu.write(curr_pr, 3, p_row_vals[3], center_border_fmt)
+                ws_gu.write(curr_pr, 4, p_row_vals[4], cls_fmt)
+                ws_gu.write(curr_pr, 5, p_row_vals[5], center_border_fmt)
+                ws_gu.write(curr_pr, 6, p_row_vals[6], cls_fmt if cls_str == "OUTLIER" else center_border_fmt)
+                gu_tracker.track_row(0, p_row_vals)
+                prefix_rows_written += 1
+
+        if prefix_rows_written == 1:
+            empty_pr = ("N/A", "None", 0, "0.00%", "No valid PASS MACIDs", "-", "-")
+            ws_gu.write_row(prefix_start + 1, 0, empty_pr, center_border_fmt)
+            gu_tracker.track_row(0, empty_pr)
+            prefix_rows_written += 1
+
+    # Section 4: Row-by-Row Good Units (PASS) Tracking & Cross-Check Table
+    good_table_start = prefix_start + (prefix_rows_written + 2 if prefix_rows_written > 0 else 0)
     gu_unit_hdrs = [
         "Good Part #", "Part ID", "Site", "Datalog",
         "WXY (W_X_Y)", "UID",
@@ -3057,6 +3644,9 @@ def write_sg406_result_excel(
         for mapped_set in pair_map.values()
     )
 
+    bt_outlier_set = outlier_macids_by_type.get("bt") or set()
+    zb_outlier_set = outlier_macids_by_type.get("zb") or set()
+
     seen_good_ids: Dict[str, Set[str]] = {k: set() for k, _ in active_keys_labels}
     write_gu_row = ws_gu.write_row
     for g_idx, (g_obj, val_map, ok_map) in enumerate(precomputed_good_rows, start=1):
@@ -3065,6 +3655,8 @@ def write_sg406_result_excel(
         uid_v = val_map.get("uid", "")
         bt_v = val_map.get("bt", "") if has_bt else ""
         zb_v = val_map.get("zb", "") if has_zb else ""
+        bt_hex_v = _macid_hex_cached(bt_v) if has_bt else ""
+        zb_hex_v = _macid_hex_cached(zb_v) if has_zb else ""
 
         uniq_state: Dict[str, str] = {}
         row_issues: List[str] = []
@@ -3100,8 +3692,25 @@ def write_sg406_result_excel(
                         if len(rev_set) > 1:
                             row_issues.append(f"{lbl2} mapped to {len(rev_set)} {lbl1}s")
 
+        has_other_issue = bool(row_issues)
+        row_has_prefix_outlier = False
+        if has_bt and bt_hex_v and bt_hex_v in bt_outlier_set:
+            row_has_prefix_outlier = True
+            row_issues.append(f"BT MACID Prefix Outlier ({_extract_macid_prefix(bt_hex_v, pp_prefix_bytes)})")
+        if has_zb and zb_hex_v and zb_hex_v in zb_outlier_set:
+            row_has_prefix_outlier = True
+            row_issues.append(f"ZB MACID Prefix Outlier ({_extract_macid_prefix(zb_hex_v, pp_prefix_bytes)})")
+
         has_issue = bool(row_issues)
-        row_status = "DISCREPANCY" if has_issue else "OK"
+        if has_other_issue or (row_has_prefix_outlier and pp_mode == "fail"):
+            row_status = "DISCREPANCY"
+            row_cell_fmt = dup_mac_hex_fmt
+        elif row_has_prefix_outlier and pp_mode == "warn":
+            row_status = "WARNING"
+            row_cell_fmt = amber_row_fmt
+        else:
+            row_status = "OK"
+            row_cell_fmt = center_fmt
         row_remarks = "; ".join(row_issues) if has_issue else "OK"
 
         gu_vals_list: List[Any] = [
@@ -3113,9 +3722,9 @@ def write_sg406_result_excel(
             uid_v,
         ]
         if has_bt:
-            gu_vals_list.extend((bt_v, _macid_hex_cached(bt_v)))
+            gu_vals_list.extend((bt_v, bt_hex_v))
         if has_zb:
-            gu_vals_list.extend((zb_v, _macid_hex_cached(zb_v)))
+            gu_vals_list.extend((zb_v, zb_hex_v))
         gu_vals_list.extend((
             "VALID" if ok_map["wxy"] else "INVALID",
             "VALID" if ok_map["uid"] else "INVALID",
@@ -3132,7 +3741,7 @@ def write_sg406_result_excel(
         gu_vals_list.extend((row_status, row_remarks))
 
         gu_row_values = tuple(gu_vals_list)
-        write_gu_row(curr_gu_row, 0, gu_row_values, dup_mac_hex_fmt if has_issue else center_fmt)
+        write_gu_row(curr_gu_row, 0, gu_row_values, row_cell_fmt)
         if g_idx <= 100 or has_issue:
             gu_tracker.track_row(0, gu_row_values)
 
